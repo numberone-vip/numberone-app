@@ -15,7 +15,8 @@ data class VirtualService(
     val countryFlag: String,
     val priceUsd: Double,
     val successRate: Int,
-    val isPopular: Boolean = false
+    val isPopular: Boolean = false,
+    val availableCount: Int = 0
 )
 
 data class PurchaseRequest(
