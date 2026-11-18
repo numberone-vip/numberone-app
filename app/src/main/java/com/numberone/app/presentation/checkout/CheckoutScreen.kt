@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.numberone.app.core.components.OtpCopyCard
 import com.numberone.app.core.localization.AppLanguage
 import com.numberone.app.core.localization.Strings
 import com.numberone.app.core.theme.TealAccent
@@ -72,10 +71,13 @@ fun CheckoutScreen(
             fontWeight = FontWeight.Bold
         )
 
-        OtpCopyCard(
-            label = "USDT (TRC20)",
-            value = "TYourWalletAddressHere123456",
-            strings = strings
+        Text(
+            text = if (language == AppLanguage.ARABIC)
+                "الدفع غير متاح مؤقتاً. لن يتم إرسال طلب أو طلب تحويل حتى يتم تفعيل عنوان الدفع الرسمي."
+            else
+                "Payments are temporarily unavailable. No transfer should be made until the official payment address is enabled.",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyMedium
         )
 
         OutlinedTextField(
@@ -101,6 +103,7 @@ fun CheckoutScreen(
 
         Button(
             onClick = { onSubmitOrder(transactionRef, selectedReceiptUri) },
+            enabled = false,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
