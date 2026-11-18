@@ -55,6 +55,8 @@ import com.numberone.app.data.auth.AuthRepository
 import com.numberone.app.data.auth.StaffAccessRole
 import com.numberone.app.domain.model.VirtualService
 import com.numberone.app.presentation.StoreViewModel
+import com.numberone.app.presentation.OrdersViewModel
+import com.numberone.app.presentation.OrdersUiState
 import com.numberone.app.presentation.auth.CustomerAuthScreen
 import com.numberone.app.presentation.StoreUiState
 import com.numberone.app.presentation.checkout.CheckoutScreen
@@ -76,6 +78,8 @@ class MainActivity : ComponentActivity() {
             val authRepository = remember { AuthRepository() }
             val storeViewModel = remember { StoreViewModel() }
             val storeUiState by storeViewModel.uiState.collectAsState()
+            val ordersViewModel = remember { OrdersViewModel() }
+            val ordersUiState by ordersViewModel.uiState.collectAsState()
 
             var selectedTab by remember { mutableStateOf(0) }
             var customerUserId by remember { mutableStateOf(authRepository.currentCustomerUserId()) }
@@ -136,7 +140,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     NavigationBarItem(
                                         selected = selectedTab == 1,
-                                        onClick = { selectedTab = 1 },
+                                        onClick = { selectedTab = 1; if (customerUserId != null) ordersViewModel.loadOrders() },
                                         icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
                                         label = { Text(strings.navOrders) }
                                     )
@@ -168,6 +172,7 @@ class MainActivity : ComponentActivity() {
                                     customerUserId = userId
                                     selectedTab = 0
                                     storeViewModel.loadServices()
+                                    ordersViewModel.loadOrders()
                                 },
                                 language = language,
                                 modifier = contentModifier
@@ -217,11 +222,33 @@ class MainActivity : ComponentActivity() {
                                         modifier = contentModifier
                                     )
                                 }
-                                1 -> OrdersScreen(
-                                    orders = emptyList(),
-                                    strings = strings,
-                                    modifier = contentModifier
-                                )
+                                1 -> when (val state = ordersUiState) {
+                                    OrdersUiState.Loading -> Column(
+                                        modifier = contentModifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        CircularProgressIndicator()
+                                        Spacer(Modifier.height(12.dp))
+                                        Text(if (language == AppLanguage.ARABIC) "جارٍ تحميل طلباتك..." else "Loading your orders...")
+                                    }
+                                    is OrdersUiState.Error -> Column(
+                                        modifier = contentModifier.fillMaxSize().padding(24.dp),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                                        Spacer(Modifier.height(12.dp))
+                                        Button(onClick = { ordersViewModel.loadOrders() }) {
+                                            Text(if (language == AppLanguage.ARABIC) "إعادة المحاولة" else "Try again")
+                                        }
+                                    }
+                                    is OrdersUiState.Success -> OrdersScreen(
+                                        orders = state.orders,
+                                        strings = strings,
+                                        modifier = contentModifier
+                                    )
+                                }
                                 2 -> SupportScreen(
                                     strings = strings,
                                     language = language,
