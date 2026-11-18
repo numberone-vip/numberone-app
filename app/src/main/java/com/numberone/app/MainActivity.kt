@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Storefront
@@ -47,6 +48,7 @@ import com.numberone.app.presentation.orders.OrdersScreen
 import com.numberone.app.presentation.store.StoreScreen
 import com.numberone.app.presentation.support.SupportScreen
 import com.numberone.app.presentation.wallet.WalletTopUpDialog
+import com.numberone.app.presentation.wallet.WalletScreen
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -83,6 +85,7 @@ class MainActivity : ComponentActivity() {
 
             var liveServices by remember { mutableStateOf(emptyList<VirtualService>()) }
             var walletBalance by remember { mutableStateOf<Double?>(null) }
+            var walletTransactions by remember { mutableStateOf(emptyList<com.numberone.app.data.repository.WalletTransactionDto>()) }
             var orders by remember { mutableStateOf(emptyList<PurchaseRequest>()) }
             var subscriptions by remember { mutableStateOf(emptyList<com.numberone.app.data.repository.CustomerSubscription>()) }
             var loading by remember { mutableStateOf(false) }
@@ -98,6 +101,9 @@ class MainActivity : ComponentActivity() {
                 walletRepo.getMyWalletSummary()
                     .onSuccess { walletBalance = it.balance }
                     .onFailure { error -> dataError = listOfNotNull(dataError, error.localizedMessage).joinToString("\n") }
+                walletRepo.getMyTransactions()
+                    .onSuccess { walletTransactions = it }
+                    .onFailure { error -> dataError = listOfNotNull(dataError, error.localizedMessage).joinToString("\n") }
                 ordersRepo.getMyOrders()
                     .onSuccess { orders = it }
                     .onFailure { error -> dataError = listOfNotNull(dataError, error.localizedMessage).joinToString("\n") }
@@ -112,6 +118,7 @@ class MainActivity : ComponentActivity() {
                 else {
                     liveServices = emptyList()
                     walletBalance = null
+                    walletTransactions = emptyList()
                     orders = emptyList()
                     subscriptions = emptyList()
                 }
@@ -192,23 +199,32 @@ class MainActivity : ComponentActivity() {
                                             selected = selectedTab == 1,
                                             onClick = {
                                                 selectedTab = 1
+                                                scope.launch { walletRepo.getMyTransactions().onSuccess { walletTransactions = it } }
+                                            },
+                                            icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = null) },
+                                            label = { Text(if (language == AppLanguage.ARABIC) "المحفظة" else "Wallet") }
+                                        )
+                                        NavigationBarItem(
+                                            selected = selectedTab == 2,
+                                            onClick = {
+                                                selectedTab = 2
                                                 scope.launch { subscriptionsRepo.getMySubscriptions().onSuccess { subscriptions = it } }
                                             },
                                             icon = { Icon(Icons.Default.Storefront, contentDescription = null) },
                                             label = { Text("أرقامي") }
                                         )
                                         NavigationBarItem(
-                                            selected = selectedTab == 2,
+                                            selected = selectedTab == 3,
                                             onClick = {
-                                                selectedTab = 2
+                                                selectedTab = 3
                                                 scope.launch { ordersRepo.getMyOrders().onSuccess { orders = it } }
                                             },
                                             icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
                                             label = { Text(strings.navOrders) }
                                         )
                                         NavigationBarItem(
-                                            selected = selectedTab == 3,
-                                            onClick = { selectedTab = 3 },
+                                            selected = selectedTab == 4,
+                                            onClick = { selectedTab = 4 },
                                             icon = { Icon(Icons.Default.SupportAgent, contentDescription = null) },
                                             label = { Text(strings.navSupport) }
                                         )
@@ -233,7 +249,7 @@ class MainActivity : ComponentActivity() {
                                                 .onSuccess { result ->
                                                     walletBalance = result.balanceAfter
                                                     checkoutService = null
-                                                    selectedTab = 2
+                                                    selectedTab = 3
                                                     requestId = UUID.randomUUID().toString()
                                                     refreshCustomerData()
                                                     Toast.makeText(context, "تم إرسال طلبك للمراجعة", Toast.LENGTH_LONG).show()
@@ -266,8 +282,22 @@ class MainActivity : ComponentActivity() {
                                         onTopUpClick = { showTopUp = true },
                                         modifier = contentModifier
                                     )
-                                    1 -> MyNumbersScreen(items = subscriptions, modifier = contentModifier)
-                                    2 -> OrdersScreen(orders = orders, strings = strings, modifier = contentModifier)
+                                    1 -> WalletScreen(
+                                        balance = walletBalance,
+                                        language = language,
+                                        transactions = walletTransactions,
+                                        loading = loading,
+                                        onTopUpClick = { showTopUp = true },
+                                        onRefresh = {
+                                            scope.launch {
+                                                walletRepo.getMyWalletSummary().onSuccess { walletBalance = it.balance }
+                                                walletRepo.getMyTransactions().onSuccess { walletTransactions = it }
+                                            }
+                                        },
+                                        modifier = contentModifier
+                                    )
+                                    2 -> MyNumbersScreen(items = subscriptions, modifier = contentModifier)
+                                    3 -> OrdersScreen(orders = orders, strings = strings, modifier = contentModifier)
                                     else -> SupportScreen(
                                         strings = strings,
                                         language = language,
@@ -289,6 +319,7 @@ class MainActivity : ComponentActivity() {
                                 onCredited = {
                                     scope.launch {
                                         walletRepo.getMyWalletSummary().onSuccess { walletBalance = it.balance }
+                                        walletRepo.getMyTransactions().onSuccess { walletTransactions = it }
                                     }
                                 }
                             )
