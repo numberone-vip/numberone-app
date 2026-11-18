@@ -19,6 +19,7 @@ Create a Vercel project from this GitHub repository and set the project Root Dir
 - Only the public key is used by this app. No service-role key is included.
 - Payment verification uses the existing finance_verify_order_payment RPC.
 - Number assignment uses orders_assign_verified_order.
+- Finance wallet visibility uses new role-checked read-only RPCs: admin_list_wallet_deposits and admin_list_wallet_balances. They do not modify balances.
 - SMS delivery uses admin_add_sms, which also extracts activation codes using the existing database logic.
 - Purchase requests are shown read-only until an atomic approval RPC exists. This avoids changing request status without creating the corresponding subscription.
 - Wallet deposits are verified by the existing verify-binance-deposit Edge Function. It currently accepts USDT BEP20 and uses server-side Binance/Supabase secrets. The payment_settings address must match the server-side BINANCE_DEPOSIT_ADDRESS; never put those secrets in the app or web dashboard.
