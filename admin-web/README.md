@@ -1,14 +1,14 @@
 # Number One Control Center
 
-Standalone web dashboard for Number One. Uses the existing Supabase project and does not create, delete, or migrate customer data.
+Standalone responsive web administration app. Existing Supabase project, tables, data and RPC contracts are preserved.
 
 ## Local setup
-- Copy .env.example to .env.local and set the Supabase URL and publishable/anon key.
-- Run npm install, then npm run dev.
+Copy .env.example to .env.local, set the existing Supabase URL and publishable/anon key, then run npm install and npm run dev.
 
-## Security
-- Authentication uses Supabase Auth.
-- Admin access is checked against public.admin_users.
-- Staff roles are checked against public.staff_members and existing RLS.
-- Browser/server clients use only the public key; no service-role key is included.
-- Database RLS and existing RPCs remain authoritative.
+## Access and security
+- Supabase Auth session required.
+- Admins are verified against public.admin_users.
+- Staff are verified against public.staff_members; pages are role-filtered.
+- RLS and existing security-definer RPCs remain the authorization authority.
+- Only the public key is used. Never add service_role or secret keys to this app.
+- Purchase-request approval and wallet-deposit review are intentionally read-only until dedicated atomic, audited database workflows are available. No unsafe direct balance or subscription mutation is performed.
