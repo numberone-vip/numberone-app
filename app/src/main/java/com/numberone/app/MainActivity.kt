@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -82,13 +83,31 @@ class MainActivity : ComponentActivity() {
             val ordersUiState by ordersViewModel.uiState.collectAsState()
 
             var selectedTab by remember { mutableStateOf(0) }
-            var customerUserId by remember { mutableStateOf(authRepository.currentCustomerUserId()) }
+            var customerUserId by remember { mutableStateOf<String?>(null) }
+            var restoringSession by remember { mutableStateOf(true) }
             var selectedServiceForCheckout by remember { mutableStateOf<VirtualService?>(null) }
             var adminRole by remember { mutableStateOf<StaffAccessRole?>(null) }
             var adminEmail by remember { mutableStateOf("") }
             var adminPassword by remember { mutableStateOf("") }
             var authBusy by remember { mutableStateOf(false) }
             var authError by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(authRepository) {
+                val existingUserId = authRepository.currentCustomerUserId()
+                if (existingUserId != null) {
+                    val existingStaffRole = runCatching {
+                        authRepository.currentStaffAccessRole()
+                    }.getOrNull()
+
+                    if (existingStaffRole != null) {
+                        adminRole = existingStaffRole
+                        selectedTab = 3
+                    } else {
+                        customerUserId = existingUserId
+                    }
+                }
+                restoringSession = false
+            }
 
             NumberOneTheme {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
@@ -176,7 +195,15 @@ class MainActivity : ComponentActivity() {
                     ) { innerPadding ->
                         val contentModifier = Modifier.padding(innerPadding)
                         val checkoutService = selectedServiceForCheckout
-                        if (selectedTab != 3 && customerUserId == null) {
+                        if (restoringSession) {
+                            Column(
+                                modifier = contentModifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        } else if (selectedTab != 3 && customerUserId == null) {
                             CustomerAuthScreen(
                                 authRepository = authRepository,
                                 onAuthenticated = { userId ->
