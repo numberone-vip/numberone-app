@@ -54,7 +54,7 @@ import com.numberone.app.domain.model.VirtualService
 fun StoreScreen(
     strings: Strings,
     language: AppLanguage,
-    walletBalance: Double,
+    walletBalance: Double?,
     services: List<VirtualService>,
     onSelectService: (VirtualService) -> Unit,
     onTopUpClick: () -> Unit,
@@ -125,7 +125,7 @@ fun StoreScreen(
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                         Text(
-                            text = "$${String.format("%.2f", walletBalance)}",
+                            text = walletBalance?.let { "${String.format("%.2f", it)} USDT" } ?: "—",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Bold
@@ -188,6 +188,16 @@ fun StoreScreen(
                     text = strings.guaranteeBadge,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        }
+
+        if (filteredServices.isEmpty()) {
+            item {
+                Text(
+                    text = if (services.isEmpty()) "لا توجد خدمات متاحة حالياً أو تعذر تحميلها." else "لا توجد نتائج مطابقة للبحث.",
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
