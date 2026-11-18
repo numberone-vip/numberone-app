@@ -63,7 +63,7 @@ fun StoreScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedApp by remember { mutableStateOf<String?>(null) }
 
-    val apps = listOf("WhatsApp", "Telegram", "OpenAI", "Google", "TikTok")
+    val apps = services.map { it.appName.trim() }.filter { it.isNotEmpty() }.distinct().sorted()
     val filteredServices = services.filter { service ->
         val matchesApp = selectedApp == null || service.appName.equals(selectedApp, ignoreCase = true)
         val matchesSearch = searchQuery.isBlank() ||
@@ -194,6 +194,17 @@ fun StoreScreen(
             }
         }
 
+        if (filteredServices.isEmpty()) {
+            item {
+                Text(
+                    text = strings.noServices,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         items(filteredServices, key = { it.id }) { service ->
             val countryName = if (language == AppLanguage.ARABIC) service.countryNameAr else service.countryNameEn
             Card(
@@ -221,7 +232,7 @@ fun StoreScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${service.successRate}% Success",
+                                text = "${strings.availableCount}: ${service.availableCount}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = StatusApproved
                             )
