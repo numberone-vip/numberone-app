@@ -25,14 +25,16 @@ data class ServiceDto(
 fun ServiceDto.toDomain(): VirtualService {
     val resolvedEn = countryNameEn ?: country
     val resolvedAr = countryNameAr ?: when (country.uppercase()) {
-        "USA", "US" -> "الولايات المتحدة"
-        "UK", "GB" -> "المملكة المتحدة"
+        "USA", "US", "UNITED STATES" -> "الولايات المتحدة"
+        "UK", "GB", "UNITED KINGDOM" -> "المملكة المتحدة"
+        "MALAYSIA", "MY" -> "ماليزيا"
         "GERMANY", "DE" -> "ألمانيا"
         else -> country
     }
     val resolvedFlag = countryFlag ?: when (country.uppercase()) {
-        "USA", "US" -> "🇺🇸"
-        "UK", "GB" -> "🇬🇧"
+        "USA", "US", "UNITED STATES" -> "🇺🇸"
+        "UK", "GB", "UNITED KINGDOM" -> "🇬🇧"
+        "MALAYSIA", "MY" -> "🇲🇾"
         "GERMANY", "DE" -> "🇩🇪"
         else -> "🌐"
     }
