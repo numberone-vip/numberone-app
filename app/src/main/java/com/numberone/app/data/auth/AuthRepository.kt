@@ -4,6 +4,8 @@ import com.numberone.app.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.loginWith
+import io.github.jan.supabase.gotrue.signUpWith
+import io.github.jan.supabase.gotrue.sendRecoveryEmail
 import io.github.jan.supabase.gotrue.logout
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.filter.eq
@@ -63,6 +65,53 @@ class AuthRepository {
                 error("هذا الحساب لا يملك صلاحية دخول لوحة الإدارة.")
             }
         }
+
+    fun currentCustomerUserId(): String? =
+        client.gotrue.currentSessionOrNull()?.user?.id
+
+    suspend fun signInCustomer(email: String, password: String): Result<String> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                require(email.isNotBlank()) { "أدخل البريد الإلكتروني." }
+                require(password.isNotBlank()) { "أدخل كلمة المرور." }
+                client.gotrue.loginWith(Email) {
+                    this.email = email.trim()
+                    this.password = password
+                }
+                client.gotrue.currentSessionOrNull()?.user?.id
+                    ?: error("تم تسجيل الدخول لكن تعذر قراءة حسابك.")
+            }
+        }
+
+    suspend fun signUpCustomer(email: String, password: String): Result<Boolean> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                require(email.isNotBlank()) { "أدخل البريد الإلكتروني." }
+                require(android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) {
+                    "أدخل بريداً إلكترونياً صحيحاً."
+                }
+                require(password.length >= 8) { "كلمة المرور يجب أن تكون 8 أحرف على الأقل." }
+                client.gotrue.signUpWith(Email) {
+                    this.email = email.trim()
+                    this.password = password
+                }
+                client.gotrue.currentSessionOrNull() != null
+            }
+        }
+
+    suspend fun sendCustomerPasswordReset(email: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                require(email.isNotBlank()) { "أدخل بريدك الإلكتروني أولاً." }
+                client.gotrue.sendRecoveryEmail(email.trim())
+            }
+        }
+
+    suspend fun signOutCustomer() {
+        withContext(Dispatchers.IO) {
+            client.gotrue.logout()
+        }
+    }
 
     suspend fun signOut() {
         withContext(Dispatchers.IO) {
