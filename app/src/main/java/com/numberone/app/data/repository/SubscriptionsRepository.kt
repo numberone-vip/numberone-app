@@ -2,6 +2,7 @@ package com.numberone.app.data.repository
 
 import com.numberone.app.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
