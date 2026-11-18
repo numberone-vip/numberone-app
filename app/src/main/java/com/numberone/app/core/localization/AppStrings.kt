@@ -38,7 +38,7 @@ data class Strings(
 
 object AppStrings {
     val arabic = Strings(
-        brandName = "Number1",
+        brandName = "Number One",
         tagline = "YOUR NUMBERS. YOUR CONTROL.",
         navStore = "المتجر",
         navOrders = "طلباتي",
@@ -69,7 +69,7 @@ object AppStrings {
     )
 
     val english = Strings(
-        brandName = "Number1",
+        brandName = "Number One",
         tagline = "YOUR NUMBERS. YOUR CONTROL.",
         navStore = "Store",
         navOrders = "Orders",
