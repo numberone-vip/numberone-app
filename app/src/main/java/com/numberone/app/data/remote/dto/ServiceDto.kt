@@ -19,7 +19,7 @@ data class ServiceDto(
     @SerialName("success_rate") val successRate: Int = 98,
     @SerialName("is_popular") val isPopular: Boolean = false,
     @SerialName("icon_url") val iconUrl: String? = null,
-    @SerialName("available_count") val availableCount: Int = 0
+    @SerialName("available_count") val availableCount: Int? = 0
 )
 
 fun ServiceDto.toDomain(): VirtualService {
@@ -45,6 +45,6 @@ fun ServiceDto.toDomain(): VirtualService {
         priceUsd = priceUsd ?: price,
         successRate = successRate,
         isPopular = isPopular,
-        availableCount = availableCount
+        availableCount = availableCount ?: 0
     )
 }
