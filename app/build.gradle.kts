@@ -131,6 +131,7 @@ dependencies {
 
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.core.ktx)
     debugImplementation(libs.androidx.ui.test.manifest)
