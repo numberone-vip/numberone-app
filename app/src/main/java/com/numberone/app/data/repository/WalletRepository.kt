@@ -46,7 +46,7 @@ class WalletRepository {
     suspend fun getMyWalletSummary(): Result<WalletSummaryDto> = withContext(Dispatchers.IO) {
         runCatching {
             requireSignedIn()
-            client.postgrest.rpc("wallet_get_my_summary").decodeSingle<WalletSummaryDto>()
+            client.postgrest.rpc(function = "wallet_get_my_summary").decodeSingle<WalletSummaryDto>()
         }
     }
 
@@ -62,7 +62,7 @@ class WalletRepository {
             requireSignedIn()
             require(amount > 0.0 && amount <= 100000.0) { "أدخل مبلغاً صحيحاً." }
             val params = buildJsonObject { put("p_amount", amount) }
-            client.postgrest.rpc("wallet_create_deposit_request", params).decodeSingle<String>()
+            client.postgrest.rpc(function = "wallet_create_deposit_request", parameters = params).decodeSingle<String>()
         }
     }
 
@@ -74,7 +74,7 @@ class WalletRepository {
                 put("p_request_id", requestId)
                 put("p_transaction_hash", transactionHash.lowercase())
             }
-            client.postgrest.rpc("wallet_submit_deposit_tx", params).decodeSingle<Boolean>()
+            client.postgrest.rpc(function = "wallet_submit_deposit_tx", parameters = params).decodeSingle<Boolean>()
             Unit
         }
     }
