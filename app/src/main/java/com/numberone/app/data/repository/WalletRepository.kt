@@ -31,6 +31,18 @@ data class WalletOrderDto(
 )
 
 @Serializable
+data class WalletTransactionDto(
+    val id: String,
+    @SerialName("transaction_type") val transactionType: String,
+    val direction: String,
+    val amount: Double,
+    @SerialName("balance_after") val balanceAfter: Double,
+    val currency: String,
+    val description: String? = null,
+    @SerialName("created_at") val createdAt: String
+)
+
+@Serializable
 data class WalletPaymentSettingsDto(
     val currency: String,
     val network: String,
@@ -47,6 +59,14 @@ class WalletRepository {
         runCatching {
             requireSignedIn()
             client.postgrest.rpc(function = "wallet_get_my_summary").decodeSingle<WalletSummaryDto>()
+        }
+    }
+
+    suspend fun getMyTransactions(limit: Int = 50): Result<List<WalletTransactionDto>> = withContext(Dispatchers.IO) {
+        runCatching {
+            requireSignedIn()
+            val params = buildJsonObject { put("p_limit", limit) }
+            client.postgrest.rpc(function = "wallet_get_my_transactions", parameters = params).decodeList<WalletTransactionDto>()
         }
     }
 
