@@ -3,7 +3,8 @@ import Link from"next/link";import{usePathname,useRouter}from"next/navigation";i
 type Item={href:string;label:string;icon:string;show:(a:Access)=>boolean};
 const nav:Item[]=[
 {href:"/dashboard",label:"Overview",icon:"◫",show:()=>true},
-{href:"/dashboard/orders",label:"Orders",icon:"▤",show:a=>a.isAdmin||a.roles.includes("orders")},
+{href:"/dashboard/orders",label:"Orders",icon:"▤",show:a=>a.isAdmin||a.roles.includes("orders")||a.roles.includes("finance")},
+{href:"/dashboard/sms",label:"SMS & activation",icon:"✉",show:a=>a.isAdmin||a.roles.includes("orders")},
 {href:"/dashboard/purchase-requests",label:"Purchase requests",icon:"▧",show:a=>a.isAdmin||a.roles.includes("finance")},
 {href:"/dashboard/services",label:"Services & pricing",icon:"◇",show:a=>a.isAdmin},
 {href:"/dashboard/subscriptions",label:"Subscriptions",icon:"▣",show:a=>a.isAdmin},
