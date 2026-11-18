@@ -10,10 +10,10 @@ import io.github.jan.supabase.storage.Storage
 
 object SupabaseClientProvider {
 
-    private const val SUPABASE_URL =
+    const val SUPABASE_URL =
         "https://rlxcsnposxvsyhwtmgbz.supabase.co"
 
-    private const val SUPABASE_ANON_KEY =
+    const val SUPABASE_ANON_KEY =
         "sb_publishable_0JRFmUNoVPY-SJjde4UmRg_MiFs94lD"
 
     val client: SupabaseClient by lazy {
