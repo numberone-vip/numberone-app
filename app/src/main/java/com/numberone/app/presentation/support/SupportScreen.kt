@@ -41,10 +41,7 @@ import com.numberone.app.core.localization.AppLanguage
 import com.numberone.app.core.localization.Strings
 import com.numberone.app.core.theme.TealAccent
 
-private data class SupportSection(
-    val title: String,
-    val content: String
-)
+private data class SupportSection(val title: String, val content: String)
 
 @Composable
 fun SupportScreen(
@@ -54,56 +51,36 @@ fun SupportScreen(
     onContactClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isArabic = language == AppLanguage.ARABIC
     val sections = remember(language) {
-        if (language == AppLanguage.ARABIC) {
+        if (isArabic) {
             listOf(
                 SupportSection(
-                    title = strings.privacyPolicy,
-                    content = """
-                        نلتزم في تطبيق Number1 بحماية خصوصيتك وأمان بياناتك الشخصية:
-                        1. البيانات التي نجمعها: نجمع فقط البريد الإلكتروني أو معرف الحساب، وسجل الطلبات، وإيصالات الدفع المرفوعة لغرض التحقق اليدوي وتفعيل الخدمة.
-                        2. استخدام البيانات: تُستخدم بياناتك حصرياً لمعالجة طلبات الأرقام الافتراضية، وتحديث حالة الطلب، وإرسال إشعارات أكواد التفعيل.
-                        3. حماية البيانات: يتم تخزين جميع البيانات بشكل مشفر عبر خوادم Supabase الآمنة، ولا نشارك أو نبيع بياناتك لأي طرف ثالث إطلاقاً.
-                        4. حذف الحساب: يمكنك طلب حذف حسابك وبياناتك في أي وقت عبر التواصل مع فريق الدعم.
-                    """.trimIndent()
+                    strings.privacyPolicy,
+                    "نستخدم بيانات الحساب الأساسية، وسجل الطلبات، وإيصال الدفع الذي تختار رفعه لمعالجة الطلب ومراجعته. لا تضع كلمات مرور حساباتك الخارجية أو مفاتيحك السرية في التطبيق. لطلب مساعدة تتعلق ببياناتك، تواصل مع الدعم."
                 ),
                 SupportSection(
-                    title = strings.termsOfUse,
-                    content = """
-                        باستخدامك لتطبيق Number1 فإنك توافق على الشروط التالية:
-                        1. الاستخدام المشروع: تُستخدم الأرقام الافتراضية لأغراض التفعيل المشروع للحسابات الشخصية والتجارية فقط، ويُحظر استخدامها في أي نشاط غير قانوني أو احتيالي.
-                        2. المراجعة اليدوية: تخضع طلبات الشراء والشحن للمراجعة اليدوية من قبل الإدارة لضمان دقة التحويلات، ويتم تنفيذ الطلبات خلال أوقات العمل بأسرع وقت ممكن.
-                        3. سياسة الاسترداد: في حال رفض الطلب أو عدم وصول رسالة التفعيل (SMS) خلال المدة المحددة، يتم حفظ أو استرداد قيمة الطلب إلى رصيد محفظتك داخل التطبيق.
-                        4. مسؤولية الحساب: التطبيق غير مسؤول عن حظر الحسابات الناتج عن مخالفة شروط المنصات الخارجية (مثل واتساب أو تيليجرام) بعد استلام الكود بنجاح.
-                    """.trimIndent()
+                    strings.termsOfUse,
+                    "الأسعار والكميات المعروضة تخص الخدمات المتاحة وقت عرضها وقد تتغير. لا يُعد الطلب مقبولاً نهائياً إلا بعد مراجعة الدفع وتأكيد الإدارة. استخدام الرقم لدى المنصات الخارجية يخضع لشروط تلك المنصات، ولا نضمن قبولها للرقم أو استمرار الحساب لديها."
                 ),
                 SupportSection(
-                    title = strings.faq,
-                    content = """
-                        • كم يستغرق تفعيل الطلب؟
-                        يتم مراجعة الطلبات يدوياً وتنفيذها عادةً خلال 5 إلى 15 دقيقة في أوقات الذروة.
-
-                        • ماذا يحدث إذا لم يصلني كود التفعيل؟
-                        لا تقلق، رصيدك محمي بالكامل؛ سيتم تعويضك برقم بديل أو استرداد المبلغ لمحفظتك.
-
-                        • كيف أتأكد من قبول إيصال الدفع؟
-                        يرجى رفع صورة واضحة للإيصال مع كتابة رقم المرجع إن وُجد، وستصلك إشعارات فورية فور المراجعة.
-                    """.trimIndent()
+                    strings.faq,
+                    "• متى يتم تأكيد الطلب؟\nيظهر تحديث حالة الطلب في تبويب «طلباتي» بعد مراجعة الإدارة.\n\n• هل الدفع متاح الآن؟\nالدفع غير مفعّل حالياً. لا تحوّل أي مبلغ حتى تظهر تعليمات الدفع الرسمية داخل التطبيق.\n\n• أين أجد رقم التفعيل؟\nعند إسناد رقم إلى طلبك، ستظهر بياناته وتحديثاته في تبويب «طلباتي»."
                 )
             )
         } else {
             listOf(
                 SupportSection(
-                    title = strings.privacyPolicy,
-                    content = "Number1 respects your privacy. We only collect account identifiers, order history, and payment receipts for manual verification. All data is securely stored on Supabase and never sold to third parties."
+                    strings.privacyPolicy,
+                    "We use basic account details, order history, and any payment receipt you choose to upload to process and review requests. Do not enter passwords for external accounts or secret keys in the app. Contact support for help with your account data."
                 ),
                 SupportSection(
-                    title = strings.termsOfUse,
-                    content = "Virtual numbers must be used for legitimate verification purposes only. Manual orders are reviewed promptly. If an SMS code is not delivered, your balance is protected and refunded to your in-app wallet."
+                    strings.termsOfUse,
+                    "Displayed prices and stock apply to the services shown at the time and may change. An order is not finally approved until payment is reviewed and the administrator confirms it. Use on third-party platforms is subject to their terms; acceptance of a number or continued account access is not guaranteed."
                 ),
                 SupportSection(
-                    title = strings.faq,
-                    content = "• Approval Time: Usually 5–15 minutes.\n• No SMS Received: Your wallet balance is automatically protected.\n• Payment Proof: Upload a clear receipt screenshot for faster approval."
+                    strings.faq,
+                    "• When is an order confirmed?\nOrder status updates appear in the Orders tab after administrator review.\n\n• Are payments available now?\nPayments are currently disabled. Do not transfer funds until official payment instructions appear in the app.\n\n• Where is my activation number?\nWhen a number is assigned to your order, its details and updates appear in the Orders tab."
                 )
             )
         }
@@ -122,12 +99,12 @@ fun SupportScreen(
             ) {
                 Icon(Icons.Default.Language, contentDescription = null)
                 Spacer(modifier = Modifier.padding(4.dp))
-                Text(text = strings.switchLanguage, fontWeight = FontWeight.Bold)
+                Text(strings.switchLanguage, fontWeight = FontWeight.Bold)
             }
         }
 
         items(sections) { section ->
-            var expanded by remember { mutableStateOf(false) }
+            var expanded by remember(section.title) { mutableStateOf(false) }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
