@@ -64,10 +64,15 @@ fun WalletScreen(
         } else {
             transactions.forEach { item ->
                 val credit = item.direction.equals("credit", true)
+                val transactionLabel = when (item.transactionType.lowercase()) {
+                    "purchase" -> if (ar) "شراء رقم" else "Number purchase"
+                    "deposit" -> if (ar) "شحن محفظة" else "Wallet deposit"
+                    else -> item.transactionType.replaceFirstChar { it.uppercase() }
+                }
                 Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(item.transactionType.replaceFirstChar { it.uppercase() }, fontWeight = FontWeight.Bold)
+                            Text(transactionLabel, fontWeight = FontWeight.Bold)
                             Text((if (credit) "+" else "−") + String.format("%.4f %s", item.amount, item.currency), color = if (credit) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                         }
                         Text(item.description ?: item.transactionType, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
