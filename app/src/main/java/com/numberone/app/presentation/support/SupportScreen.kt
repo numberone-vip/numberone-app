@@ -60,7 +60,7 @@ fun SupportScreen(
                 SupportSection(
                     title = strings.privacyPolicy,
                     content = """
-                        نلتزم في تطبيق Number1 بحماية خصوصيتك وأمان بياناتك الشخصية:
+                        نلتزم في تطبيق Number One بحماية خصوصيتك وأمان بياناتك الشخصية:
                         1. البيانات التي نجمعها: نجمع فقط البريد الإلكتروني أو معرف الحساب، وسجل الطلبات، وإيصالات الدفع المرفوعة لغرض التحقق اليدوي وتفعيل الخدمة.
                         2. استخدام البيانات: تُستخدم بياناتك حصرياً لمعالجة طلبات الأرقام الافتراضية، وتحديث حالة الطلب، وإرسال إشعارات أكواد التفعيل.
                         3. حماية البيانات: يتم تخزين جميع البيانات بشكل مشفر عبر خوادم Supabase الآمنة، ولا نشارك أو نبيع بياناتك لأي طرف ثالث إطلاقاً.
@@ -70,7 +70,7 @@ fun SupportScreen(
                 SupportSection(
                     title = strings.termsOfUse,
                     content = """
-                        باستخدامك لتطبيق Number1 فإنك توافق على الشروط التالية:
+                        باستخدامك لتطبيق Number One فإنك توافق على الشروط التالية:
                         1. الاستخدام المشروع: تُستخدم الأرقام الافتراضية لأغراض التفعيل المشروع للحسابات الشخصية والتجارية فقط، ويُحظر استخدامها في أي نشاط غير قانوني أو احتيالي.
                         2. المراجعة اليدوية: تخضع طلبات الشراء والشحن للمراجعة اليدوية من قبل الإدارة لضمان دقة التحويلات، ويتم تنفيذ الطلبات خلال أوقات العمل بأسرع وقت ممكن.
                         3. سياسة الاسترداد: في حال رفض الطلب أو عدم وصول رسالة التفعيل (SMS) خلال المدة المحددة، يتم حفظ أو استرداد قيمة الطلب إلى رصيد محفظتك داخل التطبيق.
@@ -81,7 +81,7 @@ fun SupportScreen(
                     title = strings.faq,
                     content = """
                         • كم يستغرق تفعيل الطلب؟
-                        يتم مراجعة الطلبات يدوياً وتنفيذها عادةً خلال 5 إلى 15 دقيقة في أوقات الذروة.
+                        تتم مراجعة الطلبات يدوياً حسب توفر الخدمة وحالة الدفع.
 
                         • ماذا يحدث إذا لم يصلني كود التفعيل؟
                         لا تقلق، رصيدك محمي بالكامل؛ سيتم تعويضك برقم بديل أو استرداد المبلغ لمحفظتك.
@@ -95,7 +95,7 @@ fun SupportScreen(
             listOf(
                 SupportSection(
                     title = strings.privacyPolicy,
-                    content = "Number1 respects your privacy. We only collect account identifiers, order history, and payment receipts for manual verification. All data is securely stored on Supabase and never sold to third parties."
+                    content = "Number One respects your privacy. We only collect account identifiers, order history, and payment receipts for manual verification. All data is securely stored on Supabase and never sold to third parties."
                 ),
                 SupportSection(
                     title = strings.termsOfUse,
@@ -103,7 +103,7 @@ fun SupportScreen(
                 ),
                 SupportSection(
                     title = strings.faq,
-                    content = "• Approval Time: Usually 5–15 minutes.\n• No SMS Received: Your wallet balance is automatically protected.\n• Payment Proof: Upload a clear receipt screenshot for faster approval."
+                    content = "• Approval Time: Orders are reviewed based on service availability and payment status.\n• No SMS Received: Your wallet balance is automatically protected.\n• Payment Proof: Upload a clear receipt screenshot for faster approval."
                 )
             )
         }
