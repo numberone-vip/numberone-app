@@ -46,6 +46,7 @@ import com.numberone.app.presentation.checkout.CheckoutScreen
 import com.numberone.app.presentation.orders.OrdersScreen
 import com.numberone.app.presentation.store.StoreScreen
 import com.numberone.app.presentation.support.SupportScreen
+import com.numberone.app.presentation.wallet.WalletTopUpDialog
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -74,6 +75,7 @@ class MainActivity : ComponentActivity() {
             var authMessage by remember { mutableStateOf<String?>(null) }
 
             var selectedTab by remember { mutableStateOf(0) }
+            var showTopUp by remember { mutableStateOf(false) }
             var checkoutService by remember { mutableStateOf<VirtualService?>(null) }
             var requestId by remember { mutableStateOf(UUID.randomUUID().toString()) }
             var purchaseBusy by remember { mutableStateOf(false) }
@@ -98,6 +100,9 @@ class MainActivity : ComponentActivity() {
                     .onFailure { error -> dataError = listOfNotNull(dataError, error.localizedMessage).joinToString("\n") }
                 ordersRepo.getMyOrders()
                     .onSuccess { orders = it }
+                    .onFailure { error -> dataError = listOfNotNull(dataError, error.localizedMessage).joinToString("\n") }
+                subscriptionsRepo.getMySubscriptions()
+                    .onSuccess { subscriptions = it }
                     .onFailure { error -> dataError = listOfNotNull(dataError, error.localizedMessage).joinToString("\n") }
                 loading = false
             }
@@ -258,9 +263,7 @@ class MainActivity : ComponentActivity() {
                                             requestId = UUID.randomUUID().toString()
                                             checkoutService = service
                                         },
-                                        onTopUpClick = {
-                                            Toast.makeText(context, "الشحن غير متاح حالياً لأن وسيلة الدفع غير مفعّلة.", Toast.LENGTH_LONG).show()
-                                        },
+                                        onTopUpClick = { showTopUp = true },
                                         modifier = contentModifier
                                     )
                                     1 -> MyNumbersScreen(items = subscriptions, modifier = contentModifier)
@@ -278,6 +281,17 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
+                        }
+                        if (showTopUp) {
+                            WalletTopUpDialog(
+                                repository = walletRepo,
+                                onDismiss = { showTopUp = false },
+                                onCredited = {
+                                    scope.launch {
+                                        walletRepo.getMyWalletSummary().onSuccess { walletBalance = it.balance }
+                                    }
+                                }
+                            )
                         }
                     }
                 }
