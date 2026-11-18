@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +56,8 @@ import com.numberone.app.data.auth.StaffAccessRole
 import com.numberone.app.domain.model.OrderStatus
 import com.numberone.app.domain.model.PurchaseRequest
 import com.numberone.app.domain.model.VirtualService
+import com.numberone.app.presentation.StoreViewModel
+import com.numberone.app.presentation.StoreUiState
 import com.numberone.app.presentation.checkout.CheckoutScreen
 import com.numberone.app.presentation.orders.OrdersScreen
 import com.numberone.app.presentation.store.StoreScreen
@@ -72,6 +75,8 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val authRepository = remember { AuthRepository() }
+            val storeViewModel = remember { StoreViewModel() }
+            val storeUiState by storeViewModel.uiState.collectAsState()
 
             var selectedTab by remember { mutableStateOf(0) }
             var selectedServiceForCheckout by remember { mutableStateOf<VirtualService?>(null) }
@@ -80,15 +85,6 @@ class MainActivity : ComponentActivity() {
             var adminPassword by remember { mutableStateOf("") }
             var authBusy by remember { mutableStateOf(false) }
             var authError by remember { mutableStateOf<String?>(null) }
-
-            val sampleServices = remember {
-                listOf(
-                    VirtualService("1", "WhatsApp", "الولايات المتحدة", "United States", "🇺🇸", 1.50, 98, true),
-                    VirtualService("2", "Telegram", "بريطانيا", "United Kingdom", "🇬🇧", 1.20, 96, true),
-                    VirtualService("3", "OpenAI", "كندا", "Canada", "🇨🇦", 2.00, 99, false),
-                    VirtualService("4", "Google", "ألمانيا", "Germany", "🇩🇪", 1.80, 95, false)
-                )
-            }
 
             val sampleOrders = remember {
                 listOf(
@@ -186,17 +182,37 @@ class MainActivity : ComponentActivity() {
                             )
                         } else {
                             when (selectedTab) {
-                                0 -> StoreScreen(
-                                    strings = strings,
-                                    language = language,
-                                    walletBalance = 15.00,
-                                    services = sampleServices,
-                                    onSelectService = { selectedServiceForCheckout = it },
-                                    onTopUpClick = {
-                                        Toast.makeText(context, strings.topUp, Toast.LENGTH_SHORT).show()
-                                    },
-                                    modifier = contentModifier
-                                )
+                                0 -> when (val state = storeUiState) {
+                                    StoreUiState.Loading -> Column(
+                                        modifier = contentModifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        CircularProgressIndicator()
+                                        Spacer(Modifier.height(12.dp))
+                                        Text(if (language == AppLanguage.ARABIC) "جارٍ تحميل الأرقام المتاحة..." else "Loading available numbers...")
+                                    }
+                                    is StoreUiState.Error -> Column(
+                                        modifier = contentModifier.fillMaxSize().padding(24.dp),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                                        Spacer(Modifier.height(12.dp))
+                                        Button(onClick = { storeViewModel.loadServices() }) {
+                                            Text(if (language == AppLanguage.ARABIC) "إعادة المحاولة" else "Try again")
+                                        }
+                                    }
+                                    is StoreUiState.Success -> StoreScreen(
+                                        strings = strings,
+                                        language = language,
+                                        walletBalance = 0.0,
+                                        services = state.services,
+                                        onSelectService = { selectedServiceForCheckout = it },
+                                        onTopUpClick = {},
+                                        modifier = contentModifier
+                                    )
+                                }
                                 1 -> OrdersScreen(
                                     orders = sampleOrders,
                                     strings = strings,
