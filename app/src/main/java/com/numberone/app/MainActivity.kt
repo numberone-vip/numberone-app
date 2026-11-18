@@ -169,6 +169,7 @@ class MainActivity : ComponentActivity() {
                                     selectedTab = 0
                                     storeViewModel.loadServices()
                                 },
+                                language = language,
                                 modifier = contentModifier
                             )
                         } else if (checkoutService != null) {
