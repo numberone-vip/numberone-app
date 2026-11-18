@@ -110,6 +110,17 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 actions = {
+                                    TextButton(
+                                        onClick = {
+                                            language = if (language == AppLanguage.ARABIC) {
+                                                AppLanguage.ENGLISH
+                                            } else {
+                                                AppLanguage.ARABIC
+                                            }
+                                        }
+                                    ) {
+                                        Text(strings.switchLanguage)
+                                    }
                                     if (customerUserId != null && selectedTab != 3) {
                                         TextButton(
                                             onClick = {
@@ -123,7 +134,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         ) {
-                                            Text("خروج")
+                                            Text(if (language == AppLanguage.ARABIC) "خروج" else "Sign out")
                                         }
                                     }
                                 }
@@ -182,11 +193,7 @@ class MainActivity : ComponentActivity() {
                                 service = checkoutService,
                                 strings = strings,
                                 language = language,
-                                onSubmitOrder = { _, _ ->
-                                    Toast.makeText(context, strings.statusPending, Toast.LENGTH_SHORT).show()
-                                    selectedServiceForCheckout = null
-                                    selectedTab = 1
-                                },
+                                onCancel = { selectedServiceForCheckout = null },
                                 modifier = contentModifier
                             )
                         } else {
@@ -260,7 +267,12 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     onContactClick = {
-                                        Toast.makeText(context, strings.contactSupport, Toast.LENGTH_SHORT).show()
+                                        val message = if (language == AppLanguage.ARABIC) {
+                                            "لم يتم إعداد رابط الدعم داخل التطبيق بعد."
+                                        } else {
+                                            "A support contact link has not been configured in the app yet."
+                                        }
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                     },
                                     modifier = contentModifier
                                 )
@@ -277,6 +289,12 @@ class MainActivity : ComponentActivity() {
                                                 scope.launch {
                                                     authBusy = true
                                                     authError = null
+                                                    // Avoid carrying a customer's UI state into an administrator session.
+                                                    if (customerUserId != null) {
+                                                        runCatching { authRepository.signOutCustomer() }
+                                                        customerUserId = null
+                                                        selectedServiceForCheckout = null
+                                                    }
                                                     authRepository.signInForAdmin(adminEmail, adminPassword)
                                                         .onSuccess { role -> adminRole = role }
                                                         .onFailure { error ->
@@ -297,6 +315,7 @@ class MainActivity : ComponentActivity() {
                                                     runCatching { authRepository.signOut() }
                                                     adminRole = null
                                                     adminPassword = ""
+                                                    customerUserId = null
                                                     selectedTab = 0
                                                     authBusy = false
                                                 }
