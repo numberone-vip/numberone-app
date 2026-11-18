@@ -211,7 +211,7 @@ class MainActivity : ComponentActivity() {
                                                 scope.launch { subscriptionsRepo.getMySubscriptions().onSuccess { subscriptions = it } }
                                             },
                                             icon = { Icon(Icons.Default.Storefront, contentDescription = null) },
-                                            label = { Text("أرقامي") }
+                                            label = { Text(if (language == AppLanguage.ARABIC) "أرقامي" else "My numbers") }
                                         )
                                         NavigationBarItem(
                                             selected = selectedTab == 3,
