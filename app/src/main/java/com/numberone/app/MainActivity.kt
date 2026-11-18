@@ -35,6 +35,8 @@ import com.numberone.app.core.localization.AppStrings
 import com.numberone.app.core.theme.NumberOneTheme
 import com.numberone.app.data.auth.AuthRepository
 import com.numberone.app.data.repository.OrdersRepository
+import com.numberone.app.data.repository.SubscriptionsRepository
+import com.numberone.app.presentation.subscriptions.MyNumbersScreen
 import com.numberone.app.data.repository.ServicesRepository
 import com.numberone.app.data.repository.WalletRepository
 import com.numberone.app.domain.model.PurchaseRequest
@@ -61,6 +63,7 @@ class MainActivity : ComponentActivity() {
             val servicesRepo = remember { ServicesRepository() }
             val walletRepo = remember { WalletRepository() }
             val ordersRepo = remember { OrdersRepository() }
+            val subscriptionsRepo = remember { SubscriptionsRepository() }
 
             var userId by remember { mutableStateOf(auth.currentUserId()) }
             var email by remember { mutableStateOf("") }
@@ -79,6 +82,7 @@ class MainActivity : ComponentActivity() {
             var liveServices by remember { mutableStateOf(emptyList<VirtualService>()) }
             var walletBalance by remember { mutableStateOf<Double?>(null) }
             var orders by remember { mutableStateOf(emptyList<PurchaseRequest>()) }
+            var subscriptions by remember { mutableStateOf(emptyList<com.numberone.app.data.repository.CustomerSubscription>()) }
             var loading by remember { mutableStateOf(false) }
             var dataError by remember { mutableStateOf<String?>(null) }
 
@@ -104,6 +108,7 @@ class MainActivity : ComponentActivity() {
                     liveServices = emptyList()
                     walletBalance = null
                     orders = emptyList()
+                    subscriptions = emptyList()
                 }
             }
 
@@ -182,14 +187,23 @@ class MainActivity : ComponentActivity() {
                                             selected = selectedTab == 1,
                                             onClick = {
                                                 selectedTab = 1
+                                                scope.launch { subscriptionsRepo.getMySubscriptions().onSuccess { subscriptions = it } }
+                                            },
+                                            icon = { Icon(Icons.Default.Storefront, contentDescription = null) },
+                                            label = { Text("أرقامي") }
+                                        )
+                                        NavigationBarItem(
+                                            selected = selectedTab == 2,
+                                            onClick = {
+                                                selectedTab = 2
                                                 scope.launch { ordersRepo.getMyOrders().onSuccess { orders = it } }
                                             },
                                             icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
                                             label = { Text(strings.navOrders) }
                                         )
                                         NavigationBarItem(
-                                            selected = selectedTab == 2,
-                                            onClick = { selectedTab = 2 },
+                                            selected = selectedTab == 3,
+                                            onClick = { selectedTab = 3 },
                                             icon = { Icon(Icons.Default.SupportAgent, contentDescription = null) },
                                             label = { Text(strings.navSupport) }
                                         )
@@ -214,7 +228,7 @@ class MainActivity : ComponentActivity() {
                                                 .onSuccess { result ->
                                                     walletBalance = result.balanceAfter
                                                     checkoutService = null
-                                                    selectedTab = 1
+                                                    selectedTab = 2
                                                     requestId = UUID.randomUUID().toString()
                                                     refreshCustomerData()
                                                     Toast.makeText(context, "تم إرسال طلبك للمراجعة", Toast.LENGTH_LONG).show()
@@ -249,7 +263,8 @@ class MainActivity : ComponentActivity() {
                                         },
                                         modifier = contentModifier
                                     )
-                                    1 -> OrdersScreen(orders = orders, strings = strings, modifier = contentModifier)
+                                    1 -> MyNumbersScreen(items = subscriptions, modifier = contentModifier)
+                                    2 -> OrdersScreen(orders = orders, strings = strings, modifier = contentModifier)
                                     else -> SupportScreen(
                                         strings = strings,
                                         language = language,
