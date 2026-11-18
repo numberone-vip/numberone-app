@@ -22,7 +22,7 @@ val hasValidSigningProps = keystorePropsFile.isFile &&
 
 android {
     namespace = "com.numberone.app"  
-    compileSdk = 36    
+    compileSdk = 37    
     lint {
     }
         
