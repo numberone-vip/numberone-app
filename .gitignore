@@ -1,0 +1,17 @@
+.gradle/
+.idea/
+build/
+**/build/
+local.properties
+*.keystore
+*.jks
+.cg/
+*.log
+*.zip
+*.bak
+*.before_aapt2
+*.before_slf4j
+release.properties
+error.txt
+PROJECT_LOG.*
+A_UPGRADE_WORK/
