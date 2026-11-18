@@ -263,13 +263,15 @@ class MainActivity : ComponentActivity() {
                                     language = language,
                                     walletBalance = walletBalance,
                                     services = liveServices,
+                                    isLoading = dataLoading,
+                                    dataError = dataError,
                                     onSelectService = { service ->
                                         purchaseError = null
                                         purchaseRequestId = UUID.randomUUID().toString()
                                         selectedServiceForCheckout = service
                                     },
                                     onTopUpClick = {
-                                        Toast.makeText(context, strings.topUp, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "ميزة شحن المحفظة لم تُفعّل بعد.", Toast.LENGTH_SHORT).show()
                                     },
                                     modifier = contentModifier
                                 )
