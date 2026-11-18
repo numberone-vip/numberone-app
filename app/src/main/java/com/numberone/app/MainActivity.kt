@@ -53,8 +53,6 @@ import com.numberone.app.core.localization.AppStrings
 import com.numberone.app.core.theme.NumberOneTheme
 import com.numberone.app.data.auth.AuthRepository
 import com.numberone.app.data.auth.StaffAccessRole
-import com.numberone.app.domain.model.OrderStatus
-import com.numberone.app.domain.model.PurchaseRequest
 import com.numberone.app.domain.model.VirtualService
 import com.numberone.app.presentation.StoreViewModel
 import com.numberone.app.presentation.StoreUiState
@@ -85,31 +83,6 @@ class MainActivity : ComponentActivity() {
             var adminPassword by remember { mutableStateOf("") }
             var authBusy by remember { mutableStateOf(false) }
             var authError by remember { mutableStateOf<String?>(null) }
-
-            val sampleOrders = remember {
-                listOf(
-                    PurchaseRequest(
-                        id = "ord_1",
-                        userId = "usr_1",
-                        serviceName = "WhatsApp",
-                        countryName = "🇺🇸 USA",
-                        amountUsd = 1.50,
-                        status = OrderStatus.SMS_READY,
-                        assignedNumber = "+1 555 019 2834",
-                        otpCode = "482-910",
-                        createdAt = "2026-11-14"
-                    ),
-                    PurchaseRequest(
-                        id = "ord_2",
-                        userId = "usr_1",
-                        serviceName = "Telegram",
-                        countryName = "🇬🇧 UK",
-                        amountUsd = 1.20,
-                        status = OrderStatus.PENDING,
-                        createdAt = "2026-11-14"
-                    )
-                )
-            }
 
             NumberOneTheme {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
@@ -214,7 +187,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 1 -> OrdersScreen(
-                                    orders = sampleOrders,
+                                    orders = emptyList(),
                                     strings = strings,
                                     modifier = contentModifier
                                 )
