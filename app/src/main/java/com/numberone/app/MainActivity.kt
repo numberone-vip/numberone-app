@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,8 +53,8 @@ import com.numberone.app.core.localization.AppStrings
 import com.numberone.app.core.theme.NumberOneTheme
 import com.numberone.app.data.auth.AuthRepository
 import com.numberone.app.data.auth.StaffAccessRole
-import com.numberone.app.domain.model.OrderStatus
-import com.numberone.app.domain.model.PurchaseRequest
+import com.numberone.app.data.repository.ServicesRepository
+import com.numberone.app.data.repository.WalletRepository
 import com.numberone.app.domain.model.VirtualService
 import com.numberone.app.presentation.checkout.CheckoutScreen
 import com.numberone.app.presentation.auth.CustomerAuthScreen
@@ -61,6 +62,7 @@ import com.numberone.app.presentation.orders.OrdersScreen
 import com.numberone.app.presentation.store.StoreScreen
 import com.numberone.app.presentation.support.SupportScreen
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +75,8 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val authRepository = remember { AuthRepository() }
+            val servicesRepository = remember { ServicesRepository() }
+            val walletRepository = remember { WalletRepository() }
 
             var selectedTab by remember { mutableStateOf(0) }
             var selectedServiceForCheckout by remember { mutableStateOf<VirtualService?>(null) }
@@ -87,39 +91,32 @@ class MainActivity : ComponentActivity() {
             var customerIsSignUp by remember { mutableStateOf(false) }
             var customerAuthError by remember { mutableStateOf<String?>(null) }
             var customerAuthMessage by remember { mutableStateOf<String?>(null) }
+            var liveServices by remember { mutableStateOf(emptyList<VirtualService>()) }
+            var walletBalance by remember { mutableStateOf<Double?>(null) }
+            var dataLoading by remember { mutableStateOf(false) }
+            var dataError by remember { mutableStateOf<String?>(null) }
+            var purchaseLoading by remember { mutableStateOf(false) }
+            var purchaseError by remember { mutableStateOf<String?>(null) }
+            var purchaseRequestId by remember { mutableStateOf(UUID.randomUUID().toString()) }
 
-            val sampleServices = remember {
-                listOf(
-                    VirtualService("1", "WhatsApp", "الولايات المتحدة", "United States", "🇺🇸", 1.50, 98, true),
-                    VirtualService("2", "Telegram", "بريطانيا", "United Kingdom", "🇬🇧", 1.20, 96, true),
-                    VirtualService("3", "OpenAI", "كندا", "Canada", "🇨🇦", 2.00, 99, false),
-                    VirtualService("4", "Google", "ألمانيا", "Germany", "🇩🇪", 1.80, 95, false)
-                )
-            }
-
-            val sampleOrders = remember {
-                listOf(
-                    PurchaseRequest(
-                        id = "ord_1",
-                        userId = "usr_1",
-                        serviceName = "WhatsApp",
-                        countryName = "🇺🇸 USA",
-                        amountUsd = 1.50,
-                        status = OrderStatus.SMS_READY,
-                        assignedNumber = "+1 555 019 2834",
-                        otpCode = "482-910",
-                        createdAt = "2026-11-14"
-                    ),
-                    PurchaseRequest(
-                        id = "ord_2",
-                        userId = "usr_1",
-                        serviceName = "Telegram",
-                        countryName = "🇬🇧 UK",
-                        amountUsd = 1.20,
-                        status = OrderStatus.PENDING,
-                        createdAt = "2026-11-14"
-                    )
-                )
+            LaunchedEffect(customerUserId) {
+                if (customerUserId != null) {
+                    dataLoading = true
+                    dataError = null
+                    val serviceResult = servicesRepository.getAvailableServices()
+                    serviceResult.onSuccess { liveServices = it }
+                        .onFailure { dataError = it.localizedMessage ?: "تعذر تحميل الخدمات." }
+                    walletRepository.getMyWalletSummary()
+                        .onSuccess { walletBalance = it.balance }
+                        .onFailure { error ->
+                            walletBalance = null
+                            dataError = listOfNotNull(dataError, error.localizedMessage ?: "تعذر تحميل رصيد المحفظة.").joinToString("\\n")
+                        }
+                    dataLoading = false
+                } else {
+                    liveServices = emptyList()
+                    walletBalance = null
+                }
             }
 
             NumberOneTheme {
@@ -230,10 +227,32 @@ class MainActivity : ComponentActivity() {
                                 service = checkoutService,
                                 strings = strings,
                                 language = language,
-                                onSubmitOrder = { _, _ ->
-                                    Toast.makeText(context, strings.statusPending, Toast.LENGTH_SHORT).show()
+                                loading = purchaseLoading,
+                                error = purchaseError,
+                                onConfirmWalletPurchase = {
+                                    scope.launch {
+                                        purchaseLoading = true
+                                        purchaseError = null
+                                        walletRepository.purchaseFromWallet(
+                                            serviceId = checkoutService.id,
+                                            requestId = purchaseRequestId
+                                        ).onSuccess { order ->
+                                            walletBalance = order.balanceAfter
+                                            selectedServiceForCheckout = null
+                                            selectedTab = 1
+                                            purchaseRequestId = UUID.randomUUID().toString()
+                                            servicesRepository.getAvailableServices().onSuccess { liveServices = it }
+                                            Toast.makeText(context, "تم إنشاء الطلب بنجاح", Toast.LENGTH_LONG).show()
+                                        }.onFailure { error ->
+                                            purchaseError = error.localizedMessage ?: "تعذر تنفيذ الشراء."
+                                        }
+                                        purchaseLoading = false
+                                    }
+                                },
+                                onCancel = {
                                     selectedServiceForCheckout = null
-                                    selectedTab = 1
+                                    purchaseError = null
+                                    purchaseRequestId = UUID.randomUUID().toString()
                                 },
                                 modifier = contentModifier
                             )
@@ -242,16 +261,20 @@ class MainActivity : ComponentActivity() {
                                 0 -> StoreScreen(
                                     strings = strings,
                                     language = language,
-                                    walletBalance = 15.00,
-                                    services = sampleServices,
-                                    onSelectService = { selectedServiceForCheckout = it },
+                                    walletBalance = walletBalance,
+                                    services = liveServices,
+                                    onSelectService = { service ->
+                                        purchaseError = null
+                                        purchaseRequestId = UUID.randomUUID().toString()
+                                        selectedServiceForCheckout = service
+                                    },
                                     onTopUpClick = {
                                         Toast.makeText(context, strings.topUp, Toast.LENGTH_SHORT).show()
                                     },
                                     modifier = contentModifier
                                 )
                                 1 -> OrdersScreen(
-                                    orders = sampleOrders,
+                                    orders = emptyList(),
                                     strings = strings,
                                     modifier = contentModifier
                                 )
