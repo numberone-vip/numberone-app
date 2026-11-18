@@ -29,12 +29,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.numberone.app.data.auth.AuthRepository
+import com.numberone.app.core.localization.AppLanguage
 import kotlinx.coroutines.launch
 
 @Composable
 fun CustomerAuthScreen(
     authRepository: AuthRepository,
     onAuthenticated: (String) -> Unit,
+    language: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     var isRegisterMode by remember { mutableStateOf(false) }
@@ -44,6 +46,7 @@ fun CustomerAuthScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val isArabic = language == AppLanguage.ARABIC
 
     Column(
         modifier = modifier
@@ -75,15 +78,15 @@ fun CustomerAuthScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = if (isRegisterMode) "إنشاء حساب زبون" else "تسجيل دخول الزبون",
+                    text = if (isRegisterMode) if (isArabic) "إنشاء حساب زبون" else "Create customer account" else if (isArabic) "تسجيل دخول الزبون" else "Customer sign in",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = if (isRegisterMode)
-                        "أنشئ حساباً بالبريد الإلكتروني وكلمة المرور لمتابعة طلباتك."
+                        if (isArabic) "أنشئ حساباً بالبريد الإلكتروني وكلمة المرور لمتابعة طلباتك." else "Create an account with your email and password to manage your orders."
                     else
-                        "سجّل الدخول للوصول إلى المتجر وطلباتك واشتراكاتك.",
+                        if (isArabic) "سجّل الدخول للوصول إلى المتجر وطلباتك واشتراكاتك." else "Sign in to access the store, orders, and subscriptions.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -96,7 +99,7 @@ fun CustomerAuthScreen(
                         message = null
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("البريد الإلكتروني") },
+                    label = { Text(if (isArabic) "البريد الإلكتروني" else "Email address") },
                     singleLine = true,
                     enabled = !busy
                 )
@@ -108,7 +111,7 @@ fun CustomerAuthScreen(
                         message = null
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("كلمة المرور") },
+                    label = { Text(if (isArabic) "كلمة المرور" else "Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     enabled = !busy
@@ -133,17 +136,17 @@ fun CustomerAuthScreen(
                                         if (signedIn) {
                                             val userId = authRepository.currentCustomerUserId()
                                             if (userId != null) onAuthenticated(userId)
-                                            else error = "تعذر قراءة حسابك بعد إنشاء الحساب."
+                                            else error = if (isArabic) "تعذر قراءة حسابك بعد إنشاء الحساب." else "Could not load your account after registration."
                                         } else {
-                                            message = "تم إنشاء الحساب. افتح بريدك الإلكتروني وأكّد الحساب، ثم سجّل الدخول."
+                                            message = if (isArabic) "تم إنشاء الحساب. افتح بريدك الإلكتروني وأكّد الحساب، ثم سجّل الدخول." else "Account created. Check your inbox to confirm your email, then sign in."
                                             isRegisterMode = false
                                         }
                                     }
-                                    .onFailure { error = it.localizedMessage ?: "تعذر إنشاء الحساب." }
+                                    .onFailure { error = it.localizedMessage ?: if (isArabic) "تعذر إنشاء الحساب." else "Could not create account." }
                             } else {
                                 authRepository.signInCustomer(email, password)
                                     .onSuccess { userId -> onAuthenticated(userId) }
-                                    .onFailure { error = it.localizedMessage ?: "تعذر تسجيل الدخول." }
+                                    .onFailure { error = it.localizedMessage ?: if (isArabic) "تعذر تسجيل الدخول." else "Could not sign in." }
                             }
                             busy = false
                         }
@@ -154,7 +157,7 @@ fun CustomerAuthScreen(
                     if (busy) CircularProgressIndicator(
                         modifier = Modifier.height(20.dp),
                         strokeWidth = 2.dp
-                    ) else Text(if (isRegisterMode) "إنشاء الحساب" else "تسجيل الدخول")
+                    ) else Text(if (isRegisterMode) if (isArabic) "إنشاء الحساب" else "Create account" else if (isArabic) "تسجيل الدخول" else "Sign in")
                 }
 
                 if (!isRegisterMode) {
@@ -165,15 +168,15 @@ fun CustomerAuthScreen(
                                 error = null
                                 message = null
                                 authRepository.sendCustomerPasswordReset(email)
-                                    .onSuccess { message = "إذا كان البريد مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور." }
-                                    .onFailure { error = it.localizedMessage ?: "تعذر إرسال رسالة الاستعادة." }
+                                    .onSuccess { message = if (isArabic) "إذا كان البريد مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور." else "If the email is registered, a password reset message will be sent." }
+                                    .onFailure { error = it.localizedMessage ?: if (isArabic) "تعذر إرسال رسالة الاستعادة." else "Could not send the recovery email." }
                                 busy = false
                             }
                         },
                         enabled = !busy && email.isNotBlank(),
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
-                        Text("نسيت كلمة المرور؟")
+                        Text(if (isArabic) "نسيت كلمة المرور؟" else "Forgot password?")
                     }
                 }
 
@@ -187,8 +190,8 @@ fun CustomerAuthScreen(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text(
-                        if (isRegisterMode) "لديك حساب؟ سجّل الدخول"
-                        else "ليس لديك حساب؟ أنشئ حساباً جديداً"
+                        if (isRegisterMode) if (isArabic) "لديك حساب؟ سجّل الدخول" else "Already have an account? Sign in"
+                        else if (isArabic) "ليس لديك حساب؟ أنشئ حساباً جديداً" else "New here? Create an account"
                     )
                 }
             }
