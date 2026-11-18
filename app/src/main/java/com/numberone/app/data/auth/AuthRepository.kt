@@ -69,6 +69,34 @@ class AuthRepository {
     fun currentCustomerUserId(): String? =
         client.gotrue.currentSessionOrNull()?.user?.id
 
+    /**
+     * Restores the correct destination when an existing Supabase session belongs to staff.
+     * A persisted administrator session must not be mistaken for a customer session.
+     */
+    suspend fun currentStaffAccessRole(): StaffAccessRole? =
+        withContext(Dispatchers.IO) {
+            val userId = client.gotrue.currentSessionOrNull()?.user?.id
+                ?: return@withContext null
+
+            val adminRows = client.postgrest["admin_users"]
+                .select { eq("user_id", userId) }
+                .decodeList<JsonObject>()
+
+            if (adminRows.isNotEmpty()) {
+                return@withContext StaffAccessRole.ADMIN
+            }
+
+            val staffRows = client.postgrest["staff_members"]
+                .select { eq("user_id", userId) }
+                .decodeList<JsonObject>()
+
+            val activeStaff = staffRows.firstOrNull { row ->
+                row["is_active"]?.jsonPrimitive?.booleanOrNull == true
+            }
+
+            if (activeStaff != null) StaffAccessRole.STAFF else null
+        }
+
     suspend fun signInCustomer(email: String, password: String): Result<String> =
         withContext(Dispatchers.IO) {
             runCatching {
