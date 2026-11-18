@@ -56,6 +56,7 @@ import com.numberone.app.domain.model.OrderStatus
 import com.numberone.app.domain.model.PurchaseRequest
 import com.numberone.app.domain.model.VirtualService
 import com.numberone.app.presentation.checkout.CheckoutScreen
+import com.numberone.app.presentation.auth.CustomerAuthScreen
 import com.numberone.app.presentation.orders.OrdersScreen
 import com.numberone.app.presentation.store.StoreScreen
 import com.numberone.app.presentation.support.SupportScreen
@@ -80,6 +81,12 @@ class MainActivity : ComponentActivity() {
             var adminPassword by remember { mutableStateOf("") }
             var authBusy by remember { mutableStateOf(false) }
             var authError by remember { mutableStateOf<String?>(null) }
+            var customerUserId by remember { mutableStateOf(authRepository.currentUserId()) }
+            var customerEmail by remember { mutableStateOf("") }
+            var customerPassword by remember { mutableStateOf("") }
+            var customerIsSignUp by remember { mutableStateOf(false) }
+            var customerAuthError by remember { mutableStateOf<String?>(null) }
+            var customerAuthMessage by remember { mutableStateOf<String?>(null) }
 
             val sampleServices = remember {
                 listOf(
@@ -117,6 +124,52 @@ class MainActivity : ComponentActivity() {
 
             NumberOneTheme {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                    if (customerUserId == null) {
+                        CustomerAuthScreen(
+                            email = customerEmail,
+                            password = customerPassword,
+                            isSignUp = customerIsSignUp,
+                            loading = authBusy,
+                            error = customerAuthError,
+                            message = customerAuthMessage,
+                            onEmailChange = { customerEmail = it; customerAuthError = null },
+                            onPasswordChange = { customerPassword = it; customerAuthError = null },
+                            onToggleMode = {
+                                customerIsSignUp = !customerIsSignUp
+                                customerAuthError = null
+                                customerAuthMessage = null
+                            },
+                            onSubmit = {
+                                scope.launch {
+                                    authBusy = true
+                                    customerAuthError = null
+                                    customerAuthMessage = null
+                                    if (customerIsSignUp) {
+                                        authRepository.signUpForCustomer(customerEmail, customerPassword)
+                                            .onSuccess { hasSession ->
+                                                if (hasSession) {
+                                                    customerUserId = authRepository.currentUserId()
+                                                    customerPassword = ""
+                                                } else {
+                                                    customerAuthMessage = "تم إنشاء الحساب. افتح بريدك الإلكتروني وأكّد الحساب، ثم سجّل الدخول."
+                                                    customerIsSignUp = false
+                                                    customerPassword = ""
+                                                }
+                                            }
+                                            .onFailure { e -> customerAuthError = e.localizedMessage ?: "تعذر إنشاء الحساب." }
+                                    } else {
+                                        authRepository.signInForCustomer(customerEmail, customerPassword)
+                                            .onSuccess {
+                                                customerUserId = authRepository.currentUserId()
+                                                customerPassword = ""
+                                            }
+                                            .onFailure { e -> customerAuthError = e.localizedMessage ?: "تعذر تسجيل الدخول." }
+                                    }
+                                    authBusy = false
+                                }
+                            }
+                        )
+                    } else {
                     Scaffold(
                         topBar = {
                             TopAppBar(
@@ -249,6 +302,7 @@ class MainActivity : ComponentActivity() {
                                                     authBusy = true
                                                     runCatching { authRepository.signOut() }
                                                     adminRole = null
+                                                    customerUserId = null
                                                     adminPassword = ""
                                                     selectedTab = 0
                                                     authBusy = false
@@ -260,6 +314,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                    }
                     }
                 }
             }
