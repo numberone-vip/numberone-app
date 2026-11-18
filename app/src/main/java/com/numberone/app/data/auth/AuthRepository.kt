@@ -62,7 +62,7 @@ class AuthRepository {
                     ?: error("تعذر قراءة جلسة تسجيل الدخول.")
 
                 val adminRows = client.postgrest["admin_users"]
-                    .select { eq("user_id", userId) }
+                    .select { filter { eq("user_id", userId) } }
                     .decodeList<JsonObject>()
 
                 if (adminRows.isNotEmpty()) {
