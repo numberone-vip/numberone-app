@@ -44,6 +44,7 @@ fun ServiceDto.toDomain(): VirtualService {
         countryFlag = resolvedFlag,
         priceUsd = priceUsd ?: price,
         successRate = successRate,
-        isPopular = isPopular
+        isPopular = isPopular,
+        availableCount = availableCount
     )
 }
