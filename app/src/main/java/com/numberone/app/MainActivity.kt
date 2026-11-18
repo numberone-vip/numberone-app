@@ -55,6 +55,7 @@ import com.numberone.app.data.auth.AuthRepository
 import com.numberone.app.data.auth.StaffAccessRole
 import com.numberone.app.domain.model.VirtualService
 import com.numberone.app.presentation.StoreViewModel
+import com.numberone.app.presentation.auth.CustomerAuthScreen
 import com.numberone.app.presentation.StoreUiState
 import com.numberone.app.presentation.checkout.CheckoutScreen
 import com.numberone.app.presentation.orders.OrdersScreen
@@ -77,6 +78,7 @@ class MainActivity : ComponentActivity() {
             val storeUiState by storeViewModel.uiState.collectAsState()
 
             var selectedTab by remember { mutableStateOf(0) }
+            var customerUserId by remember { mutableStateOf(authRepository.currentCustomerUserId()) }
             var selectedServiceForCheckout by remember { mutableStateOf<VirtualService?>(null) }
             var adminRole by remember { mutableStateOf<StaffAccessRole?>(null) }
             var adminEmail by remember { mutableStateOf("") }
@@ -101,6 +103,24 @@ class MainActivity : ComponentActivity() {
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
+                                    }
+                                },
+                                actions = {
+                                    if (customerUserId != null && selectedTab != 3) {
+                                        TextButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    authBusy = true
+                                                    runCatching { authRepository.signOutCustomer() }
+                                                    customerUserId = null
+                                                    selectedServiceForCheckout = null
+                                                    selectedTab = 0
+                                                    authBusy = false
+                                                }
+                                            }
+                                        ) {
+                                            Text("خروج")
+                                        }
                                     }
                                 }
                             )
@@ -141,7 +161,17 @@ class MainActivity : ComponentActivity() {
                     ) { innerPadding ->
                         val contentModifier = Modifier.padding(innerPadding)
                         val checkoutService = selectedServiceForCheckout
-                        if (checkoutService != null) {
+                        if (selectedTab != 3 && customerUserId == null) {
+                            CustomerAuthScreen(
+                                authRepository = authRepository,
+                                onAuthenticated = { userId ->
+                                    customerUserId = userId
+                                    selectedTab = 0
+                                    storeViewModel.loadServices()
+                                },
+                                modifier = contentModifier
+                            )
+                        } else if (checkoutService != null) {
                             CheckoutScreen(
                                 service = checkoutService,
                                 strings = strings,
