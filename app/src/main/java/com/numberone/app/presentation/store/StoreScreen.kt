@@ -210,7 +210,9 @@ fun StoreScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onSelectService(service) },
+                    .clickable(enabled = service.availableCount > 0) {
+                        onSelectService(service)
+                    },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
