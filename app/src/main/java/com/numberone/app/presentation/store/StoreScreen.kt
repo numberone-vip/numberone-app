@@ -3,40 +3,16 @@ package com.numberone.app.presentation.store
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,11 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.numberone.app.core.localization.AppLanguage
 import com.numberone.app.core.localization.Strings
-import com.numberone.app.core.theme.StatusApproved
-import com.numberone.app.core.theme.TealAccent
 import com.numberone.app.domain.model.VirtualService
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StoreScreen(
     strings: Strings,
@@ -62,194 +35,119 @@ fun StoreScreen(
     onTopUpClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedApp by remember { mutableStateOf<String?>(null) }
-
-    val apps = listOf("WhatsApp", "Telegram", "OpenAI", "Google", "TikTok")
-    val filteredServices = services.filter { service ->
-        val matchesApp = selectedApp == null || service.appName.equals(selectedApp, ignoreCase = true)
-        val matchesSearch = searchQuery.isBlank() ||
-            service.appName.contains(searchQuery, ignoreCase = true) ||
-            service.countryNameAr.contains(searchQuery, ignoreCase = true) ||
-            service.countryNameEn.contains(searchQuery, ignoreCase = true)
-        matchesApp && matchesSearch
+    var search by remember { mutableStateOf("") }
+    var country by remember { mutableStateOf<String?>(null) }
+    val countries = services.map { if (language == AppLanguage.ARABIC) it.countryNameAr else it.countryNameEn }.distinct().sorted()
+    val filtered = services.filter { service ->
+        val name = if (language == AppLanguage.ARABIC) service.countryNameAr else service.countryNameEn
+        (country == null || name == country) &&
+            (search.isBlank() || service.appName.contains(search, true) || name.contains(search, true))
     }
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        if (isLoading) {
-            item { Text("جارٍ تحميل بيانات المتجر والمحفظة…", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        }
-        if (dataError != null) {
-            item { Text(dataError, color = MaterialTheme.colorScheme.error) }
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(StatusApproved.copy(alpha = 0.12f))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(StatusApproved)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = strings.adminOnlineStatus,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = StatusApproved,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = strings.walletBalance,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                        )
-                        Text(
-                            text = walletBalance?.let { "${String.format("%.2f", it)} USDT" } ?: "—",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Button(
-                        onClick = onTopUpClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = TealAccent),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(text = strings.topUp, color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-
-        item {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(strings.searchHint) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true
-            )
-        }
-
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    FilterChip(
-                        selected = selectedApp == null,
-                        onClick = { selectedApp = null },
-                        label = { Text(strings.filterAll) }
-                    )
-                }
-                items(apps) { app ->
-                    FilterChip(
-                        selected = selectedApp == app,
-                        onClick = { selectedApp = if (selectedApp == app) null else app },
-                        label = { Text(app) }
-                    )
-                }
-            }
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(TealAccent.copy(alpha = 0.1f))
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = TealAccent)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = strings.guaranteeBadge,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-        }
-
-        if (filteredServices.isEmpty()) {
-            item {
-                Text(
-                    text = if (services.isEmpty()) "لا توجد خدمات متاحة حالياً أو تعذر تحميلها." else "لا توجد نتائج مطابقة للبحث.",
-                    modifier = Modifier.fillMaxWidth().padding(20.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        items(filteredServices, key = { it.id }) { service ->
-            val countryName = if (language == AppLanguage.ARABIC) service.countryNameAr else service.countryNameEn
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelectService(service) },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = service.countryFlag, style = MaterialTheme.typography.headlineMedium)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "${service.appName} • $countryName",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "${service.successRate}% Success",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = StatusApproved
-                            )
-                        }
-                    }
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("NUMBER ONE  /  GLOBAL CONNECTIVITY", color = Color(0xFF8FE6DC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "$${String.format("%.2f", service.priceUsd)}",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TealAccent,
-                        fontWeight = FontWeight.Bold
+                        if (language == AppLanguage.ARABIC) "أرقامك. تحكّمك." else "Your numbers.\nYour control.",
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold
                     )
+                    Text(
+                        if (language == AppLanguage.ARABIC) "اختر الخدمة والدولة واطلب رقمك الافتراضي بخطوات واضحة." else "Choose a service and country, then order your virtual number in a few clear steps.",
+                        color = Color.White.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+        item {
+            Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                Row(Modifier.fillMaxWidth().padding(17.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(strings.walletBalance, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                        Text(walletBalance?.let { String.format("%.2f USDT", it) } ?: "—", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    }
+                    Button(onClick = onTopUpClick, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+                        Text(strings.topUp, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+        item {
+            OutlinedTextField(value = search, onValueChange = { search = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text(strings.searchHint) }, leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }, singleLine = true, shape = RoundedCornerShape(14.dp))
+        }
+        if (countries.size > 1) {
+            item {
+                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item { FilterChip(selected = country == null, onClick = { country = null }, label = { Text(strings.filterAll) }) }
+                    items(countries) { item -> FilterChip(selected = country == item, onClick = { country = if (country == item) null else item }, label = { Text(item) }) }
+                }
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.secondaryContainer).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                Spacer(Modifier.width(9.dp))
+                Text(strings.guaranteeBadge, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(if (language == AppLanguage.ARABIC) "الخدمات المتاحة" else "Available services", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(filtered.size.toString(), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+            }
+        }
+        if (isLoading) item { Text(if (language == AppLanguage.ARABIC) "جارٍ تحديث المتجر…" else "Refreshing store…", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        if (dataError != null) item { Text(dataError, color = MaterialTheme.colorScheme.error) }
+        if (filtered.isEmpty() && !isLoading) {
+            item {
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("⌕", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (services.isEmpty()) (if (language == AppLanguage.ARABIC) "لا توجد خدمات مضافة حالياً." else "No services have been added yet.") else (if (language == AppLanguage.ARABIC) "لا توجد نتائج مطابقة." else "No matching services."), fontWeight = FontWeight.SemiBold)
+                        Text(if (language == AppLanguage.ARABIC) "سيظهر هنا كل ما تضيفه الإدارة إلى المتجر." else "Services added by the team will appear here.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
+        items(filtered, key = { it.id }) { service ->
+            val countryName = if (language == AppLanguage.ARABIC) service.countryNameAr else service.countryNameEn
+            val available = service.availableCount > 0
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable(enabled = available) { onSelectService(service) },
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
+                        Text(service.countryFlag, style = MaterialTheme.typography.headlineSmall)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(service.appName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(countryName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            if (available) (if (language == AppLanguage.ARABIC) "متوفر: " + service.availableCount else "Available: " + service.availableCount) else (if (language == AppLanguage.ARABIC) "غير متوفر حالياً" else "Out of stock"),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (available) Color(0xFF13865F) else MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text(String.format("%.2f USDT", service.priceUsd), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(if (language == AppLanguage.ARABIC) "للطلب" else "Order", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }
