@@ -296,7 +296,7 @@ class MainActivity : ComponentActivity() {
                                         },
                                         modifier = contentModifier
                                     )
-                                    2 -> MyNumbersScreen(items = subscriptions, modifier = contentModifier)
+                                    2 -> MyNumbersScreen(items = subscriptions, language = language, modifier = contentModifier)
                                     3 -> OrdersScreen(orders = orders, strings = strings, modifier = contentModifier)
                                     else -> SupportScreen(
                                         strings = strings,
