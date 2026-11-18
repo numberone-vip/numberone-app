@@ -1,0 +1,5 @@
+import {redirect} from "next/navigation";import{createClient}from"@/lib/supabase/server";
+export type Access={userId:string;email:string;isAdmin:boolean;roles:string[]};
+export async function getAccess():Promise<Access|null>{const sb=await createClient();const{data:{user},error}=await sb.auth.getUser();if(error||!user)return null;const[{data:admin},{data:staff}]=await Promise.all([sb.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle(),sb.from("staff_members").select("role").eq("user_id",user.id).eq("is_active",true)]);const isAdmin=!!admin;const roles=(staff??[]).map((x:any)=>String(x.role));if(!isAdmin&&!roles.length)return null;return{userId:user.id,email:user.email??"",isAdmin,roles};}
+export async function requireAccess(){const a=await getAccess();if(!a)redirect("/login?reason=unauthorized");return a;}
+export function can(a:Access,role:string){return a.isAdmin||a.roles.includes(role);}
