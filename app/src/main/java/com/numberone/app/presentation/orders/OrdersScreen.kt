@@ -43,12 +43,12 @@ fun OrdersScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "لا توجد طلبات حتى الآن",
+                text = strings.noOrders,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "ستظهر طلباتك هنا بعد إرسال أول طلب.",
+                text = strings.noOrdersHint,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
