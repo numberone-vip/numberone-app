@@ -70,7 +70,7 @@ class AuthRepository {
                 }
 
                 val staffRows = client.postgrest["staff_members"]
-                    .select { eq("user_id", userId) }
+                    .select { filter { eq("user_id", userId) } }
                     .decodeList<JsonObject>()
 
                 val activeStaff = staffRows.firstOrNull { row ->
