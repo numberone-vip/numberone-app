@@ -105,6 +105,7 @@ fun StoreScreen(
             }
         }
 
+        if (walletBalance > 0) {
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -140,6 +141,7 @@ fun StoreScreen(
                     }
                 }
             }
+        }
         }
 
         item {
