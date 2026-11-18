@@ -56,6 +56,8 @@ fun StoreScreen(
     language: AppLanguage,
     walletBalance: Double?,
     services: List<VirtualService>,
+    isLoading: Boolean = false,
+    dataError: String? = null,
     onSelectService: (VirtualService) -> Unit,
     onTopUpClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -80,6 +82,13 @@ fun StoreScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (isLoading) {
+            item { Text("جارٍ تحميل بيانات المتجر والمحفظة…", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        if (dataError != null) {
+            item { Text(dataError, color = MaterialTheme.colorScheme.error) }
+        }
+
         item {
             Row(
                 modifier = Modifier
