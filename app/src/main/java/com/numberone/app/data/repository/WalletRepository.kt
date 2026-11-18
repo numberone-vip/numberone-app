@@ -1,7 +1,7 @@
 package com.numberone.app.data.repository
 
 import com.numberone.app.data.remote.SupabaseClientProvider
-import io.github.jan.supabase.gotrue.gotrue
+import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +65,7 @@ class WalletRepository {
     }
 
     private fun requireSignedIn() {
-        check(client.gotrue.currentSessionOrNull()?.user?.id != null) {
+        check(client.auth.currentSessionOrNull()?.user?.id != null) {
             "يجب تسجيل الدخول قبل استخدام المحفظة."
         }
     }
