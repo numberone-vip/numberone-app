@@ -41,6 +41,21 @@ fun OrdersScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        if (orders.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("لا توجد طلبات حتى الآن", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("عندما تطلب رقماً من المتجر سيظهر هنا رقم الطلب وحالة الدفع والتفعيل.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
         items(orders, key = { it.id }) { order ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
