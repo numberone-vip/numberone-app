@@ -207,6 +207,8 @@ class MainActivity : ComponentActivity() {
                             CustomerAuthScreen(
                                 authRepository = authRepository,
                                 onAuthenticated = { userId ->
+                                    // A successful customer login replaces any staff session.
+                                    adminRole = null
                                     customerUserId = userId
                                     selectedTab = 0
                                     storeViewModel.loadServices()
