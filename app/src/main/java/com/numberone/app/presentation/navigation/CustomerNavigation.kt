@@ -1,5 +1,8 @@
 package com.numberone.app.presentation.navigation
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -259,7 +262,12 @@ fun CustomerNavigation() {
                                     language = if (language == AppLanguage.ARABIC) AppLanguage.ENGLISH else AppLanguage.ARABIC
                                 },
                                 onContactClick = {
-                                    Toast.makeText(context, "يرجى استخدام قناة الدعم الرسمية.", Toast.LENGTH_SHORT).show()
+                                    val supportIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/FastNumbersSy_bot"))
+                                    try {
+                                        context.startActivity(supportIntent)
+                                    } catch (_: ActivityNotFoundException) {
+                                        Toast.makeText(context, "https://t.me/FastNumbersSy_bot", Toast.LENGTH_LONG).show()
+                                    }
                                 },
                                 modifier = contentModifier
                             )

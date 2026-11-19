@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, rebuild-v2]
   pull_request:
-    branches: [main]
+    branches: [main, rebuild-v2]
   workflow_dispatch:
 
 jobs:

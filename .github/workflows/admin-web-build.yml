@@ -7,7 +7,7 @@ on:
       - "admin-web/**"
       - ".github/workflows/admin-web-build.yml"
   pull_request:
-    branches: [main]
+    branches: [main, rebuild-v2]
     paths:
       - "admin-web/**"
 
