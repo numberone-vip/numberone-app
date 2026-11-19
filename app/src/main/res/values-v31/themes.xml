@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorAccent">@color/number_one_gold</item>
+        <item name="android:windowBackground">@color/number_one_navy</item>
+        <item name="android:statusBarColor">@color/number_one_navy</item>
+        <item name="android:navigationBarColor">@color/number_one_navy</item>
+        <item name="android:windowSplashScreenBackground">@color/number_one_navy</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/number_one_navy</item>
+        <item name="android:windowSplashScreenAnimationDuration">500</item>
+    </style>
+</resources>

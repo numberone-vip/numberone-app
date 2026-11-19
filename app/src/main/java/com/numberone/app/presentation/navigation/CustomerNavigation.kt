@@ -15,10 +15,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.numberone.app.core.localization.AppLanguage
 import com.numberone.app.core.localization.AppStrings
 import com.numberone.app.core.theme.NumberOneTheme
@@ -44,11 +49,23 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerNavigation() {
-    var language by remember { mutableStateOf(AppLanguage.ARABIC) }
+    var languageCode by rememberSaveable { mutableStateOf("ar") }
+    val language = if (languageCode == "en") AppLanguage.ENGLISH else AppLanguage.ARABIC
     val strings = AppStrings.get(language)
     val direction = if (language.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route ?: "store"
+    val selectedTab = when (currentRoute) {
+        "wallet" -> 1
+        "numbers" -> 2
+        "orders" -> 3
+        "support" -> 4
+        else -> 0
+    }
+
     val auth = remember { AuthRepository() }
     val servicesRepo = remember { ServicesRepository() }
     val walletRepo = remember { WalletRepository() }
@@ -58,11 +75,10 @@ fun CustomerNavigation() {
     var userId by remember { mutableStateOf(auth.currentUserId()) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var signUp by remember { mutableStateOf(false) }
+    var signUp by rememberSaveable { mutableStateOf(false) }
     var authBusy by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
     var authMessage by remember { mutableStateOf<String?>(null) }
-    var selectedTab by remember { mutableStateOf(0) }
     var showTopUp by remember { mutableStateOf(false) }
     var checkoutService by remember { mutableStateOf<VirtualService?>(null) }
     var requestId by remember { mutableStateOf(UUID.randomUUID().toString()) }
@@ -162,7 +178,11 @@ fun CustomerNavigation() {
                                     scope.launch {
                                         auth.signOut()
                                         userId = null
-                                        selectedTab = 0
+                                        checkoutService = null
+                                        navController.navigate("store") {
+                                            popUpTo("store") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
                                     }
                                 }) {
                                     Icon(Icons.Default.Logout, contentDescription = null)
@@ -172,12 +192,18 @@ fun CustomerNavigation() {
                         )
                     },
                     bottomBar = {
-                        if (checkoutService == null) {
+                        if (currentRoute != "checkout") {
                             FloatingCustomerNavigationBar(
                                 selectedTab = selectedTab,
                                 language = language,
                                 onSelectTab = { tab ->
-                                    selectedTab = tab
+                                    val routes = listOf("store", "wallet", "numbers", "orders", "support")
+                                    val route = routes.getOrElse(tab) { "store" }
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                     when (tab) {
                                         1 -> scope.launch { walletRepo.getMyTransactions().onSuccess { walletTransactions = it } }
                                         2 -> scope.launch { subscriptionsRepo.getMySubscriptions().onSuccess { subscriptions = it } }
@@ -188,42 +214,13 @@ fun CustomerNavigation() {
                         }
                     }
                 ) { padding ->
-                    val contentModifier = Modifier.padding(padding)
-                    val selectedService = checkoutService
-                    if (selectedService != null) {
-                        CheckoutScreen(
-                            service = selectedService,
-                            strings = strings,
-                            language = language,
-                            loading = purchaseBusy,
-                            error = purchaseError,
-                            onConfirmWalletPurchase = {
-                                scope.launch {
-                                    purchaseBusy = true
-                                    purchaseError = null
-                                    walletRepo.purchaseFromWallet(selectedService.id, requestId)
-                                        .onSuccess { result ->
-                                            walletBalance = result.balanceAfter
-                                            checkoutService = null
-                                            selectedTab = 3
-                                            requestId = UUID.randomUUID().toString()
-                                            refreshCustomerData()
-                                            Toast.makeText(context, if (language == AppLanguage.ARABIC) "تم إرسال طلبك للمراجعة" else "Your order was submitted for review", Toast.LENGTH_LONG).show()
-                                        }
-                                        .onFailure { purchaseError = it.localizedMessage ?: "تعذر تنفيذ الشراء." }
-                                    purchaseBusy = false
-                                }
-                            },
-                            onCancel = {
-                                checkoutService = null
-                                purchaseError = null
-                                requestId = UUID.randomUUID().toString()
-                            },
-                            modifier = contentModifier
-                        )
-                    } else {
-                        when (selectedTab) {
-                            0 -> StoreScreen(
+                    NavHost(
+                        navController = navController,
+                        startDestination = "store",
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        composable("store") {
+                            StoreScreen(
                                 strings = strings,
                                 language = language,
                                 walletBalance = walletBalance,
@@ -234,12 +231,14 @@ fun CustomerNavigation() {
                                     purchaseError = null
                                     requestId = UUID.randomUUID().toString()
                                     checkoutService = service
+                                    navController.navigate("checkout")
                                 },
                                 onTopUpClick = { showTopUp = true },
-                                onRetry = { scope.launch { refreshCustomerData() } },
-                                modifier = contentModifier
+                                onRetry = { scope.launch { refreshCustomerData() } }
                             )
-                            1 -> WalletScreen(
+                        }
+                        composable("wallet") {
+                            WalletScreen(
                                 balance = walletBalance,
                                 language = language,
                                 transactions = walletTransactions,
@@ -250,16 +249,21 @@ fun CustomerNavigation() {
                                         walletRepo.getMyWalletSummary().onSuccess { walletBalance = it.balance }
                                         walletRepo.getMyTransactions().onSuccess { walletTransactions = it }
                                     }
-                                },
-                                modifier = contentModifier
+                                }
                             )
-                            2 -> MyNumbersScreen(items = subscriptions, language = language, modifier = contentModifier)
-                            3 -> OrdersScreen(orders = orders, strings = strings, modifier = contentModifier)
-                            else -> SupportScreen(
+                        }
+                        composable("numbers") {
+                            MyNumbersScreen(items = subscriptions, language = language)
+                        }
+                        composable("orders") {
+                            OrdersScreen(orders = orders, strings = strings)
+                        }
+                        composable("support") {
+                            SupportScreen(
                                 strings = strings,
                                 language = language,
                                 onToggleLanguage = {
-                                    language = if (language == AppLanguage.ARABIC) AppLanguage.ENGLISH else AppLanguage.ARABIC
+                                    languageCode = if (languageCode == "ar") "en" else "ar"
                                 },
                                 onContactClick = {
                                     val supportIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/FastNumbersSy_bot"))
@@ -268,9 +272,48 @@ fun CustomerNavigation() {
                                     } catch (_: ActivityNotFoundException) {
                                         Toast.makeText(context, "https://t.me/FastNumbersSy_bot", Toast.LENGTH_LONG).show()
                                     }
-                                },
-                                modifier = contentModifier
+                                }
                             )
+                        }
+                        composable("checkout") {
+                            val selectedService = checkoutService
+                            if (selectedService == null) {
+                                LaunchedEffect(Unit) { navController.popBackStack() }
+                            } else {
+                                CheckoutScreen(
+                                    service = selectedService,
+                                    strings = strings,
+                                    language = language,
+                                    loading = purchaseBusy,
+                                    error = purchaseError,
+                                    onConfirmWalletPurchase = {
+                                        scope.launch {
+                                            purchaseBusy = true
+                                            purchaseError = null
+                                            walletRepo.purchaseFromWallet(selectedService.id, requestId)
+                                                .onSuccess { result ->
+                                                    walletBalance = result.balanceAfter
+                                                    checkoutService = null
+                                                    requestId = UUID.randomUUID().toString()
+                                                    navController.navigate("orders") {
+                                                        popUpTo("store") { saveState = true }
+                                                        launchSingleTop = true
+                                                    }
+                                                    refreshCustomerData()
+                                                    Toast.makeText(context, if (language == AppLanguage.ARABIC) "تم إرسال طلبك للمراجعة" else "Your order was submitted for review", Toast.LENGTH_LONG).show()
+                                                }
+                                                .onFailure { purchaseError = it.localizedMessage ?: "تعذر تنفيذ الشراء." }
+                                            purchaseBusy = false
+                                        }
+                                    },
+                                    onCancel = {
+                                        checkoutService = null
+                                        purchaseError = null
+                                        requestId = UUID.randomUUID().toString()
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
                         }
                     }
                 }

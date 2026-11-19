@@ -38,8 +38,8 @@ import com.numberone.app.core.localization.Strings
 import com.numberone.app.domain.model.VirtualService
 import java.util.Locale
 
-private val StoreEmerald = Color(0xFF20C997)
-private val GlassBorder = listOf(Color(0xFF55C7FF), Color(0xFF9B8CFF), Color(0xFF55C7FF))
+private val StoreEmerald = Color(0xFF49D6B0)
+private val GlassBorder = listOf(Color(0xFFE7BD72), Color(0xFF49D6B0), Color(0xFFE7BD72))
 
 @Composable
 fun StoreScreen(
@@ -190,10 +190,10 @@ fun StoreScreen(
 private fun StoreHero(language: AppLanguage, count: Int) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(
-            Brush.linearGradient(listOf(Color(0xFF111D35), Color(0xFF172B50), Color(0xFF28234F)))
+            Brush.linearGradient(listOf(Color(0xFF0D1B2E), Color(0xFF142A43), Color(0xFF20354A)))
         )
     ) {
-        Box(Modifier.align(Alignment.TopEnd).padding(16.dp).size(112.dp).clip(CircleShape).background(Color(0xFF8B7CFF).copy(alpha = 0.17f)))
+        Box(Modifier.align(Alignment.TopEnd).padding(16.dp).size(112.dp).clip(CircleShape).background(Color(0xFFE7BD72).copy(alpha = 0.15f)))
         Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("NUMBER ONE  /  GLOBAL CONNECTIVITY", color = Color(0xFF83E7DB), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
             Text(

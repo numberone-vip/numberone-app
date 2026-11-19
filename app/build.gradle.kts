@@ -139,6 +139,7 @@ dependencies {
     implementation(libs.collection.ktx)
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.compose)
     // Exclude older conflicting version from transitive dependencies
     // Again this arises only when using a local maven repo. Most probably because it lacks flexibility of online one.
     // We can run some gradle:app dependency commands to compare the results for online and offline maven repo later.

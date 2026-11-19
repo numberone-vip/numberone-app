@@ -15,11 +15,15 @@ import androidx.core.view.WindowCompat
 private val ColorWhite = Color(0xFFFFFFFF)
 
 private val DarkColorScheme = darkColorScheme(
-    primary = ElectricBlue,
-    onPrimary = ColorWhite,
-    secondary = QuietViolet,
-    onSecondary = ColorWhite,
-    tertiary = EmeraldAccent,
+    primary = RoyalGold,
+    onPrimary = MidnightNavy,
+    primaryContainer = Color(0xFF4A371B),
+    onPrimaryContainer = Color(0xFFFFE8C1),
+    secondary = TealAccent,
+    onSecondary = MidnightNavy,
+    secondaryContainer = Color(0xFF123D38),
+    onSecondaryContainer = Color(0xFFC6F7E9),
+    tertiary = ElectricBlue,
     onTertiary = MidnightNavy,
     background = MidnightNavy,
     onBackground = ColorWhite,
@@ -27,25 +31,33 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = ColorWhite,
     surfaceVariant = MidnightSurfaceVariant,
     onSurfaceVariant = Color(0xFFB6C2D4),
-    outline = Color(0xFF536176),
-    outlineVariant = Color(0xFF2A3548)
+    outline = Color(0xFF64748B),
+    outlineVariant = Color(0xFF2A3A50),
+    error = Color(0xFFFF8A8A),
+    onError = Color(0xFF3A0808)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF315FD5),
+    primary = Color(0xFF8B5E1C),
     onPrimary = ColorWhite,
-    secondary = Color(0xFF6557C8),
+    primaryContainer = Color(0xFFFFE8C1),
+    onPrimaryContainer = Color(0xFF2D1A03),
+    secondary = Color(0xFF087E69),
     onSecondary = ColorWhite,
-    tertiary = Color(0xFF138B68),
+    secondaryContainer = Color(0xFFD0F3E9),
+    onSecondaryContainer = Color(0xFF073A32),
+    tertiary = Color(0xFF315FA1),
     onTertiary = ColorWhite,
     background = SoftCloud,
     onBackground = InkNavy,
     surface = ColorWhite,
     onSurface = InkNavy,
-    surfaceVariant = Color(0xFFEBF0F8),
-    onSurfaceVariant = Color(0xFF5E6B80),
+    surfaceVariant = Color(0xFFEBF0F6),
+    onSurfaceVariant = Color(0xFF596A80),
     outline = Color(0xFF9AA8BC),
-    outlineVariant = LightOutline
+    outlineVariant = LightOutline,
+    error = Color(0xFFB3261E),
+    onError = ColorWhite
 )
 
 @Composable

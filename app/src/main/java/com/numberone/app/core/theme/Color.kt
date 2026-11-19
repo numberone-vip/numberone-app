@@ -2,23 +2,27 @@ package com.numberone.app.core.theme
 
 import androidx.compose.ui.graphics.Color
 
-val MidnightNavy = Color(0xFF0A0E17)
-val MidnightSurface = Color(0xFF111827)
-val MidnightSurfaceVariant = Color(0xFF1A2435)
-val ElectricBlue = Color(0xFF4C8DFF)
-val QuietViolet = Color(0xFF8B7CFF)
-val EmeraldAccent = Color(0xFF20C997)
-val SoftCloud = Color(0xFFF5F7FC)
-val InkNavy = Color(0xFF172238)
+// Number One brand palette: midnight navy, royal gold and electric teal.
+val MidnightNavy = Color(0xFF091321)
+val MidnightSurface = Color(0xFF111F34)
+val MidnightSurfaceVariant = Color(0xFF1B2B42)
+val RoyalGold = Color(0xFFE7BD72)
+val TealAccent = Color(0xFF49D6B0)
+val ElectricBlue = Color(0xFF5D8CFF)
+
+val EmeraldAccent = TealAccent
+val QuietViolet = ElectricBlue
+val SoftCloud = Color(0xFFF4F7FB)
+val InkNavy = Color(0xFF17263B)
 val LightOutline = Color(0xFFE2E8F0)
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-val Purple40 = Color(0xFF5368D8)
+val Purple80 = Color(0xFFB9C8FF)
+val PurpleGrey80 = Color(0xFFC5D0DF)
+val Pink80 = RoyalGold
+val Purple40 = Color(0xFF315FA1)
 val PurpleGrey40 = Color(0xFF536078)
-val Pink40 = Color(0xFFB65E84)
-val TealAccent = EmeraldAccent
+val Pink40 = Color(0xFF936522)
+
 val StatusApproved = Color(0xFF15803D)
 val StatusApprovedBg = Color(0xFFDCFCE7)
 val StatusPending = Color(0xFFB45309)

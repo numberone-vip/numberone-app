@@ -18,7 +18,7 @@ fun CustomerAuthScreen(
     modifier:Modifier=Modifier
 ){
     Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(22.dp),verticalArrangement=Arrangement.Center){
-        Card(Modifier.fillMaxWidth(),shape=RoundedCornerShape(24.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.primary)){
+        Card(Modifier.fillMaxWidth(),shape=RoundedCornerShape(24.dp),colors=CardDefaults.cardColors(containerColor=Color(0xFF111F34))){
             Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){
                 Text("N1  /  NUMBER ONE",color=Color(0xFF8FE6DC),style=MaterialTheme.typography.labelSmall,fontWeight=FontWeight.Bold)
                 Text("YOUR NUMBERS. YOUR CONTROL.",color=Color.White,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.ExtraBold)

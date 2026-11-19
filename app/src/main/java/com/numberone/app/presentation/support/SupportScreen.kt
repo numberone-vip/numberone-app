@@ -173,12 +173,12 @@ fun SupportScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TealAccent),
+                colors = ButtonDefaults.buttonColors(containerColor = TealAccent, contentColor = Color(0xFF091321)),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Text(
                     text = strings.contactSupport,
-                    color = Color.White,
+                    color = Color(0xFF091321),
                     fontWeight = FontWeight.Bold
                 )
             }
