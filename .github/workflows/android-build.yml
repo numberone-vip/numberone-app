@@ -11,7 +11,7 @@ jobs:
   debug-build:
     runs-on: ubuntu-latest
     env:
-      HAS_RELEASE_SIGNING: \${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_STORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
+      HAS_RELEASE_SIGNING: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_STORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,10 +25,10 @@ jobs:
       - name: Configure release signing
         if: env.HAS_RELEASE_SIGNING == 'true'
         env:
-          ANDROID_KEYSTORE_BASE64: \${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_STORE_PASSWORD: \${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: \${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: \${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.keystore
           {
