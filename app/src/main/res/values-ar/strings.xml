@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Number One</string>
+    <string name="app_slogan">أرقامك بين يديك</string>
+    <string name="language_arabic">العربية</string>
+    <string name="language_english">English</string>
+    <string name="please_wait">يرجى الانتظار…</string>
+    <string name="retry">إعادة المحاولة</string>
+</resources>

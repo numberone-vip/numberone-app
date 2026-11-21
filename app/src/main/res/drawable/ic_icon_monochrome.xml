@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Number One app icon - single-color layer for Android 13+ themed icons. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M38,30 H47 L61,56 V30 H70 V78 H61 L47,52 V78 H38 Z" android:fillColor="#FFFFFFFF" />
+    <path
+        android:pathData="M75.55,39.46 A26,26 0,0,1 75.55,68.54"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:strokeColor="#FFFFFFFF"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M81.71,38 A32,32 0,0,1 81.71,70"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeColor="#B3FFFFFF"
+        android:fillColor="#00000000" />
+</vector>

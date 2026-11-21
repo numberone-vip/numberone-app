@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Number One launcher foreground.
+  Champagne-gold "1" inside a hairline ring, within the adaptive-icon safe zone (66/108dp).
+  Pair with a solid obsidian background: #FF0A0A0C.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Hairline ring (center 54,54, radius 31) -->
+    <path
+        android:pathData="M54,23 A31,31 0,1,1 54,85 A31,31 0,1,1 54,23 Z"
+        android:strokeWidth="1.2"
+        android:strokeColor="#66D9B26A"
+        android:fillColor="#00000000" />
+
+    <!-- The "1" with a flag, champagne-to-bronze gradient -->
+    <path
+        android:pathData="M46,40 L54,31 L62,31 L62,77 L54,77 L54,42 L46,49 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="46"
+                android:startY="31"
+                android:endX="62"
+                android:endY="77">
+                <item android:color="#FFF3DFA2" android:offset="0" />
+                <item android:color="#FFE8CD8A" android:offset="0.5" />
+                <item android:color="#FFB8903F" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
