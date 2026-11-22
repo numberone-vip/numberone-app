@@ -93,7 +93,7 @@ internal val ENGLISH_TEXT: Map<String, String> = mapOf(
         "تم اعتماد الشراء وربط الرقم بالعميل" to "Purchase approved and number linked to the customer",
         "أدخل رقم هاتف صحيح" to "Enter a valid phone number",
         "خدمة" to "Service",
-        "لا توجد رسائل بعد.\nستظهر هنا رسائل رقمك النشط تلقائياً.": "No messages yet.\nYour active number's messages will appear here automatically.",
+        "لا توجد رسائل بعد.\nستظهر هنا رسائل رقمك النشط تلقائياً." to "No messages yet.\nYour active number's messages will appear here automatically.",
         "إيراد الطلبات المعتمدة (USDT) وعدد الطلبات لكل يوم" to "Approved-order revenue (USDT) and order count per day",
         "سجل الإدارة" to "Admin log",
         "سجل الإدارة غير مفعّل بعد. طبّق ملف SQL الخاص بسجل التدقيق (admin_audit_log) بعد مراجعته." to "The admin log is not enabled yet. Apply the audit-log SQL file (admin_audit_log) after reviewing it.",
