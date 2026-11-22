@@ -16,6 +16,7 @@ object NumberOneColors {
 
     val IndigoRoyal = Color(0xFF1E2A4A)
     val IndigoDeep = Color(0xFF141C33)
+    val NavyHeader = Color(0xFF0E1528)
     val ButtonPurple = Color(0xFF5A3E9B)
     val Gold = Color(0xFFD9B26A)
     val Obsidian = Color(0xFF0A0A0C)
