@@ -1,0 +1,4 @@
+-- APPLIED to the live project as migration "customer_admin_chat". Kept for history. Do not re-run.
+-- Table: private.customer_messages (RLS on, no client grants).
+-- Functions: customer_send_message, customer_list_messages (customer), admin_list_conversations, admin_list_chat, admin_send_chat (admin).
+-- Guards: 1 to 1000 chars; customers limited to 20 messages per minute.

@@ -1,0 +1,7 @@
+[functions.fivesim-api]
+verify_jwt = true
+
+[functions.five-sim-push]
+# The function verifies FIVE_SIM_PUSH_CRON_SECRET itself. Supabase JWT verification is disabled
+# so a scheduler can call it with that secret instead of a user session token.
+verify_jwt = false

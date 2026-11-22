@@ -1,0 +1,4 @@
+-- APPLIED to the live project (rlxcsnposxvsyhwtmgbz) as migration "admin_manual_purchase_fulfillment".
+-- Kept here for history. Do not re-run.
+-- Functions: admin_list_pending_purchases(), admin_find_customer_by_phone(text), admin_approve_manual_purchase(uuid, text, date, text).
+-- The approval stores a random access code hash that nobody can read (the customer sees the number from the account).

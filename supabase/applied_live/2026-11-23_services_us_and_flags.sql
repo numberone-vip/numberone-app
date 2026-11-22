@@ -1,0 +1,5 @@
+-- APPLIED to the live project: migrations "us_monthly_service_and_activate_list" and "service_country_codes_iso_for_flags".
+-- 1) Adds service srv_us_monthly: United States, country_code US, 2 USDT, active.
+-- 2) Activates the WhatsApp UK and US services (they were is_active = false).
+-- 3) Converts country_code from dial code (+1, +44) to ISO (US, GB) for 4 services so flagEmoji() can show a flag.
+-- Do not re-run.
