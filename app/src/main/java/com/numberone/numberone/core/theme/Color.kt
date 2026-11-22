@@ -14,6 +14,7 @@ object NumberOneColors {
     // BRAND - OBSIDIAN & GOLD
     // ==========================================
 
+    val IndigoRoyal = Color(0xFF1E2A4A)
     val Obsidian = Color(0xFF0A0A0C)
     val WarmBlack = Color(0xFF14110A)
     val Onyx = Color(0xFF141418)

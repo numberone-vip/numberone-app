@@ -1,4 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.layout.imePadding
 
 package com.numberone.numberone.presentation.screens.admin
 
