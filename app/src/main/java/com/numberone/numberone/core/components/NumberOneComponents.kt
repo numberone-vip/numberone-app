@@ -481,7 +481,7 @@ private fun FloatingPillSnackbar(data: SnackbarData) {
             val actionLabel = data.visuals.actionLabel
             if (actionLabel != null) {
                 TextButton(onClick = { data.performAction() }) {
-                    Text(actionLabel, color = NumberOneColors.Gold, fontWeight = FontWeight.Bold)
+                    Text(actionLabel, color = NumberOneColors.GoldMid, fontWeight = FontWeight.Bold)
                 }
             }
         }
