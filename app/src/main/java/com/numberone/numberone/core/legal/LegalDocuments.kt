@@ -6,8 +6,8 @@ import com.numberone.numberone.core.localization.AppLanguage
  * Terms of Service and Privacy Policy text, shown from the login screen.
  *
  * DRAFT: written for the app's current behaviour. Before publishing, replace the
- * bracketed placeholders ([اسم الشركة] / [Company name], [البريد] / [support email],
- * [بلد الشركة] / [governing law]) and have a lawyer review the text.
+ * bracketed placeholders ([اسم الشركة] / [Company name], nuberonsy@gmail.com / [support email],
+ * الجمهورية العربية السورية / [governing law]) and have a lawyer review the text.
  */
 data class LegalSection(val heading: String, val body: String)
 
@@ -22,51 +22,51 @@ object LegalDocuments {
     fun privacy(language: AppLanguage): LegalDocument = if (language.isArabic) PRIVACY_AR else PRIVACY_EN
 
     private val TERMS_AR = LegalDocument(
-        title = "شروط الاستخدام",
-        updated = "آخر تحديث: 21 نوفمبر 2026",
+        title = "الشروط والأحكام",
+        updated = "آخر تحديث: 23 نوفمبر 2026",
         sections = listOf(
             LegalSection(
                 "1. القبول",
-                "باستخدامك تطبيق Number One فإنك توافق على هذه الشروط. إذا لم توافق عليها فلا تستخدم التطبيق."
+                "إن وصولك إلى تطبيق Number One أو استخدامك لأيٍّ من خدماته يُعدّ إقراراً صريحاً وموافقةً كاملةً منك على الالتزام بهذه الشروط والأحكام. في حال عدم موافقتك على أي بند، يُرجى التوقف فوراً عن استخدام التطبيق."
             ),
             LegalSection(
                 "2. الحساب",
-                "أنت مسؤول عن دقة بيانات حسابك وعن سرية كلمة المرور، وعن كل نشاط يتم من حسابك. لا تشارك حسابك مع أشخاص آخرين."
+                "يلتزم المستخدم بتقديم بيانات دقيقة وصحيحة عند التسجيل، ويتحمل المسؤولية الكاملة عن الحفاظ على سرية بيانات الدخول وكلمة المرور، وعن كافة الأنشطة التي تُجرى عبر حسابه، ويُحظر مشاركة الحساب مع أي طرف ثالث."
             ),
             LegalSection(
                 "3. الأرقام الافتراضية",
-                "يوفّر التطبيق أرقاماً مؤقتة لاستقبال رسائل التحقق من خدمات أطراف ثالثة. كل رقم صالح لمدة محددة، ولا نضمن أن كل خدمة تقبل هذه الأرقام أو تسمح بالتسجيل عبرها."
+                "يوفّر التطبيق أرقاماً افتراضية مؤقتة مخصصة لاستقبال رسائل التحقق النصية (OTP) من المنصات الرقمية. يخضع كل رقم لمدة صلاحية محددة، ولا تضمن إدارة التطبيق قبول جميع المنصات الخارجية لهذه الأرقام."
             ),
             LegalSection(
                 "4. الرصيد والدفع",
-                "الرصيد المشحون يُستخدم داخل التطبيق فقط. تخضع المدفوعات بالتحويل (مثل USDT) أو عبر الوسائل الأخرى المتاحة للتحقق من المعاملة، وقد تُلغى المعاملات الخاطئة أو المكررة. يُمنح الاسترداد وفق ما هو معلن داخل التطبيق، أو عند وجود خطأ تقني من جهتنا."
+                "يُستخدم الرصيد المودع حصراً لشراء الخدمات داخل التطبيق. تخضع كافة عمليات الشحن والتحويل المالي (بما في ذلك USDT والوسائل المعتمدة) للمراجعة والتحقق قبل إضافتها، وتُرفض المعاملات الخاطئة أو المكررة. يُطبّق الاسترداد وفق السياسة المعلنة داخل التطبيق أو عند ثبوت خلل تقني من جانبنا."
             ),
             LegalSection(
                 "5. الاستخدام المقبول",
-                "يُمنع استخدام التطبيق لأي غرض غير قانوني أو للاحتيال، أو لإنشاء حسابات وهمية، أو لمحاولة اختراق الخدمة أو تعطيلها."
+                "يُحظر حظراً باتاً استخدام التطبيق في أي أنشطة مخالفة للقوانين النافذة، أو في أعمال الاحتيال وانتحال الشخصية، أو محاولة اختراق البنية التقنية للتطبيق أو تعطيل خوادمه."
             ),
             LegalSection(
                 "6. تعليق الحساب وإنهاؤه",
-                "يحق لنا تعليق الحساب أو إنهاؤه عند مخالفة هذه الشروط، ونحاول إخطارك بذلك متى أمكن."
+                "تحتفظ إدارة التطبيق بالحق الكامل في تعليق أو إنهاء أي حساب يثبت مخالفته لهذه الشروط، مع السعي لإخطار المستخدم متى ما أمكن ذلك."
             ),
             LegalSection(
                 "7. إخلاء المسؤولية",
-                "نقدّم الخدمة كما هي. لا نتحمل الخسائر غير المباشرة إلى الحد الذي يسمح به القانون."
+                "تُقدَّم خدمات التطبيق «كما هي» ووفقاً للتوافر التقني، ولا تتحمل إدارة التطبيق أي مسؤولية عن الأضرار غير المباشرة إلى أقصى حد يسمح به القانون."
             ),
             LegalSection(
                 "8. التعديلات",
-                "قد نعدّل هذه الشروط من وقت لآخر، واستمرارك في الاستخدام بعد النشر يعني موافقتك على النسخة المعدّلة."
+                "يحق لإدارة التطبيق تحديث هذه الشروط والأحكام في أي وقت، ويُعدّ استمرارك في استخدام التطبيق بعد نشر التعديلات موافقةً نهائيةً على النسخة المحدّثة."
             ),
             LegalSection(
                 "9. القانون والتواصل",
-                "تخضع هذه الشروط لقوانين [بلد الشركة]. للتواصل: [البريد]."
+                "تخضع هذه الشروط والأحكام وتُفسَّر وفقاً للقوانين المعمول بها في الجمهورية العربية السورية. للتواصل الرسمي والدعم: nuberonsy@gmail.com"
             )
         )
     )
 
     private val TERMS_EN = LegalDocument(
-        title = "Terms of Use",
-        updated = "Last updated: November 21, 2026",
+        title = "Terms and Conditions",
+        updated = "Last updated: November 23, 2026",
         sections = listOf(
             LegalSection(
                 "1. Acceptance",
@@ -102,14 +102,14 @@ object LegalDocuments {
             ),
             LegalSection(
                 "9. Law and contact",
-                "These terms are governed by the laws of [بلد الشركة / governing law]. Contact: [البريد / support email]."
+                "These terms are governed by the laws of the Syrian Arab Republic. Contact: nuberonsy@gmail.com."
             )
         )
     )
 
     private val PRIVACY_AR = LegalDocument(
         title = "سياسة الخصوصية",
-        updated = "آخر تحديث: 21 نوفمبر 2026",
+        updated = "آخر تحديث: 23 نوفمبر 2026",
         sections = listOf(
             LegalSection(
                 "1. البيانات التي نجمعها",
@@ -145,14 +145,14 @@ object LegalDocuments {
             ),
             LegalSection(
                 "9. التعديلات والتواصل",
-                "قد نحدّث هذه السياسة، وسنعلن التغييرات داخل التطبيق. للتواصل بشأن الخصوصية: [البريد]."
+                "قد نحدّث هذه السياسة، وسنعلن التغييرات داخل التطبيق. للتواصل بشأن الخصوصية: nuberonsy@gmail.com."
             )
         )
     )
 
     private val PRIVACY_EN = LegalDocument(
         title = "Privacy Policy",
-        updated = "Last updated: November 21, 2026",
+        updated = "Last updated: November 23, 2026",
         sections = listOf(
             LegalSection(
                 "1. Data we collect",
@@ -188,7 +188,7 @@ object LegalDocuments {
             ),
             LegalSection(
                 "9. Changes and contact",
-                "We may update this policy and will announce changes in the app. For privacy questions: [البريد / support email]."
+                "We may update this policy and will announce changes in the app. For privacy questions: nuberonsy@gmail.com."
             )
         )
     )

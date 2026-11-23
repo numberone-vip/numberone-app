@@ -40,6 +40,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -115,6 +116,9 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
     var pendingRequestId by remember { mutableStateOf<String?>(null) }
     var countrySheetOpen by remember { mutableStateOf(false) }
     var countrySearch by remember { mutableStateOf("") }
+    var serviceSheetOpen by remember { mutableStateOf(false) }
+    var serviceSearch by remember { mutableStateOf("") }
+    var isRefreshing by remember { mutableStateOf(false) }
     var catalogLoading by remember { mutableStateOf(true) }
     var quoteLoading by remember { mutableStateOf(false) }
     var actionLoading by remember { mutableStateOf(false) }
@@ -239,6 +243,8 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                 country.countryCode.contains(query, ignoreCase = true)
         }
     }
+    val sQuery = serviceSearch.trim()
+    val filteredServices = remember(catalog, sQuery) { catalog.services.sortedBy { it.name.lowercase() }.filter { s -> sQuery.isEmpty() || s.name.contains(sQuery, ignoreCase = true) || s.code.contains(sQuery, ignoreCase = true) } }
 
     val activeOrder = order
     val canBuy = currentQuote != null && chosenOperator != null && selectedCountry != null &&
@@ -258,8 +264,9 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             // Inside the main tabs the shell already handles the system bars.
             contentWindowInsets = if (embedded) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets
         ) { padding ->
+            PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { scope.launch { isRefreshing = true; vm.loadWallet(); repository.catalog().onSuccess { res -> catalog = res }; val c = selectedCountry; val s = selectedService; if (c != null && s != null) repository.quote(c.countryCode, s.code).onSuccess { quote = it }; repository.latestActivation().onSuccess { if (it != null) order = it }; isRefreshing = false } }, modifier = Modifier.fillMaxSize().padding(padding)) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
@@ -280,23 +287,8 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                     BalanceHeader(balance = vm.wallet.balance, currency = vm.wallet.currency)
                 }
 
-                item {
-                    ServiceChips(
-                        services = catalog.services,
-                        selected = selectedService,
-                        onSelect = { selectedService = it }
-                    )
-                }
-
-                item {
-                    CountryPicker(
-                        country = selectedCountry,
-                        onClick = {
-                            countrySearch = ""
-                            countrySheetOpen = true
-                        }
-                    )
-                }
+                item { CountryPicker(country = selectedCountry, onClick = { countrySearch = ""; countrySheetOpen = true }) }
+                item { ServicePicker(service = selectedService, totalCount = catalog.services.size, onClick = { serviceSearch = ""; serviceSheetOpen = true }) }
 
                 item {
                     OperatorPicker(
@@ -401,6 +393,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                 }
             }
         }
+            }
         TopSnackbarHost(
             hostState = snackbar,
             modifier = Modifier
@@ -478,6 +471,32 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             }
         }
     }
+
+    if (serviceSheetOpen) {
+        ModalBottomSheet(onDismissRequest = { serviceSheetOpen = false; serviceSearch = "" }) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(tr("اختر الخدمة"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text("${filteredServices.size}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+                OutlinedTextField(value = serviceSearch, onValueChange = { serviceSearch = it }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(tr("ابحث باسم التطبيق أو الخدمة")) }, leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) }, shape = RoundedCornerShape(16.dp))
+                if (filteredServices.isEmpty()) EmptyState(tr("لا توجد خدمات مطابقة"))
+                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 460.dp)) {
+                    items(filteredServices, key = { it.code }) { service ->
+                        val isSelected = service.code == selectedService?.code
+                        Row(modifier = Modifier.fillMaxWidth().clickable { selectedService = service; serviceSheetOpen = false; serviceSearch = "" }.padding(vertical = 12.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(service.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                Text(service.code, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (isSelected) Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -507,28 +526,17 @@ private fun BalanceHeader(balance: Double, currency: String) {
 }
 
 @Composable
-private fun ServiceChips(
-    services: List<VirtualNumberService>,
-    selected: VirtualNumberService?,
-    onSelect: (VirtualNumberService) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionTitle(title = tr("الخدمة"), subtitle = tr("التطبيق أو الموقع الذي تريد التحقق منه"))
-        if (services.isEmpty()) {
-            EmptyState(tr("لا توجد خدمات متاحة حالياً"))
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                services.forEach { service ->
-                    FilterChip(
-                        selected = selected?.code == service.code,
-                        onClick = { onSelect(service) },
-                        label = { Text(service.name) }
-                    )
-                }
+private fun ServicePicker(service: VirtualNumberService?, totalCount: Int, onClick: () -> Unit) {
+    NOCard(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(tr("الخدمة"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(service?.name ?: tr("اختر الخدمة"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(if (totalCount > 0) "${tr("عرض الكل وبحث")} ($totalCount)" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

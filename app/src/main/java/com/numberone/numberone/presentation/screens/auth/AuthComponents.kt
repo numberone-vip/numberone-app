@@ -149,7 +149,7 @@ internal fun AuthScaffold(
     accentGlow: Color = NumberOneColors.GoldMid,
     ornamentColor: Color = NumberOneColors.Champagne,
     emblemRes: Int = R.drawable.ic_login_logo,
-    emblemCard: Boolean = true,
+    emblemCard: Boolean = false,
     topEnd: (@Composable () -> Unit)? = null,
     header: @Composable ColumnScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit

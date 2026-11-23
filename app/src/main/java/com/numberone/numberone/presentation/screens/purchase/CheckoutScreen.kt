@@ -169,18 +169,7 @@ fun CheckoutScreen(
                 Icon(Icons.Filled.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text(tr("  اشترِ الآن من رصيدك"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
             }
-            if (walletBalance != null && inStock) {
-                if (hasFunds) {
-                    Text(
-                        text = trf(
-                            "سيُخصم {0} USDT من رصيدك ({1} USDT)",
-                            ltr(priceText),
-                            ltr(formatAmount(walletBalance))
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
+            if (walletBalance != null && inStock && !hasFunds) {
                     Text(
                         text = trf(
                             "رصيدك {0} USDT أقل من السعر — اشحن محفظتك أو ادفع بتحويل USDT.",
@@ -212,7 +201,6 @@ fun CheckoutScreen(
                 Text(tr("  الدفع بتحويل USDT (BEP20)"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
             }
         }
-    }
 
     if (confirmOpen) {
         AlertDialog(

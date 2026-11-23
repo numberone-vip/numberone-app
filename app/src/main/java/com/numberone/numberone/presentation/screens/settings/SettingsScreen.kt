@@ -32,8 +32,8 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(onBack: () -> Unit, onLogout: () -> Unit, userEmail: String? = null) {
     val scope = rememberCoroutineScope()
     val prefs = AppContainer.appPreferences
-    val language by prefs.appLanguage.collectAsState(initial = AppLanguage.ARABIC)
-    val theme by prefs.appTheme.collectAsState(initial = "system")
+    val language by prefs.appLanguage.collectAsState(initial = AppLanguage.ENGLISH)
+    val theme by prefs.appTheme.collectAsState(initial = "dark")
 
     NOScaffold(title = tr("حسابي"), onBack = onBack) {
         // Profile
@@ -83,6 +83,31 @@ fun SettingsScreen(onBack: () -> Unit, onLogout: () -> Unit, userEmail: String? 
                     )
                 }
             }
+        }
+
+        NOCard {
+            SectionTitle(tr("حول التطبيق"), "Number One")
+            Text(
+                tr("منصة متكاملة لإدارة الأرقام الافتراضية وخدمات التفعيل والاشتراكات الرقمية."),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                tr("• التفعيل الفوري: أرقام مخصصة لاستقبال رمز التحقق لمرة واحدة، مع استرداد تلقائي للمبلغ في حال عدم وصول الرمز وفق شروط الخدمة."),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                tr("• الأرقام الشهرية والسنوية: احتفظ برقمك واستخدمه باستمرار من خلال اشتراك شهري يتجدد تلقائياً أو باقة سنوية طويلة الأمد."),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "Number One | Your Number. Your Control.",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
 
         OutlinedButton(

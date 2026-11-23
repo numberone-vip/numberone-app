@@ -96,7 +96,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 }
             }
             SectionTitle(
-                tr("اختر الخدمة"),
+                tr("الباقات والأرقام الخاصة"),
                 tr("ادفع من رصيدك فوراً، أو حوّل USDT عبر شبكة BEP20 وأرسل الإيصال.")
             )
         }
@@ -134,20 +134,6 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 },
                 onCancelReceipt = { receipt = null }
             )
-        }
-
-        NOCard {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    tr("الدفع عبر شام كاش غير متاح لشراء الأرقام حالياً."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
 
         FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)

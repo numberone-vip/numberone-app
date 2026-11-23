@@ -51,13 +51,13 @@ class AppPreferences(
     val appLanguage: Flow<AppLanguage> =
         preferencesFlow.map { preferences ->
             AppLanguage.fromLanguageCode(
-                preferences[LANGUAGE_KEY] ?: "ar"
+                preferences[LANGUAGE_KEY] ?: "en"
             )
         }
 
     val appTheme: Flow<String> =
         preferencesFlow.map { preferences ->
-            preferences[THEME_KEY] ?: "system"
+            preferences[THEME_KEY] ?: "dark"
         }
 
     val orderNotifications: Flow<Boolean> =

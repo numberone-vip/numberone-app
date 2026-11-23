@@ -66,7 +66,7 @@ fun LoginScreen(
     val palette = authPalette()
     val scope = rememberCoroutineScope()
     val prefs = AppContainer.appPreferences
-    val language by prefs.appLanguage.collectAsState(initial = AppLanguage.ARABIC)
+    val language by prefs.appLanguage.collectAsState(initial = AppLanguage.ENGLISH)
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val activity = remember(context) { context.findActivity() as? FragmentActivity }
@@ -133,7 +133,6 @@ fun LoginScreen(
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(14.dp))
-            SecurePill(tr("اتصال مشفّر وآمن 100%"))
         }
     ) {
         Column(

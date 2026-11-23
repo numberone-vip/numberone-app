@@ -23,7 +23,7 @@ class MainActivity : FragmentActivity() {
         // Draw behind the status and navigation bars; screens pad with safe-area insets.
         enableEdgeToEdge()
         setContent {
-            val language by AppContainer.appPreferences.appLanguage.collectAsState(initial = AppLanguage.ARABIC)
+            val language by AppContainer.appPreferences.appLanguage.collectAsState(initial = AppLanguage.ENGLISH)
             val theme by AppContainer.appPreferences.appTheme.collectAsState(initial = "system")
             val dark = when (theme) {
                 "dark" -> true

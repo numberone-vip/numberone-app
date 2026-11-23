@@ -87,3 +87,6 @@ release.keystore
 release.properties
 *.jks
 *.keystore
+
+release.keystore
+release.properties

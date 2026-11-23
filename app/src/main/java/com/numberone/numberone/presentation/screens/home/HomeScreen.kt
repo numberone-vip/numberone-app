@@ -359,7 +359,7 @@ private fun DashboardTab(
             amount = ltr("${formatAmount(vm.wallet.balance)} ${vm.wallet.currency}"),
             footer = {
                 Text(
-                    tr("الشبكة: BEP20 • شام كاش"),
+                    tr("طرق الشحن: USDT (BEP20) • شام كاش"),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White.copy(alpha = 0.72f)
                 )
@@ -399,10 +399,10 @@ private fun DashboardTab(
             Text(tr("اختصارات"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                 ShortcutTile(tr("الرسائل"), tr("رموز التحقق والرسائل"), Icons.Filled.Sms, { onNavigate(AppRoutes.SMS_INBOX) }, Modifier.weight(1f).fillMaxHeight(), badge = vm.unreadSmsCount)
-                ShortcutTile(tr("طلباتي"), tr("متابعة مشترياتك"), Icons.Filled.ReceiptLong, { onNavigate(AppRoutes.PURCHASE_HISTORY) }, Modifier.weight(1f).fillMaxHeight())
+                ShortcutTile(tr("طلباتي"), tr("سجل الطلبات والمشتريات"), Icons.Filled.ReceiptLong, { onNavigate(AppRoutes.PURCHASE_HISTORY) }, Modifier.weight(1f).fillMaxHeight())
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
-                ShortcutTile(tr("اشتراكاتي"), tr("حالة الاشتراك ورمز الوصول"), Icons.Filled.Subscriptions, { onNavigate(AppRoutes.SUBSCRIPTION) }, Modifier.weight(1f).fillMaxHeight())
+                ShortcutTile(tr("اشتراكاتي"), tr("إدارة الباقات ورموز التفعيل"), Icons.Filled.Subscriptions, { onNavigate(AppRoutes.SUBSCRIPTION) }, Modifier.weight(1f).fillMaxHeight())
                 ShortcutTile(
                     tr("الحساب"),
                     userEmail?.takeIf { it.isNotBlank() } ?: tr("اللغة والمظهر والأمان"),
@@ -411,7 +411,7 @@ private fun DashboardTab(
                     Modifier.weight(1f).fillMaxHeight()
                 )
             }
-            ActionRow(tr("الدعم الفني"), tr("تواصل مع فريق الدعم"), Icons.Filled.SupportAgent, { onNavigate(AppRoutes.SUPPORT) })
+            ActionRow(tr("الدعم الفني"), tr("المساعدة وخدمة العملاء"), Icons.Filled.SupportAgent, { onNavigate(AppRoutes.SUPPORT) })
             if (isAdmin) {
                 ActionRow(
                     tr("لوحة الإدارة"),
@@ -440,7 +440,7 @@ private fun findActiveNumbers(vm: AppViewModel, api: VirtualNumberOrder?): List<
     if (api != null && api.phone.isNotBlank() && api.status.uppercase() in LIVE_API_STATUSES && notExpired(api.expiresAt)) {
         result += ActiveNumber(
             phone = api.phone,
-            title = tr("رقم فوري") + if (api.productCode.isNotBlank()) " • ${api.productCode}" else "",
+            title = tr("رقم لطلب كود مرة واحدة") + if (api.productCode.isNotBlank()) " • ${api.productCode}" else "",
             expiresAt = api.expiresAt,
             instant = true,
             code = api.smsCode?.takeIf { it.isNotBlank() }
@@ -452,7 +452,7 @@ private fun findActiveNumbers(vm: AppViewModel, api: VirtualNumberOrder?): List<
         ?.let { o ->
             result += ActiveNumber(
                 phone = o.phoneNumber.orEmpty(),
-                title = tr("رقم خاص") + if (o.serviceName.isNotBlank()) " • ${o.serviceName}" else "",
+                title = tr("رقم اشتراك شهري ودائم") + if (o.serviceName.isNotBlank()) " • ${o.serviceName}" else "",
                 expiresAt = o.expiresAt,
                 instant = false,
                 code = o.smsCode?.takeIf { it.isNotBlank() }
@@ -518,19 +518,19 @@ private fun GetNumberCard(onInstant: () -> Unit, onPrivate: () -> Unit) {
             ) {
                 Icon(Icons.Filled.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(30.dp))
             }
-            Text(tr("+ احصل على رقم الآن"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Text(tr("احصل على رقمك الافتراضي"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
             Text(
-                tr("لا يوجد لديك رقم نشط. فعّل واتساب أو تيليجرام برقم فوري، أو اشترك برقم خاص."),
+                tr("لا توجد أرقام نشطة حالياً. اختر رقماً فورياً للتفعيل السريع، أو اشترك برقم خاص مخصص لك."),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(onClick = onInstant, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(14.dp)) {
-                    Text(tr("رقم فوري"), fontWeight = FontWeight.Bold)
+                    Text(tr("رقم لطلب كود مرة واحدة"), fontWeight = FontWeight.Bold)
                 }
                 OutlinedButton(onClick = onPrivate, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(14.dp)) {
-                    Text(tr("رقم خاص"), fontWeight = FontWeight.Bold)
+                    Text(tr("رقم اشتراك شهري ودائم"), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -570,22 +570,29 @@ private fun GreetingHeader(userEmail: String?) {
 
 @Composable
 private fun PrivateNumbersTab(vm: AppViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+    PullToRefreshBox(
+        isRefreshing = vm.loading,
+        onRefresh = { vm.loadStore(); vm.loadWallet() },
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(tr("أرقامي"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-            Text(
-                tr("أرقام خاصة شهرية وسنوية تُجهَّز وتُسلَّم يدوياً من الإدارة."),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(tr("أرقامي"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                Text(
+                    tr("أرقام خاصة شهرية وسنوية تُجهَّز وتُسلَّم يدوياً من الإدارة."),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            StoreBody(vm)
         }
-        StoreBody(vm)
     }
 }
 
