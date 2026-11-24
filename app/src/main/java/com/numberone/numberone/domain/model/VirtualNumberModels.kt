@@ -59,5 +59,6 @@ data class VirtualNumberOrder(
     @SerialName("charged_price") val chargedPrice: Double = 0.0,
     @SerialName("base_price") val basePrice: Double = 0.0,
     @SerialName("product_code") val productCode: String = "",
-    @SerialName("country_code") val countryCode: String = ""
+    @SerialName("country_code") val countryCode: String = "",
+    @SerialName("is_hidden") val isHidden: Boolean = false
 )
