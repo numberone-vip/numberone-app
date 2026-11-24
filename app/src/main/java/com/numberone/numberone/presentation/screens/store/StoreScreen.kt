@@ -172,6 +172,13 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
             }
             if (vm.hexzSandboxChecked) {
                 Text(tr("تم الاتصال بخدمة الاختبار بنجاح."), color = MaterialTheme.colorScheme.primary)
+                vm.hexzSandboxBalance?.let { balance ->
+                    Text(
+                        tr("نتيجة رصيد Sandbox: ") + balance,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             Text(
                 tr("الشراء غير مفعّل؛ اختبار الاتصال لا ينشئ طلباً ولا يخصم رصيداً."),
