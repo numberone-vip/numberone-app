@@ -30,5 +30,9 @@ data class HexzCatalogItem(
     @SerialName("logo_url") val logoUrl: String? = null,
     val description: String? = null,
     @SerialName("in_stock") val inStock: Boolean? = null,
-    @SerialName("requires_target") val requiresTarget: Boolean = false
+    @SerialName("requires_target") val requiresTarget: Boolean = false,
+    @SerialName("target_schema") val targetSchema: kotlinx.serialization.json.JsonElement? = null,
+    @SerialName("family_id") val familyId: String? = null,
+    val sku: String? = null,
+    val section: String? = null
 )
