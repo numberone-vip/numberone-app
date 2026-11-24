@@ -110,9 +110,9 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 walletBalance = vm.wallet.balance,
                 onTopUp = onTopUp,
                 onWalletPurchase = { selectedServiceId -> vm.buy(selectedServiceId) },
-                onManualPayment = {
+                onManualPayment = { selectedServiceId ->
                     receipt = null
-                    vm.createManualOrder(service.id)
+                    vm.createManualOrder(selectedServiceId)
                 }
             )
         }
