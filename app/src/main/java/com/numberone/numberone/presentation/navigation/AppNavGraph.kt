@@ -27,6 +27,7 @@ import com.numberone.numberone.presentation.screens.auth.AccessCodeScreen
 import com.numberone.numberone.presentation.screens.auth.LoginScreen
 import com.numberone.numberone.presentation.screens.auth.SignupScreen
 import com.numberone.numberone.presentation.screens.home.HomeScreen
+import com.numberone.numberone.presentation.screens.hexz.HexzScreen
 import com.numberone.numberone.presentation.screens.orders.OrdersScreen
 import com.numberone.numberone.presentation.screens.settings.SettingsScreen
 import com.numberone.numberone.presentation.screens.sms.SmsInboxScreen
@@ -108,6 +109,12 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
         }
         composable(AppRoutes.WALLET) {
             WalletScreen(vm = appViewModel, onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.HEXZ) {
+            HexzScreen(
+                onBack = { navController.popBackStack() },
+                onTopUp = { navController.navigate(AppRoutes.WALLET) }
+            )
         }
         composable(AppRoutes.PURCHASE) {
             StoreScreen(
