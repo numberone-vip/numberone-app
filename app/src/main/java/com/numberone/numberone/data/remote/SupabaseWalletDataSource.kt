@@ -68,8 +68,19 @@ class SupabaseWalletDataSource : WalletDataSource {
         return result.error ?: result.message ?: result.status ?: tr("تم إرسال طلب التحقق")
     }
 
-    override suspend fun getServices(): List<Service> =
-        rpcJson.decodeFromString<List<Service>>(supabase.postgrest.from("services").select().data)
+    override suspend fun getServices(): List<Service> {
+        val services = rpcJson.decodeFromString<List<Service>>(
+            supabase.postgrest.from("services").select().data
+        )
+        // A catalog product can have several purchasable price rows. Group only identical
+        // product/country combinations and retain every original row (especially its UUID).
+        return services.groupBy {
+            listOf(it.name.trim().lowercase(), it.country.trim().lowercase(), it.countryCode.trim().lowercase())
+        }.values.map { variants ->
+            val sorted = variants.sortedWith(compareBy<Service> { it.price }.thenBy { it.id })
+            sorted.first().copy(options = sorted)
+        }
+    }
 
     override suspend fun getMyOrders(userId: String): List<OrderModel> =
         supabase.postgrest.from("orders").select {
