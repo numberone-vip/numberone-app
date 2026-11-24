@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,7 @@ import com.numberone.numberone.core.components.NOCard
 import com.numberone.numberone.core.components.NOScaffold
 import com.numberone.numberone.core.components.SectionTitle
 import com.numberone.numberone.core.localization.tr
+import coil3.compose.AsyncImage
 import com.numberone.numberone.data.remote.HexzProduct
 import com.numberone.numberone.di.AppContainer
 import kotlinx.coroutines.launch
@@ -158,7 +162,21 @@ private fun HexzProductCard(
             verticalArrangement = Arrangement.spacedBy(9.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.ShoppingBag, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                if (!product.logoUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = product.logoUrl,
+                        contentDescription = product.name,
+                        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        Icons.Filled.ShoppingBag,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
                 Column(
                     modifier = Modifier.weight(1f).padding(start = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
