@@ -4,9 +4,20 @@ import com.numberone.numberone.domain.model.HexzCatalogResponse
 import io.github.jan.supabase.functions.functions
 import io.ktor.client.call.body
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.put
 
 class HexzCatalogDataSource {
     private val supabase = SupabaseClientProvider.client
+
+    suspend fun checkSandboxBalance() {
+        val response = supabase.functions.invoke(
+            function = "hexz-orders-test",
+            body = buildJsonObject { put("action", "balance") }
+        )
+        val payload = response.body<JsonObject>()
+        check(payload["ok"]?.toString() == "true") { "تعذر الاتصال برصيد Hexz التجريبي: $payload" }
+    }
 
     suspend fun getCatalog(): List<com.numberone.numberone.domain.model.HexzCatalogItem> {
         val response = supabase.functions.invoke(
