@@ -394,6 +394,15 @@ private fun DashboardTab(
             }
         }
 
+        // HEXZ is a customer-facing destination available to every signed-in user.
+        ActionRow(
+            tr("HEXZ"),
+            tr("الألعاب والخدمات الرقمية والمنتجات الفورية"),
+            Icons.Filled.PhoneAndroid,
+            { onNavigate(AppRoutes.HEXZ) },
+            highlighted = true
+        )
+
         // 3. Shortcuts: a tidy 2x2 grid, then the full-width rows.
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(tr("اختصارات"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

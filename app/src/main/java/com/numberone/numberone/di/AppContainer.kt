@@ -21,5 +21,6 @@ object AppContainer {
     val purchaseRepository: PurchaseRepository by lazy { PurchaseRepositoryImpl() }
     val walletRepository: WalletRepository by lazy { WalletRepositoryImpl(walletSource) }
     val virtualNumberRepository: VirtualNumberRepository by lazy { VirtualNumberRepositoryImpl() }
+    val hexzDataSource: HexzDataSource by lazy { HexzDataSource() }
     val adminRepository: AdminRepository by lazy { AdminRepositoryImpl() }
 }
