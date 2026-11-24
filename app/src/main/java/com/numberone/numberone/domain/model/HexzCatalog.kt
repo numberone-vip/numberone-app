@@ -46,5 +46,12 @@ data class HexzTargetField(
     val format: String? = null,
     @SerialName("min_length") val minLength: Int? = null,
     @SerialName("max_length") val maxLength: Int? = null,
-    val required: Boolean = true
+    val required: Boolean = true,
+    val options: List<HexzTargetOption> = emptyList()
+)
+
+@Serializable
+data class HexzTargetOption(
+    val label: String = "",
+    val value: String = ""
 )
