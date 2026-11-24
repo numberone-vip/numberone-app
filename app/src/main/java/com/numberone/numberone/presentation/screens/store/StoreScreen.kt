@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
@@ -53,6 +55,7 @@ import com.numberone.numberone.core.util.ReceiptFile
 import com.numberone.numberone.domain.model.PaymentOrderCreation
 import com.numberone.numberone.presentation.screens.purchase.CheckoutScreen
 import com.numberone.numberone.presentation.viewmodel.AppViewModel
+import com.numberone.numberone.domain.model.HexzCatalogItem
 
 @Composable
 fun StoreScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: (() -> Unit)? = null) {
@@ -74,6 +77,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
     }
 
     var receipt by remember { mutableStateOf<ReceiptFile?>(null) }
+    var selectedProvider by remember { mutableStateOf("sim5") }
 
     val pickReceipt = rememberReceiptPicker(
         onPicked = { receipt = it },
@@ -101,19 +105,43 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
             )
         }
 
-        if (vm.services.isEmpty() && !vm.loading) EmptyState(tr("لا توجد خدمات متاحة حالياً. حاول لاحقاً."))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (selectedProvider == "sim5") {
+                Button(onClick = { selectedProvider = "sim5" }) { Text("Sim5") }
+                TextButton(onClick = { selectedProvider = "hexz"; vm.loadHexzCatalog() }) { Text("Hexz") }
+            } else {
+                TextButton(onClick = { selectedProvider = "sim5" }) { Text("Sim5") }
+                Button(onClick = { selectedProvider = "hexz"; vm.loadHexzCatalog() }) { Text("Hexz") }
+            }
+        }
 
-        vm.services.forEach { service ->
-            CheckoutScreen(
-                service = service,
-                enabled = !vm.loading,
-                walletBalance = vm.wallet.balance,
-                onTopUp = onTopUp,
-                onWalletPurchase = { selectedServiceId -> vm.buy(selectedServiceId) },
-                onManualPayment = { selectedServiceId ->
-                    receipt = null
-                    vm.createManualOrder(selectedServiceId)
-                }
+        if (selectedProvider == "sim5") {
+            if (vm.services.isEmpty() && !vm.loading) EmptyState(tr("لا توجد خدمات متاحة حالياً. حاول لاحقاً."))
+            vm.services.forEach { service ->
+                CheckoutScreen(
+                    service = service,
+                    enabled = !vm.loading,
+                    walletBalance = vm.wallet.balance,
+                    onTopUp = onTopUp,
+                    onWalletPurchase = { selectedServiceId -> vm.buy(selectedServiceId) },
+                    onManualPayment = { selectedServiceId ->
+                        receipt = null
+                        vm.createManualOrder(selectedServiceId)
+                    }
+                )
+            }
+        } else {
+            if (vm.hexzCatalog.isEmpty() && vm.loading) {
+                Text(tr("جاري تحميل كتالوج Hexz..."))
+            } else if (vm.hexzCatalog.isEmpty()) {
+                EmptyState(tr("لا توجد منتجات Hexz للعرض حالياً."))
+            } else {
+                vm.hexzCatalog.forEach { item -> HexzCatalogCard(item) }
+            }
+            Text(
+                tr("عرض الكتالوج فقط حالياً؛ الشراء غير مفعّل حتى يتم اعتماد مسار الطلب والخصم."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 
@@ -214,5 +242,28 @@ private fun PendingPaymentCard(
             )
             error?.let { NoticeBanner(text = it, isError = true) }
         }
+    }
+}
+
+
+@Composable
+private fun HexzCatalogCard(item: HexzCatalogItem) {
+    NOCard {
+        Text(item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        item.region?.takeIf { it.isNotBlank() }?.let { Text(trf("المنطقة: {0}", it)) }
+        val priceText = item.price?.toString()?.takeIf { it.isNotBlank() && it != "null" }
+        if (priceText != null) {
+            Text(trf("السعر: {0} {1}", priceText, item.currency.orEmpty()))
+        }
+        item.requiredData?.takeIf { it.isNotBlank() }?.let {
+            Text(trf("البيانات المطلوبة: {0}", it), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item.description?.takeIf { it.isNotBlank() }?.let { Text(it) }
+        val stockLabel = when (item.inStock) {
+            true -> tr("متوفر")
+            false -> tr("غير متوفر")
+            null -> tr("حالة المخزون غير محددة")
+        }
+        Text(stockLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
