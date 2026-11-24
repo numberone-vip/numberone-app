@@ -12,7 +12,8 @@ data class Service(
     @SerialName("price") val price: Double = 0.0,
     @SerialName("icon_url") val iconUrl: String? = null,
     @SerialName("available_count") val availableCount: Int? = 0,
-    @SerialName("created_at") val createdAt: String? = null
+    @SerialName("created_at") val createdAt: String? = null,
+    @kotlinx.serialization.Transient val options: List<Service> = emptyList()
 )
 
 @Serializable
