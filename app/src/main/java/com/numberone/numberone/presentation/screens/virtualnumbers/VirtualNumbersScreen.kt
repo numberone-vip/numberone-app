@@ -156,7 +156,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             .onFailure { say(it.message ?: tr("تعذر تحميل كتالوج الأرقام")) }
         catalogLoading = false
         // Recover the latest activation after navigating away or reopening the screen.
-        repository.latestActivation().onSuccess { latest -> if (latest != null) order = latest }
+        repository.latestActivation().onSuccess { latest -> order = latest?.takeUnless { it.isHidden } }
     }
 
     LaunchedEffect(selectedCountry?.countryCode, selectedService?.code) {
@@ -188,7 +188,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             val fresh = repository.poll(id).getOrNull() ?: continue
             val previousCode = order?.smsCode
             order = fresh
-            if (!fresh.smsCode.isNullOrBlank() && fresh.smsCode != previousCode) {
+            if (!fresh.isHidden && !fresh.smsCode.isNullOrBlank() && fresh.smsCode != previousCode) {
                 SmsNotifications.show(
                     context,
                     SmsNotifications.notifyId(fresh.activationId),
@@ -264,7 +264,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             // Inside the main tabs the shell already handles the system bars.
             contentWindowInsets = if (embedded) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets
         ) { padding ->
-            PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { scope.launch { isRefreshing = true; vm.loadWallet(); repository.catalog().onSuccess { res -> catalog = res }; val c = selectedCountry; val s = selectedService; if (c != null && s != null) repository.quote(c.countryCode, s.code).onSuccess { quote = it }; repository.latestActivation().onSuccess { if (it != null) order = it }; isRefreshing = false } }, modifier = Modifier.fillMaxSize().padding(padding)) {
+            PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { scope.launch { isRefreshing = true; vm.loadWallet(); repository.catalog().onSuccess { res -> catalog = res }; val c = selectedCountry; val s = selectedService; if (c != null && s != null) repository.quote(c.countryCode, s.code).onSuccess { quote = it }; repository.latestActivation().onSuccess { order = it?.takeUnless { activation -> activation.isHidden } }; isRefreshing = false } }, modifier = Modifier.fillMaxSize().padding(padding)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -379,7 +379,22 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                                     successMessage = tr("تم إلغاء الرقم وتحديث الاسترداد إن وُجد")
                                 )
                             },
-                            onDismiss = { order = null }
+                            onDismiss = {
+                                if (!actionLoading) scope.launch {
+                                    actionLoading = true
+                                    try {
+                                        repository.hideActivation(activeOrder.activationId)
+                                            .onSuccess {
+                                                order = null
+                                                SmsNotifications.dismiss(context, SmsNotifications.notifyId(activeOrder.activationId))
+                                                say(tr("تم إخفاء الطلب"))
+                                            }
+                                            .onFailure { say(it.message ?: tr("تعذر إخفاء الطلب")) }
+                                    } finally {
+                                        actionLoading = false
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -788,7 +803,7 @@ private fun ActivationCard(
         }
 
         if (!isLive(order.status)) {
-            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = onDismiss, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
                 Text(tr("إخفاء هذا الطلب"))
             }
         }
