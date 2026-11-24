@@ -167,8 +167,6 @@ class AdminRepositoryImpl : AdminRepository {
     override suspend fun updatePaymentConfig(config: AppPaymentConfig) = runCatching {
         val wallet = config.binanceWalletAddress.trim()
         require(wallet.isEmpty() || bscRegex.matches(wallet)) { tr("عنوان محفظة BEP20 غير صالح (يبدأ بـ 0x ويتكون من 42 خانة)") }
-        require(config.sypUsdRate.isFinite() && config.sypUsdRate >= 0.0 && config.sypUsdRate <= 10_000_000.0) { tr("سعر الصرف غير صالح") }
-        require(config.promoBannerText.length <= 300) { tr("نص البانر طويل (الحد 300 حرف)") }
         require(config.binanceNetwork.equals("BEP20", ignoreCase = true)) { tr("شبكة الإيداع المدعومة هي BEP20 فقط") }
         require(config.shamCashName.length <= 120) { tr("اسم صاحب حساب شام كاش طويل جداً") }
         require(config.sypUsdRate.isFinite() && config.sypUsdRate >= 0.0 && config.sypUsdRate <= 10_000_000.0) { tr("سعر صرف الليرة غير صالح") }

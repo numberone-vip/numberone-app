@@ -93,6 +93,7 @@ class AppViewModel : ViewModel() {
             deposits = repo.getMyTopUpRequests().getOrThrow()
             services = repo.getServices().getOrThrow()
             history = repo.getMyOrders().getOrThrow()
+            paymentConfig = repo.getPaymentConfig().getOrNull()
         }
     }
 
