@@ -79,6 +79,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
     var receipt by remember { mutableStateOf<ReceiptFile?>(null) }
     var selectedProvider by remember { mutableStateOf("sim5") }
     var hexzLoadRequested by remember { mutableStateOf(false) }
+    var hexzSearch by remember { mutableStateOf("") }
 
     LaunchedEffect(selectedProvider, vm.loading) {
         if (selectedProvider == "hexz" && hexzLoadRequested && !vm.loading && !vm.hexzCatalogLoaded) {
@@ -144,10 +145,29 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
             } else if (vm.hexzCatalog.isEmpty()) {
                 EmptyState(tr("لا توجد منتجات Hexz للعرض حالياً."))
             } else {
-                vm.hexzCatalog.forEach { item -> HexzCatalogCard(item) }
+                OutlinedTextField(
+                    value = hexzSearch,
+                    onValueChange = { hexzSearch = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text(tr("ابحث عن لعبة أو بطاقة أو منطقة")) }
+                )
+                val filteredHexz = vm.hexzCatalog.filter { item ->
+                    val needle = hexzSearch.trim()
+                    needle.isEmpty() || listOfNotNull(item.name, item.category, item.familyName, item.region, item.description)
+                        .any { it.contains(needle, ignoreCase = true) }
+                }
+                if (filteredHexz.isEmpty()) EmptyState(tr("لا توجد نتائج مطابقة للبحث."))
+                filteredHexz.forEach { item -> HexzCatalogCard(item) }
+            }
+            Button(onClick = { vm.checkHexzSandbox() }, enabled = !vm.loading) {
+                Text(tr("اختبار اتصال Hexz Sandbox"))
+            }
+            if (vm.hexzSandboxChecked) {
+                Text(tr("تم الاتصال بخدمة الاختبار بنجاح."), color = MaterialTheme.colorScheme.primary)
             }
             Text(
-                tr("عرض الكتالوج فقط حالياً؛ الشراء غير مفعّل حتى يتم اعتماد مسار الطلب والخصم."),
+                tr("الشراء غير مفعّل؛ اختبار الاتصال لا ينشئ طلباً ولا يخصم رصيداً."),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
