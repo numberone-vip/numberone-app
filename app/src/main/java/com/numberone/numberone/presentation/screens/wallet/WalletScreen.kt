@@ -83,9 +83,9 @@ import com.numberone.numberone.core.components.ltr
 import com.numberone.numberone.core.components.rememberReceiptPicker
 import com.numberone.numberone.core.components.statusTone
 import com.numberone.numberone.core.components.successColor
-import com.numberone.numberone.core.util.PaymentConfig
 import com.numberone.numberone.core.util.ReceiptFile
 import com.numberone.numberone.domain.model.ShamCashTopUp
+import com.numberone.numberone.domain.model.AppPaymentConfig
 import com.numberone.numberone.domain.model.WalletTopUp
 import com.numberone.numberone.domain.model.WalletTransaction
 import com.numberone.numberone.domain.model.isOpenStatus
@@ -170,6 +170,7 @@ fun WalletScreen(vm: AppViewModel, onBack: () -> Unit) {
         } else {
             ShamSection(
                 vm = vm,
+                paymentConfig = vm.paymentConfig,
                 pendingReceipt = pendingReceipt,
                 receiptTargetId = receiptTargetId,
                 onPickReceipt = { topUpId ->
@@ -244,7 +245,7 @@ private fun exactUsdt(value: Double): String =
 @Composable
 private fun BinanceSection(vm: AppViewModel) {
     val selected = vm.deposits.firstOrNull { it.id == vm.selectedDeposit && isOpenStatus(it.status) }
-    val address = vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
+    val address = vm.paymentConfig?.binanceWalletAddress?.takeIf { it.isNotBlank() }
 
     NOCard {
         DepositProgress(current = if (selected == null) 1 else 2)
@@ -270,10 +271,13 @@ private fun BinanceSection(vm: AppViewModel) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             shape = RoundedCornerShape(16.dp)
         )
+        if (address == null) {
+            NoticeBanner(text = tr("لم تُضف الإدارة عنوان استقبال USDT على شبكة BEP20 بعد. لا تنشئ طلب إيداع قبل إعداد العنوان."), isError = true)
+        }
         NOButton(
             text = tr("إنشاء طلب"),
             onClick = vm::topUp,
-            enabled = !vm.loading && vm.amount.isNotBlank()
+            enabled = !vm.loading && vm.amount.isNotBlank() && address != null
         )
     }
 
@@ -494,6 +498,7 @@ private fun DepositRow(deposit: WalletTopUp, selected: Boolean, onSelect: () -> 
 @Composable
 private fun ShamSection(
     vm: AppViewModel,
+    paymentConfig: AppPaymentConfig?,
     pendingReceipt: ReceiptFile?,
     receiptTargetId: String?,
     onPickReceipt: (String) -> Unit,
@@ -531,10 +536,14 @@ private fun ShamSection(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             shape = RoundedCornerShape(16.dp)
         )
+        val shamAccountReady = !paymentConfig?.shamCashAccount.isNullOrBlank()
+        if (!shamAccountReady) {
+            NoticeBanner(text = tr("لم تُعدّ الإدارة حساب شام كاش بعد. لن تتمكن من إنشاء طلب شحن حتى يتم حفظ الحساب."), isError = true)
+        }
         NOButton(
             text = tr("إنشاء الطلب"),
             onClick = vm::createShamTopUp,
-            enabled = !vm.loading && vm.shamAmount.isNotBlank()
+            enabled = !vm.loading && vm.shamAmount.isNotBlank() && shamAccountReady
         )
     }
 
@@ -545,6 +554,7 @@ private fun ShamSection(
     } else {
         ActiveShamRequest(
             topUp = active,
+            paymentConfig = paymentConfig,
             loading = vm.loading,
             error = vm.error,
             pendingReceipt = if (receiptTargetId == active.id) pendingReceipt else null,
@@ -572,6 +582,7 @@ private fun ShamSection(
 @Composable
 private fun ActiveShamRequest(
     topUp: ShamCashTopUp,
+    paymentConfig: AppPaymentConfig?,
     loading: Boolean,
     error: String?,
     pendingReceipt: ReceiptFile?,
@@ -602,11 +613,11 @@ private fun ActiveShamRequest(
             }
         }
         Column {
-            if (PaymentConfig.SHAM_CASH_ACCOUNT_NAME.isNotBlank()) {
-                TicketRow(label = tr("اسم صاحب الحساب"), value = PaymentConfig.SHAM_CASH_ACCOUNT_NAME, copyValue = PaymentConfig.SHAM_CASH_ACCOUNT_NAME)
+            paymentConfig?.shamCashName?.takeIf { it.isNotBlank() }?.let { name ->
+                TicketRow(label = tr("اسم صاحب الحساب"), value = name, copyValue = name)
             }
-            if (PaymentConfig.SHAM_CASH_ACCOUNT.isNotBlank()) {
-                TicketRow(label = tr("حساب شام كاش"), value = PaymentConfig.SHAM_CASH_ACCOUNT, copyValue = PaymentConfig.SHAM_CASH_ACCOUNT, monospace = true)
+            paymentConfig?.shamCashAccount?.takeIf { it.isNotBlank() }?.let { account ->
+                TicketRow(label = tr("حساب شام كاش"), value = account, copyValue = account, monospace = true)
             }
             TicketRow(label = tr("رقم الطلب"), value = "#" + topUp.id.take(8), copyValue = topUp.id, monospace = true)
         }

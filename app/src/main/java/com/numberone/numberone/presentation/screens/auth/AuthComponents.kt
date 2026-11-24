@@ -148,7 +148,7 @@ internal fun AuthScaffold(
     accentBrush: Brush = AuthAccentBrush,
     accentGlow: Color = NumberOneColors.GoldMid,
     ornamentColor: Color = NumberOneColors.Champagne,
-    emblemRes: Int = R.drawable.ic_login_logo,
+    emblemRes: Int = R.drawable.ic_numberone_mark,
     emblemCard: Boolean = false,
     topEnd: (@Composable () -> Unit)? = null,
     header: @Composable ColumnScope.() -> Unit,
@@ -302,7 +302,7 @@ internal fun AuthEmblem(
     brush: Brush = AuthAccentBrush,
     headerBrush: Brush = AuthHeaderBrush,
     glow: Color = NumberOneColors.GoldMid,
-    drawableRes: Int = R.drawable.ic_login_logo,
+    drawableRes: Int = R.drawable.ic_numberone_mark,
     card: Boolean = true
 ) {
     val shape = RoundedCornerShape(if (card) 24.dp else 30.dp)

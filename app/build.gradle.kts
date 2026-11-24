@@ -72,7 +72,9 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
 
-            isMinifyEnabled = false
+            // R8 removes and optimizes unused bytecode in release builds.
+            // Keep resource shrinking disabled until dynamic resource usage is audited.
+            isMinifyEnabled = true
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

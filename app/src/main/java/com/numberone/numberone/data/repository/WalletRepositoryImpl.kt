@@ -88,4 +88,5 @@ class WalletRepositoryImpl(
         walletDataSource.submitShamCashReceipt(id, bytes, mimeType, extension)
     }
     override suspend fun getMyShamCashTopUps() = runCatching { currentUserId(); walletDataSource.getMyShamCashTopUps() }
+    override suspend fun getPaymentConfig() = runCatching { currentUserId(); walletDataSource.getPaymentConfig() }
 }

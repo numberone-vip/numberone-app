@@ -284,15 +284,22 @@ private fun PaymentConfigCard(vm: AdminViewModel) {
     val base = vm.paymentConfig ?: AppPaymentConfig()
     var wallet by remember(base) { mutableStateOf(base.binanceWalletAddress) }
     var shamAccount by remember(base) { mutableStateOf(base.shamCashAccount) }
+    var shamName by remember(base) { mutableStateOf(base.shamCashName) }
+    var sypRate by remember(base) { mutableStateOf(if (base.sypUsdRate > 0) base.sypUsdRate.toString() else "") }
+    var promo by remember(base) { mutableStateOf(base.promoBannerText) }
     var localError by remember(base) { mutableStateOf<String?>(null) }
 
+    val parsedSypRate = sypRate.trim().ifEmpty { "0" }.toDoubleOrNull()
     val dirty = wallet.trim() != base.binanceWalletAddress ||
-        shamAccount.trim() != base.shamCashAccount
+        shamAccount.trim() != base.shamCashAccount ||
+        shamName.trim() != base.shamCashName ||
+        parsedSypRate != base.sypUsdRate ||
+        promo.trim() != base.promoBannerText
 
     fun edited() { localError = null; vm.clearConfigNotice() }
 
     NOCard {
-        SectionTitle(tr("إعدادات الدفع والتطبيق"), tr("تُحفظ مباشرة على الخادم وتنعكس على شاشات الدفع"))
+        SectionTitle(tr("إعدادات الدفع والتطبيق"), tr("تُحفظ على الخادم وتظهر للمستخدمين مباشرة"))
         OutlinedTextField(
             value = wallet,
             onValueChange = { wallet = it; edited() },
@@ -309,8 +316,31 @@ private fun PaymentConfigCard(vm: AdminViewModel) {
             textStyle = ltrTextStyle(),
             modifier = Modifier.fillMaxWidth()
         )
+        OutlinedTextField(
+            value = shamName,
+            onValueChange = { shamName = it; edited() },
+            label = { Text(tr("اسم صاحب حساب شام كاش")) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = sypRate,
+            onValueChange = { sypRate = it; edited() },
+            label = { Text(tr("سعر صرف الليرة مقابل الدولار (اختياري)")) },
+            singleLine = true,
+            textStyle = ltrTextStyle(),
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = promo,
+            onValueChange = { promo = it; edited() },
+            label = { Text(tr("نص الإعلان داخل التطبيق (اختياري)")) },
+            minLines = 2,
+            maxLines = 3,
+            modifier = Modifier.fillMaxWidth()
+        )
         Text(
-            tr("القاعدة الحية تدعم حاليًا عنوان Binance وحساب Sham Cash فقط ضمن هذا RPC."),
+            tr("إعدادات الدفع والإعلان تُقرأ من الخادم وتنعكس على حسابات المستخدمين."),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -322,16 +352,21 @@ private fun PaymentConfigCard(vm: AdminViewModel) {
             loading = vm.loading,
             enabled = dirty,
             onClick = {
-                vm.savePaymentConfig(
-                    AppPaymentConfig(
-                        binanceWalletAddress = wallet.trim(),
-                        binanceNetwork = base.binanceNetwork,
-                        shamCashAccount = shamAccount.trim(),
-                        shamCashName = base.shamCashName,
-                        sypUsdRate = base.sypUsdRate,
-                        promoBannerText = base.promoBannerText
+                val rate = sypRate.trim().ifEmpty { "0" }.toDoubleOrNull()
+                if (rate == null || !rate.isFinite() || rate < 0) {
+                    localError = tr("أدخل سعر صرف صحيحاً أو اترك الحقل فارغاً")
+                } else {
+                    vm.savePaymentConfig(
+                        AppPaymentConfig(
+                            binanceWalletAddress = wallet.trim(),
+                            binanceNetwork = base.binanceNetwork,
+                            shamCashAccount = shamAccount.trim(),
+                            shamCashName = shamName.trim(),
+                            sypUsdRate = rate,
+                            promoBannerText = promo.trim()
+                        )
                     )
-                )
+                }
             }
         )
     }
