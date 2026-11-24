@@ -166,6 +166,7 @@ function normalizeOrder(row: any, providerOrder?: ProviderOrder) {
     base_price: Number(row.base_price ?? 0),
     product_code: String(row.product_code ?? row.service_code ?? providerOrder?.product ?? ""),
     country_code: String(row.country_code ?? providerOrder?.country ?? ""),
+    is_hidden: Boolean(row.is_hidden ?? false),
   };
 }
 
