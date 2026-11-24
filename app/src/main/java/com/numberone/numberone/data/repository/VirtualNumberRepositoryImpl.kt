@@ -43,6 +43,11 @@ class VirtualNumberRepositoryImpl(
         source.latestActivation()
     }
 
+    override suspend fun hideActivation(activationId: String): Result<Unit> = guard {
+        require(activationId.isNotBlank()) { tr("معرّف التفعيل مطلوب") }
+        source.hideActivation(activationId)
+    }
+
     override suspend fun requestNextSms(activationId: String): Result<VirtualNumberOrder> = guard {
         require(activationId.isNotBlank()) { tr("معرّف التفعيل مطلوب") }
         source.requestNextSms(activationId)
