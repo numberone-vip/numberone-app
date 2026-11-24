@@ -43,9 +43,9 @@
 - تشغيل GitHub Actions: [45418859524](https://github.com/saamabbas83-arch/numberone-app/actions/runs/45418859524).
 - الـ commit المبني: `9efa5a11ebec60934f7eac69ab0ceb378d06e3cc`.
 - نتيجة المهمة: `success`؛ خطوات الاختبار وبناء Debug وRelease الموقّع ورفع الملفين كلها ناجحة.
-- Debug Artifact: `NumberOne-Debug-APK`، المعرّف `14931424631`، الحجم 26,500,057 بايت.
-- Release Artifact: `NumberOne-Release-APK`، المعرّف `14932399454`، الحجم 18,242,746 بايت.
-- لم أتمكن من فحص APK bytecode أو تثبيته على جهاز من خلال واجهة المستودع؛ نجاح البناء ووجود Artifact لا يثبتان اختبار التشغيل على جهاز.
+- Debug Artifact: `NumberOne-Debug-APK`، المعرّف `14931424631`، الحجم 26,500,057 بايت؛ APK المستخرج 27,571,869 بايت، SHA-256: `2c33a1cf33958d60c98272c6b2b31ab2bee75191b6e42f46117b2f371e43941d`.
+- Release Artifact: `NumberOne-Release-APK`، المعرّف `14932399454`، الحجم 18,242,746 بايت؛ APK المستخرج 19,192,887 بايت، SHA-256: `7d264f5884acda556dd5787761ec8b54910d7c97c30396dce493b4733d423753`.
+- نُزّل ملفا Artifact وفُك ضغطهما وفُحص APK نفسه: كلاهما يحمل package name `com.numberone.numberone` وversionName `1.1.0` وversionCode `2`، ويتضمن جدول الموارد مراجع `ic_launcher` و`ic_launcher_round`، كما يحتوي كل APK على APK Signing Block. لم يتم التثبيت أو اختبار التشغيل على جهاز فعلي.
 - سجل التشغيل يثبت أن `GOOGLE_SERVICES_JSON_BASE64` كان فارغاً؛ لذلك هذان الملفان لا يحتويان تهيئة Firebase/FCM.
 
 ### Firebase
