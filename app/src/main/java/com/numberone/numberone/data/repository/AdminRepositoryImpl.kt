@@ -169,13 +169,19 @@ class AdminRepositoryImpl : AdminRepository {
         require(wallet.isEmpty() || bscRegex.matches(wallet)) { tr("عنوان محفظة BEP20 غير صالح (يبدأ بـ 0x ويتكون من 42 خانة)") }
         require(config.sypUsdRate.isFinite() && config.sypUsdRate >= 0.0 && config.sypUsdRate <= 10_000_000.0) { tr("سعر الصرف غير صالح") }
         require(config.promoBannerText.length <= 300) { tr("نص البانر طويل (الحد 300 حرف)") }
-        // Live RPC currently persists only the Binance BEP20 address and Sham Cash account.
-        // Do not send the extra V4-only fields: the live signature rejects them.
+        require(config.binanceNetwork.equals("BEP20", ignoreCase = true)) { tr("شبكة الإيداع المدعومة هي BEP20 فقط") }
+        require(config.shamCashName.length <= 120) { tr("اسم صاحب حساب شام كاش طويل جداً") }
+        require(config.sypUsdRate.isFinite() && config.sypUsdRate >= 0.0 && config.sypUsdRate <= 10_000_000.0) { tr("سعر صرف الليرة غير صالح") }
+        require(config.promoBannerText.length <= 300) { tr("نص البانر طويل (الحد 300 حرف)") }
+        // Match the live five-argument public RPC signature exactly.
         db.rpcRaw(
             "admin_update_payment_config",
             buildJsonObject {
-                put("p_binance_address", wallet)
+                put("p_binance_wallet_address", wallet)
                 put("p_sham_cash_account", config.shamCashAccount.trim())
+                put("p_sham_cash_name", config.shamCashName.trim())
+                put("p_syp_usd_rate", config.sypUsdRate)
+                put("p_promo_banner_text", config.promoBannerText.trim())
             }
         )
         Unit

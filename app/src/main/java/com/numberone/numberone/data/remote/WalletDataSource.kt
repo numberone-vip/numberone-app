@@ -9,6 +9,7 @@ import com.numberone.numberone.domain.model.WalletOrderResult
 import com.numberone.numberone.domain.model.PaymentOrderCreation
 import com.numberone.numberone.domain.model.Order
 import com.numberone.numberone.domain.model.ShamCashTopUp
+import com.numberone.numberone.domain.model.AppPaymentConfig
 
 interface WalletDataSource {
     suspend fun getWallet(userId: String): Wallet
@@ -26,4 +27,5 @@ interface WalletDataSource {
     suspend fun createShamCashTopUp(paymentMethod: String, paidAmount: Double): String
     suspend fun submitShamCashReceipt(requestId: String, bytes: ByteArray, mimeType: String, extension: String): Boolean
     suspend fun getMyShamCashTopUps(): List<ShamCashTopUp>
+    suspend fun getPaymentConfig(): AppPaymentConfig
 }

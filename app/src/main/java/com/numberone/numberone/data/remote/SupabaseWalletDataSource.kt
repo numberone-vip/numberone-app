@@ -10,6 +10,7 @@ import com.numberone.numberone.domain.model.WalletOrderResult
 import com.numberone.numberone.domain.model.PaymentOrderCreation
 import com.numberone.numberone.domain.model.Order as OrderModel
 import com.numberone.numberone.domain.model.ShamCashTopUp
+import com.numberone.numberone.domain.model.AppPaymentConfig
 import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
@@ -135,6 +136,11 @@ class SupabaseWalletDataSource : WalletDataSource {
 
     override suspend fun getMyShamCashTopUps(): List<ShamCashTopUp> =
         supabase.postgrest.rpcDecode("wallet_get_my_sham_cash_topups", buildJsonObject { put("p_limit", 50) })
+
+    /** Read payment destinations from the authenticated public RPC, never hard-coded in the APK. */
+    override suspend fun getPaymentConfig(): AppPaymentConfig =
+        supabase.postgrest.rpcDecode<List<AppPaymentConfig>>("get_payment_config").firstOrNull()
+            ?: AppPaymentConfig()
 }
 
 

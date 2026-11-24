@@ -30,6 +30,7 @@ class AppViewModel : ViewModel() {
     var pendingOrder by mutableStateOf<PaymentOrderCreation?>(null); private set
     var shamTopUps by mutableStateOf<List<ShamCashTopUp>>(emptyList()); private set
     var shamSelected by mutableStateOf(""); private set
+    var paymentConfig by mutableStateOf<AppPaymentConfig?>(null); private set
 
     // Input fields keep private backing properties. Public accessors are plain getters and
     // the setters are explicit functions, so no JVM setX() declaration can clash.
@@ -54,7 +55,7 @@ class AppViewModel : ViewModel() {
     /** Wipes every piece of per-user state (called on sign-out so the next account never sees it). */
     private fun clearSessionState() {
         _shamMethod = "SHAM_CASH_SYP"; _shamAmount = ""; shamTopUps = emptyList(); shamSelected = ""
-        wallet = Wallet(); transactions = emptyList(); deposits = emptyList(); services = emptyList()
+        wallet = Wallet(); transactions = emptyList(); deposits = emptyList(); services = emptyList(); paymentConfig = null
         subscriptions = emptyList(); sms = emptyList(); smsSeenCount = 0; history = emptyList()
         _accessCode = ""; _amount = ""; _txHash = ""; selectedDeposit = ""; pendingOrder = null
         walletRequestIds.clear(); error = null; message = null
@@ -102,6 +103,7 @@ class AppViewModel : ViewModel() {
             transactions = repo.getTransactions().getOrThrow()
             deposits = repo.getMyTopUpRequests().getOrThrow()
             shamTopUps = repo.getMyShamCashTopUps().getOrThrow()
+            paymentConfig = repo.getPaymentConfig().getOrNull()
         }
     }
 
@@ -114,6 +116,7 @@ class AppViewModel : ViewModel() {
             deposits = repo.getMyTopUpRequests().getOrThrow()
             shamTopUps = repo.getMyShamCashTopUps().getOrThrow()
             history = repo.getMyOrders().getOrThrow()
+            paymentConfig = repo.getPaymentConfig().getOrNull()
         }
     }
 
