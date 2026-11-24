@@ -21,6 +21,7 @@ class AppViewModel : ViewModel() {
     var services by mutableStateOf<List<Service>>(emptyList()); private set
     var hexzCatalog by mutableStateOf<List<HexzCatalogItem>>(emptyList()); private set
     var hexzCatalogLoaded by mutableStateOf(false); private set
+    var hexzSandboxChecked by mutableStateOf(false); private set
     var subscriptions by mutableStateOf<List<Subscription>>(emptyList()); private set
     var sms by mutableStateOf<List<SmsMessage>>(emptyList()); private set
     /** How many messages the user had seen when the inbox was last open. */
@@ -57,7 +58,7 @@ class AppViewModel : ViewModel() {
     private fun clearSessionState() {
         _shamMethod = "SHAM_CASH_SYP"; _shamAmount = ""; shamTopUps = emptyList(); shamSelected = ""
         wallet = Wallet(); transactions = emptyList(); deposits = emptyList(); services = emptyList()
-        hexzCatalog = emptyList(); hexzCatalogLoaded = false
+        hexzCatalog = emptyList(); hexzCatalogLoaded = false; hexzSandboxChecked = false
         subscriptions = emptyList(); sms = emptyList(); smsSeenCount = 0; history = emptyList()
         _accessCode = ""; _amount = ""; _txHash = ""; selectedDeposit = ""; pendingOrder = null
         walletRequestIds.clear(); error = null; message = null
@@ -121,6 +122,14 @@ class AppViewModel : ViewModel() {
     }
 
     fun loadStore() { run { services = AppContainer.walletRepository.getServices().getOrThrow() } }
+
+    fun checkHexzSandbox() {
+        run {
+            com.numberone.numberone.data.remote.HexzCatalogDataSource().checkSandboxBalance()
+            hexzSandboxChecked = true
+            message = tr("اتصال Hexz Sandbox ناجح")
+        }
+    }
 
     /** Loads the Hexz catalog only; this deliberately does not create orders or debit wallet funds. */
     fun loadHexzCatalog() {
