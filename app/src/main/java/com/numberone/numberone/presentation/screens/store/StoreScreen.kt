@@ -78,6 +78,14 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
 
     var receipt by remember { mutableStateOf<ReceiptFile?>(null) }
     var selectedProvider by remember { mutableStateOf("sim5") }
+    var hexzLoadRequested by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedProvider, vm.loading) {
+        if (selectedProvider == "hexz" && hexzLoadRequested && !vm.loading && !vm.hexzCatalogLoaded) {
+            hexzLoadRequested = false
+            vm.loadHexzCatalog()
+        }
+    }
 
     val pickReceipt = rememberReceiptPicker(
         onPicked = { receipt = it },
@@ -108,7 +116,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (selectedProvider == "sim5") {
                 Button(onClick = { selectedProvider = "sim5" }) { Text("Sim5") }
-                TextButton(onClick = { selectedProvider = "hexz"; vm.loadHexzCatalog() }) { Text("Hexz") }
+                TextButton(onClick = { selectedProvider = "hexz"; hexzLoadRequested = true }) { Text("Hexz") }
             } else {
                 TextButton(onClick = { selectedProvider = "sim5" }) { Text("Sim5") }
                 Button(onClick = { selectedProvider = "hexz"; vm.loadHexzCatalog() }) { Text("Hexz") }
