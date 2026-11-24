@@ -89,7 +89,7 @@ class HexzDataSource {
                 requiresTarget = item.text("requires_target") == "true" || fields.isNotEmpty(),
                 targetFields = fields
             )
-        }
+        }.distinctBy { it.id }
     }
 
     private fun JsonObject.text(key: String): String? =
