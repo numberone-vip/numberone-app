@@ -54,13 +54,13 @@ class HexzDataSource {
             val id = item.text("product_id") ?: item.text("sku") ?: return@mapNotNull null
             val name = item.text("name")?.takeIf(String::isNotBlank) ?: return@mapNotNull null
             val fields = item["target_schema"]?.let { value ->
-                runCatching { value.jsonArray.mapNotNull { fieldElement ->
-                    val field = fieldElement as? JsonObject ?: return@mapNotNull null
-                    val key = field.text("key")?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+                runCatching { value.jsonArray.mapNotNull fieldLoop@ { fieldElement ->
+                    val field = fieldElement as? JsonObject ?: return@fieldLoop null
+                    val key = field.text("key")?.takeIf(String::isNotBlank) ?: return@fieldLoop null
                     val options = field["options"]?.let { raw ->
-                        runCatching { raw.jsonArray.mapNotNull { optionElement ->
-                            val option = optionElement as? JsonObject ?: return@mapNotNull null
-                            val optionValue = option.text("value") ?: return@mapNotNull null
+                        runCatching { raw.jsonArray.mapNotNull optionLoop@ { optionElement ->
+                            val option = optionElement as? JsonObject ?: return@optionLoop null
+                            val optionValue = option.text("value") ?: return@optionLoop null
                             HexzTargetOption(optionValue, option.text("label") ?: optionValue)
                         } }.getOrDefault(emptyList())
                     }.orEmpty()
