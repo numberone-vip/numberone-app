@@ -147,80 +147,11 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "Supported actions: balance, create_order" }, 400);
   }
 
-  // Fail closed: this live provider endpoint must not create billable orders
-  // until an atomic wallet debit + durable local order/ledger record is wired in.
-  // Keep balance lookup available; no provider order is sent from this function.
+  // Fail closed until a server-side atomic wallet debit and durable order ledger
+  // are integrated. Balance reads remain available; no billable provider order is sent.
   return json({
     ok: false,
     stage: "wallet_integration_required",
     error: "Hexz order creation is temporarily unavailable until wallet payment and transaction recording are enabled.",
   }, 503);
-
-  const idempotencyKey = req.headers.get("Idempotency-Key") ?? "";
-  if (!/^[A-Za-z0-9._:-]{8,120}$/.test(idempotencyKey)) {
-    return json({ ok: false, error: "A unique Idempotency-Key (8-120 safe characters) is required" }, 400);
-  }
-
-  const productId = input.product_id;
-  if (typeof productId !== "string" || !productId.trim() || productId.length > 200) {
-    return json({ ok: false, error: "A valid product_id is required" }, 400);
-  }
-  const targetInput = input.target;
-  if (targetInput !== undefined && targetInput !== null &&
-      (typeof targetInput !== "object" || Array.isArray(targetInput))) {
-    return json({ ok: false, error: "target must be an object when provided" }, 400);
-  }
-  const target: Record<string, string> = {};
-  if (targetInput && typeof targetInput === "object") {
-    for (const [key, value] of Object.entries(targetInput as Record<string, unknown>)) {
-      if (!/^[A-Za-z0-9_.-]{1,80}$/.test(key) || typeof value !== "string" || value.length > 200) {
-        return json({ ok: false, error: "Invalid target field" }, 400);
-      }
-      target[key] = value.trim();
-    }
-  }
-
-  // Read the exact product schema from the existing cache; no database writes are performed.
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data: cached, error: cacheError } = await admin.from("hexz_catalog_cache")
-    .select("payload").eq("cache_key", "catalog").maybeSingle();
-  if (cacheError || !cached?.payload || !Array.isArray(cached.payload.items)) {
-    return json({ ok: false, stage: "catalog_validation", error: "Product validation data is unavailable; refresh the catalog and retry" }, 503);
-  }
-  const product = cached.payload.items.find((item: Record<string, unknown>) =>
-    item && String(item.product_id ?? "") === productId.trim());
-  if (!product) {
-    return json({ ok: false, stage: "catalog_validation", error: "Product is not present in the current Hexz catalog" }, 400);
-  }
-  const schema = Array.isArray(product.target_schema) ? product.target_schema as TargetField[] : [];
-  const requiresTarget = product.requires_target === true || schema.length > 0;
-  if (requiresTarget && schema.length === 0) {
-    return json({ ok: false, stage: "catalog_validation", error: "Required target schema is missing for this product" }, 503);
-  }
-  if (!requiresTarget && Object.keys(target).length > 0) {
-    return json({ ok: false, stage: "target_validation", error: "This product does not accept target fields" }, 400);
-  }
-  const targetError = validateTarget(schema, target);
-  if (targetError) return json({ ok: false, stage: "target_validation", error: targetError }, 400);
-
-  const orderItem: Record<string, unknown> = { product_id: productId.trim(), quantity: 1 };
-  if (Object.keys(target).length > 0) orderItem.target = target;
-  const orderBody = JSON.stringify({ items: [orderItem] });
-
-  try {
-    const response = await signedRequest("/api/v1/orders", "POST", keyId, secret, orderBody, idempotencyKey);
-    const result = await readPayload(response);
-    return json({
-      ok: response.ok, environment: "live", stage: "create_order",
-      http_status: response.status, idempotency_key: idempotencyKey, result,
-    }, response.ok ? 200 : 502);
-  } catch {
-    return json({
-      ok: false, environment: "live", stage: "network",
-      error: "Order request timed out or Hexz live service is unavailable. Retry only with the SAME Idempotency-Key.",
-      idempotency_key: idempotencyKey,
-    }, 502);
-  }
 });
