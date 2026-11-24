@@ -2,6 +2,8 @@ package com.numberone.numberone.presentation.screens.store
 
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.core.localization.trf
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -11,12 +13,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -57,6 +62,7 @@ import com.numberone.numberone.domain.model.PaymentOrderCreation
 import com.numberone.numberone.presentation.screens.purchase.CheckoutScreen
 import com.numberone.numberone.presentation.viewmodel.AppViewModel
 import com.numberone.numberone.domain.model.HexzCatalogItem
+import com.numberone.numberone.domain.model.HexzTargetField
 
 @Composable
 fun StoreScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: (() -> Unit)? = null) {
@@ -305,35 +311,80 @@ private fun HexzCatalogCard(item: HexzCatalogItem) {
             val current = targetValues[field.key].orEmpty()
             val digitsOnly = field.format.equals("digits", ignoreCase = true)
             val min = field.minLength ?: 0
-            val valid = ( !field.required || current.isNotBlank() ) &&
+            val valid = (!field.required || current.isNotBlank()) &&
                 (current.isBlank() || current.length >= min) &&
                 (field.maxLength == null || current.length <= field.maxLength) &&
-                (!digitsOnly || current.all { it.isDigit() })
+                (!digitsOnly || current.all { it.isDigit() }) &&
+                (!field.type.equals("select", true) || field.options.any { it.value == current })
+            HexzTargetInput(field = field, value = current, onValueChange = { targetValues[field.key] = it })
+            if (current.isNotBlank() && !valid) {
+                Text(tr("قيمة الحقل غير صالحة"), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun HexzTargetInput(
+    field: HexzTargetField,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    if (field.type.equals("select", ignoreCase = true)) {
+        var expanded by remember(field.key) { mutableStateOf(false) }
+        Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = current,
-                onValueChange = { raw ->
-                    val normalized = if (digitsOnly) raw.filter { it.isDigit() } else raw
-                    targetValues[field.key] = field.maxLength?.let { normalized.take(it) } ?: normalized
-                },
-                modifier = Modifier.fillMaxWidth(),
+                value = field.options.firstOrNull { it.value == value }?.label.orEmpty(),
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth().clickable { expanded = true },
+                readOnly = true,
                 singleLine = true,
                 label = { Text(field.label.ifBlank { field.key }) },
-                isError = current.isNotBlank() && !valid,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (digitsOnly) KeyboardType.Number else KeyboardType.Text
-                ),
-                supportingText = {
-                    Text(
-                        when {
-                            field.required && current.isBlank() -> tr("هذا الحقل مطلوب")
-                            current.isNotBlank() && current.length < min -> trf("الحد الأدنى {0} خانات", min)
-                            !valid -> tr("تحقق من قيمة الحقل")
-                            field.maxLength != null -> trf("حتى {0} خانة", field.maxLength)
-                            else -> tr(" ")
-                        }
+                placeholder = { Text(tr("اختر قيمة")) },
+                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+                isError = field.required && value.isBlank()
+            )
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                field.options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = { onValueChange(option.value); expanded = false }
                     )
                 }
-            )
+            }
         }
+    } else {
+        val digitsOnly = field.format.equals("digits", ignoreCase = true)
+        val min = field.minLength ?: 0
+        val valid = (!field.required || value.isNotBlank()) &&
+            (value.isBlank() || value.length >= min) &&
+            (field.maxLength == null || value.length <= field.maxLength) &&
+            (!digitsOnly || value.all { it.isDigit() })
+        OutlinedTextField(
+            value = value,
+            onValueChange = { raw ->
+                val normalized = if (digitsOnly) raw.filter { it.isDigit() } else raw
+                onValueChange(field.maxLength?.let { normalized.take(it) } ?: normalized)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(field.label.ifBlank { field.key }) },
+            isError = value.isNotBlank() && !valid,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (digitsOnly) KeyboardType.Number else KeyboardType.Text
+            ),
+            supportingText = {
+                Text(
+                    when {
+                        field.required && value.isBlank() -> tr("هذا الحقل مطلوب")
+                        value.isNotBlank() && value.length < min -> trf("الحد الأدنى {0} خانات", min)
+                        !valid -> tr("تحقق من قيمة الحقل")
+                        field.maxLength != null -> trf("حتى {0} خانة", field.maxLength)
+                        else -> tr(" ")
+                    }
+                )
+            }
+        )
     }
 }
