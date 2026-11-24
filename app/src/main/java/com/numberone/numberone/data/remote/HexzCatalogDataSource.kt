@@ -10,13 +10,14 @@ import kotlinx.serialization.json.put
 class HexzCatalogDataSource {
     private val supabase = SupabaseClientProvider.client
 
-    suspend fun checkSandboxBalance() {
+    suspend fun checkSandboxBalance(): String {
         val response = supabase.functions.invoke(
             function = "hexz-orders-test",
             body = buildJsonObject { put("action", "balance") }
         )
         val payload = response.body<JsonObject>()
         check(payload["ok"]?.toString() == "true") { "تعذر الاتصال برصيد Hexz التجريبي: $payload" }
+        return payload["result"]?.toString() ?: "تم الاتصال، لكن المزود لم يُرجع تفاصيل الرصيد."
     }
 
     suspend fun getCatalog(): List<com.numberone.numberone.domain.model.HexzCatalogItem> {
