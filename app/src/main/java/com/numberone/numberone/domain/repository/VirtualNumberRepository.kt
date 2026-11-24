@@ -11,6 +11,7 @@ interface VirtualNumberRepository {
     suspend fun poll(activationId: String): Result<VirtualNumberOrder>
     suspend fun requestNextSms(activationId: String): Result<VirtualNumberOrder>
     suspend fun latestActivation(): Result<VirtualNumberOrder?>
+    suspend fun hideActivation(activationId: String): Result<Unit>
     suspend fun cancel(activationId: String): Result<VirtualNumberOrder>
     suspend fun registerDeviceToken(token: String): Result<Unit>
 }
