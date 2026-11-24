@@ -41,6 +41,10 @@ object SmsNotifications {
         manager.createNotificationChannel(channel)
     }
 
+    fun dismiss(context: Context, id: Int) {
+        NotificationManagerCompat.from(context).cancel(id)
+    }
+
     fun canPost(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < 33) return true
         return ContextCompat.checkSelfPermission(
