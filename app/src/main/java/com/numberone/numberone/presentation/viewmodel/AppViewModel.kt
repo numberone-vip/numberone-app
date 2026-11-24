@@ -19,6 +19,8 @@ class AppViewModel : ViewModel() {
     var transactions by mutableStateOf<List<WalletTransaction>>(emptyList()); private set
     var deposits by mutableStateOf<List<WalletTopUp>>(emptyList()); private set
     var services by mutableStateOf<List<Service>>(emptyList()); private set
+    var hexzCatalog by mutableStateOf<List<HexzCatalogItem>>(emptyList()); private set
+    var hexzCatalogLoaded by mutableStateOf(false); private set
     var subscriptions by mutableStateOf<List<Subscription>>(emptyList()); private set
     var sms by mutableStateOf<List<SmsMessage>>(emptyList()); private set
     /** How many messages the user had seen when the inbox was last open. */
@@ -55,6 +57,7 @@ class AppViewModel : ViewModel() {
     private fun clearSessionState() {
         _shamMethod = "SHAM_CASH_SYP"; _shamAmount = ""; shamTopUps = emptyList(); shamSelected = ""
         wallet = Wallet(); transactions = emptyList(); deposits = emptyList(); services = emptyList()
+        hexzCatalog = emptyList(); hexzCatalogLoaded = false
         subscriptions = emptyList(); sms = emptyList(); smsSeenCount = 0; history = emptyList()
         _accessCode = ""; _amount = ""; _txHash = ""; selectedDeposit = ""; pendingOrder = null
         walletRequestIds.clear(); error = null; message = null
@@ -118,6 +121,15 @@ class AppViewModel : ViewModel() {
     }
 
     fun loadStore() { run { services = AppContainer.walletRepository.getServices().getOrThrow() } }
+
+    /** Loads the Hexz catalog only; this deliberately does not create orders or debit wallet funds. */
+    fun loadHexzCatalog() {
+        if (hexzCatalogLoaded || loading) return
+        run {
+            hexzCatalog = com.numberone.numberone.data.remote.HexzCatalogDataSource().getCatalog()
+            hexzCatalogLoaded = true
+        }
+    }
 
     fun topUp() {
         val value = amount.trim().toDoubleOrNull()
