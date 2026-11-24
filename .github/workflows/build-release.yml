@@ -84,7 +84,8 @@ jobs:
           verify_apk() {
             apk="$1"
             "$AAPT" dump badging "$apk" | grep -F "package: name='com.numberone.numberone'"
-            "$AAPT" dump badging "$apk" | grep -E "application: .*icon='res/.*/ic_launcher"
+            # Adaptive launcher icons are commonly reported as ic_launcher.xml.
+            "$AAPT" dump badging "$apk" | grep -E "application: .*icon='[^']*/ic_launcher(\\.[^']+)?'"
           }
           verify_apk app/build/outputs/apk/debug/app-debug.apk
           if [ "$RELEASE_SIGNING_AVAILABLE" = "true" ]; then
