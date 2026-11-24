@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -65,15 +66,20 @@ import com.numberone.numberone.domain.model.Service
 fun CheckoutScreen(
     service: Service,
     enabled: Boolean,
-    onWalletPurchase: () -> Unit,
-    onManualPayment: () -> Unit,
+    onWalletPurchase: (String) -> Unit,
+    onManualPayment: (String) -> Unit,
     walletBalance: Double? = null,
     onTopUp: (() -> Unit)? = null
 ) {
-    val available = service.availableCount ?: 0
+    val options = service.options.ifEmpty { listOf(service) }
+    var selectedId by remember(service.id, options) {
+        mutableStateOf((options.firstOrNull { (it.availableCount ?: 0) > 0 } ?: options.first()).id)
+    }
+    val selected = options.firstOrNull { it.id == selectedId } ?: options.first()
+    val available = selected.availableCount ?: 0
     val inStock = available > 0
     val stockColor = if (inStock) successColor() else dangerColor()
-    val price = service.price.toDouble()
+    val price = selected.price
     val priceText = formatAmount(price)
     val hasFunds = walletBalance == null || walletBalance >= price
     val walletPurchaseEnabled = enabled && inStock && hasFunds
@@ -137,6 +143,21 @@ fun CheckoutScreen(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        if (options.size > 1) {
+            Text(tr("اختر السعر المناسب"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { option ->
+                    val optionLabel = "${formatAmount(option.price)} USDT"
+                    FilterChip(
+                        selected = option.id == selected.id,
+                        onClick = { selectedId = option.id },
+                        label = { Text(optionLabel) },
+                        enabled = true
                     )
                 }
             }
