@@ -2,7 +2,7 @@ name: Build Release APK
 
 on:
   push:
-    branches: [ main, master, v9-release, "fix/production-readiness-2026-11" ]
+    branches: [ main, master, v9-release, "fix/production-readiness-2026-11", "fix/admin-dashboard-network-resilience-2026-11" ]
   workflow_dispatch:
 
 permissions:

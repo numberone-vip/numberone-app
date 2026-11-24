@@ -20,6 +20,7 @@ import com.numberone.numberone.domain.model.Order
 import com.numberone.numberone.domain.model.ServiceDraft
 import com.numberone.numberone.domain.model.WalletTransaction
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** UI state only. Every action is authorized by the server (is_admin() inside each RPC). */
@@ -82,10 +83,32 @@ class AdminViewModel : ViewModel() {
         }
     }
 
+    /** Retry only transient transport failures; never retry authorization, SQL, or decode errors. */
+    private suspend fun <T> retryTransient(block: suspend () -> Result<T>): Result<T> {
+        var result = block()
+        for (attempt in 1..2) {
+            val failure = result.exceptionOrNull() ?: return result
+            if (!isTransientNetworkFailure(failure)) return result
+            delay(350L * attempt)
+            result = block()
+        }
+        return result
+    }
+
+    private fun isTransientNetworkFailure(error: Throwable): Boolean {
+        return generateSequence(error) { it.cause }.any { cause ->
+            val type = cause::class.simpleName.orEmpty()
+            val message = cause.message.orEmpty().lowercase()
+            type in setOf("IOException", "SocketTimeoutException", "ConnectException", "UnknownHostException") ||
+                listOf("timeout", "connection abort", "connection reset", "failed to connect",
+                    "unable to resolve host", "network is unreachable", "socket").any(message::contains)
+        }
+    }
+
     /**
-     * Refreshes every section. Each section is independent: one failing RPC is reported in
-     * [warning] with its own reason, and the rest of the panel still loads. Never throws, so a
-     * successful write followed by a refresh can't be displayed as a failed write.
+     * Refreshes every section independently. Brief network failures get bounded retries; persistent
+     * failures are shown per section while successful sections remain available. This function
+     * never throws, so a successful write is not reported as failed just because refresh failed.
      */
     private suspend fun reload() {
         val repo = AppContainer.adminRepository
@@ -93,18 +116,32 @@ class AdminViewModel : ViewModel() {
         fun <T> report(label: String, result: Result<T>, apply: (T) -> Unit) {
             result.onSuccess(apply).onFailure { e -> failed += "$label (${detailOf(e).lineSequence().last()})" }
         }
-        report(tr("الملخص"), repo.getSummary()) { summary = it }
-        report(tr("طلبات الشام كاش"), repo.listShamCashTopUps()) { shamTopUps = it }
-        report(tr("الطلبات"), repo.listOrders()) { orders = it }
-        report(tr("الإيداعات"), repo.listDeposits()) { deposits = it }
-        report(tr("الاشتراكات"), repo.listSubscriptions()) { subscriptions = it }
-        report(tr("المستخدمون"), repo.listUsers()) { users = it }
-        report(tr("سجل الحركات"), repo.listWalletTransactions()) { ledger = it }
-        report(tr("الخدمات"), repo.listServices()) { services = it }
-        report(tr("إعدادات الدفع"), repo.getPaymentConfig()) { paymentConfig = it }
-        warning = if (failed.isEmpty()) null else
-            tr("تعذر تحميل بعض الأقسام:") + "\n" + failed.joinToString("\n") +
-                "\n" + tr("تأكد من تطبيق ملف SQL الخاص بلوحة الإدارة.")
+        report(tr("الملخص"), retryTransient { repo.getSummary() }) { summary = it }
+        report(tr("طلبات الشام كاش"), retryTransient { repo.listShamCashTopUps() }) { shamTopUps = it }
+        report(tr("الطلبات"), retryTransient { repo.listOrders() }) { orders = it }
+        report(tr("الإيداعات"), retryTransient { repo.listDeposits() }) { deposits = it }
+        report(tr("الاشتراكات"), retryTransient { repo.listSubscriptions() }) { subscriptions = it }
+        report(tr("المستخدمون"), retryTransient { repo.listUsers() }) { users = it }
+        report(tr("سجل الحركات"), retryTransient { repo.listWalletTransactions() }) { ledger = it }
+        report(tr("الخدمات"), retryTransient { repo.listServices() }) { services = it }
+        report(tr("إعدادات الدفع"), retryTransient { repo.getPaymentConfig() }) { paymentConfig = it }
+
+        if (failed.isEmpty()) {
+            warning = null
+        } else {
+            val details = failed.joinToString("\n")
+            val sqlRelated = failed.any { item ->
+                val value = item.lowercase()
+                listOf("pgrst202", "42883", "42501", "permission denied", "schema cache",
+                    "does not exist", "function").any(value::contains)
+            }
+            val advice = if (sqlRelated) {
+                tr("توجد مؤشرات على مشكلة في الدوال أو الصلاحيات؛ راجع ملف SQL الخاص بلوحة الإدارة.")
+            } else {
+                tr("تعذر الاتصال بالخادم مؤقتاً. تحقق من الإنترنت وحالة Supabase ثم اضغط تحديث؛ لا حاجة لتطبيق SQL بسبب أخطاء الاتصال وحدها.")
+            }
+            warning = tr("تعذر تحميل بعض الأقسام:") + "\n" + details + "\n" + advice
+        }
     }
 
     fun load() = run {
