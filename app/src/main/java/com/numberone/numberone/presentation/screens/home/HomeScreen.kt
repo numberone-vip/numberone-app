@@ -127,7 +127,7 @@ private data class MainTab(val label: String, val icon: ImageVector, val selecte
 // A function (not a val) so the labels follow the selected language.
 private fun mainTabs() = listOf(
     MainTab(tr("الرئيسية"), Icons.Outlined.Home, Icons.Filled.Home),
-    MainTab(tr("أرقامي"), Icons.Outlined.SimCard, Icons.Filled.SimCard),
+    MainTab(tr("المتجر الرقمي"), Icons.Outlined.SimCard, Icons.Filled.SimCard),
     MainTab(tr("فوري"), Icons.Outlined.Bolt, Icons.Filled.Bolt)
 )
 
