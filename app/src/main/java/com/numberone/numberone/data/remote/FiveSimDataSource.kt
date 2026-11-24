@@ -4,6 +4,7 @@ import com.numberone.numberone.domain.model.VirtualNumberCatalog
 import com.numberone.numberone.domain.model.VirtualNumberOrder
 import com.numberone.numberone.domain.model.VirtualNumberQuote
 import io.github.jan.supabase.functions.functions
+import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.call.body
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -60,6 +61,13 @@ class FiveSimDataSource {
 
     suspend fun latestActivation(): VirtualNumberOrder? =
         invoke<LatestResponse>(Request(action = "latest_activation")).activation
+
+    /** Persists the user-owned activation hide action using an auth.uid()-scoped RPC. */
+    suspend fun hideActivation(activationId: String) {
+        require(activationId.isNotBlank()) { "Activation ID is required" }
+        val params = buildJsonObject { put("p_activation_id", activationId) }
+        supabase.postgrest.rpcRaw("virtual_numbers_hide_my_activation", params)
+    }
 
     /** Refreshes the active activation to return the newest SMS received on that same number. */
     suspend fun requestNextSms(activationId: String): VirtualNumberOrder = invoke(
