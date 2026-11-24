@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.MaterialTheme
@@ -276,15 +277,13 @@ private fun PendingPaymentCard(
 
 @Composable
 private fun HexzCatalogCard(item: HexzCatalogItem) {
+    val targetValues = remember(item.productId) { mutableStateMapOf<String, String>() }
     NOCard {
         Text(item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         item.region?.takeIf { it.isNotBlank() }?.let { Text(trf("المنطقة: {0}", it)) }
         val priceText = item.price?.toString()?.takeIf { it.isNotBlank() && it != "null" }
         if (priceText != null) {
             Text(trf("السعر: {0} {1}", priceText, item.currency.orEmpty()))
-        }
-        item.requiredData?.takeIf { it.isNotBlank() }?.let {
-            Text(trf("البيانات المطلوبة: {0}", it), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         item.description?.takeIf { it.isNotBlank() }?.let { Text(it) }
         val stockLabel = when (item.inStock) {
@@ -293,5 +292,48 @@ private fun HexzCatalogCard(item: HexzCatalogItem) {
             null -> tr("حالة المخزون غير محددة")
         }
         Text(stockLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+        val fields = item.targetSchema.orEmpty().filter { it.key.isNotBlank() }
+        if (item.requiresTarget && fields.isEmpty()) {
+            Text(
+                tr("هذا المنتج يحتاج بيانات حساب، لكن مخطط الحقول غير متوفر؛ لا يمكن متابعة الطلب."),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        fields.forEach { field ->
+            val current = targetValues[field.key].orEmpty()
+            val digitsOnly = field.format.equals("digits", ignoreCase = true)
+            val min = field.minLength ?: 0
+            val valid = ( !field.required || current.isNotBlank() ) &&
+                (current.isBlank() || current.length >= min) &&
+                (field.maxLength == null || current.length <= field.maxLength) &&
+                (!digitsOnly || current.all { it.isDigit() })
+            OutlinedTextField(
+                value = current,
+                onValueChange = { raw ->
+                    val normalized = if (digitsOnly) raw.filter { it.isDigit() } else raw
+                    targetValues[field.key] = field.maxLength?.let { normalized.take(it) } ?: normalized
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text(field.label.ifBlank { field.key }) },
+                isError = current.isNotBlank() && !valid,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (digitsOnly) KeyboardType.Number else KeyboardType.Text
+                ),
+                supportingText = {
+                    Text(
+                        when {
+                            field.required && current.isBlank() -> tr("هذا الحقل مطلوب")
+                            current.isNotBlank() && current.length < min -> trf("الحد الأدنى {0} خانات", min)
+                            !valid -> tr("تحقق من قيمة الحقل")
+                            field.maxLength != null -> trf("حتى {0} خانة", field.maxLength)
+                            else -> tr(" ")
+                        }
+                    )
+                }
+            )
+        }
     }
 }
