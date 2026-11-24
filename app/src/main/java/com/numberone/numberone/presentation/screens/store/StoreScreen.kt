@@ -106,10 +106,10 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
         vm.services.forEach { service ->
             CheckoutScreen(
                 service = service,
-                enabled = !vm.loading && (service.availableCount ?: 0) > 0,
+                enabled = !vm.loading,
                 walletBalance = vm.wallet.balance,
                 onTopUp = onTopUp,
-                onWalletPurchase = { vm.buy(service.id) },
+                onWalletPurchase = { selectedServiceId -> vm.buy(selectedServiceId) },
                 onManualPayment = {
                     receipt = null
                     vm.createManualOrder(service.id)
