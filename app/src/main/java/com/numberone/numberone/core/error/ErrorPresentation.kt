@@ -17,6 +17,8 @@ object ErrorPresentation {
         val friendly = ErrorMapper.toUserMessage(e)
         if (showTechnicalDetails) {
             val cause = (e as? AppException)?.cause ?: e
+            // The friendly text already carries the raw message: nothing technical to add.
+            if (cause.message?.let { friendly.contains(it) } == true) return friendly
             val technical = listOfNotNull(cause::class.simpleName, cause.message?.takeIf { it.isNotBlank() })
                 .joinToString(": ")
             if (technical.isNotBlank() && technical !in friendly) return "$friendly\n\n[$technical]"

@@ -29,7 +29,7 @@ sealed class AppError(val category: Category) {
     object ServiceInUse : AppError(Category.BUSINESS)
 
     /** A message that the app itself wrote in Arabic (validation); shown as-is. */
-    class Localized(val text: String) : AppError(Category.VALIDATION)
+    data class Localized(val text: String) : AppError(Category.VALIDATION)
 
     object Unknown : AppError(Category.UNKNOWN)
 }

@@ -38,7 +38,7 @@ object ErrorMapper {
             containsArabic(raw) -> AppError.Localized(raw)
             "no stock" in lower -> AppError.NoStock
             "insufficient" in lower -> AppError.InsufficientBalance
-            "not confirmed" in lower || "reconcil" in lower ||
+            "payment not confirmed" in lower || "reconcil" in lower ||
                 "persistence is pending" in lower || "retained" in lower -> AppError.PendingReview
             "already used with different" in lower -> AppError.DuplicateRequest
             "still pending" in lower -> AppError.PendingOrderExists
