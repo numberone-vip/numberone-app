@@ -1,5 +1,6 @@
 package com.numberone.numberone.presentation.viewmodel
 
+import com.numberone.numberone.core.error.ErrorPresentation
 import com.numberone.numberone.domain.model.AdminService
 import com.numberone.numberone.domain.model.AdminShamCashTopUp
 import com.numberone.numberone.domain.model.AdminSubscription
@@ -29,8 +30,9 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class AdminViewModelReloadTest {
 
-    @Before fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
-    @After fun tearDown() { Dispatchers.resetMain() }
+    // DIAGNOSTIC: show the real exception type and message instead of [UNKNOWN].
+    @Before fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()); ErrorPresentation.showTechnicalDetails = true }
+    @After fun tearDown() { Dispatchers.resetMain(); ErrorPresentation.showTechnicalDetails = false }
 
     private fun users(isAdmin: Boolean) = stubOf<UserRepository> { name ->
         when (name) {
