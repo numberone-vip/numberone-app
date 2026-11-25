@@ -11,7 +11,7 @@ private val resultValueField by lazy {
     Result::class.java.declaredFields.first { !Modifier.isStatic(it.modifiers) }.apply { isAccessible = true }
 }
 
-internal fun unwrapResult(value: Any?): Any? =
+fun unwrapResult(value: Any?): Any? =
     if (value is Result<*>) resultValueField.get(value) else value
 
 /**
