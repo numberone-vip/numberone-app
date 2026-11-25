@@ -1,6 +1,13 @@
 package com.numberone.numberone.presentation.viewmodel
 
+import com.numberone.numberone.domain.model.AdminService
+import com.numberone.numberone.domain.model.AdminShamCashTopUp
+import com.numberone.numberone.domain.model.AdminSubscription
 import com.numberone.numberone.domain.model.AdminSummary
+import com.numberone.numberone.domain.model.AdminUser
+import com.numberone.numberone.domain.model.AdminWalletDeposit
+import com.numberone.numberone.domain.model.Order
+import com.numberone.numberone.domain.model.WalletTransaction
 import com.numberone.numberone.domain.repository.AdminRepository
 import com.numberone.numberone.domain.repository.UserRepository
 import com.numberone.numberone.support.stubOf
@@ -38,13 +45,13 @@ class AdminViewModelReloadTest {
         when (name) {
             "getSummary" -> summaryFailure?.let { Result.failure<AdminSummary>(it) }
                 ?: Result.success(AdminSummary(customers = 1, wallets = 1, deposits = 0, subscriptions = 0))
-            "listShamCashTopUps" -> Result.success(emptyList<Any>())
-            "listOrders" -> Result.success(emptyList<Any>())
-            "listDeposits" -> Result.success(emptyList<Any>())
-            "listSubscriptions" -> Result.success(emptyList<Any>())
-            "listUsers" -> Result.success(emptyList<Any>())
-            "listWalletTransactions" -> Result.success(emptyList<Any>())
-            "listServices" -> Result.success(emptyList<Any>())
+            "listShamCashTopUps" -> Result.success(emptyList<AdminShamCashTopUp>())
+            "listOrders" -> Result.success(emptyList<Order>())
+            "listDeposits" -> Result.success(emptyList<AdminWalletDeposit>())
+            "listSubscriptions" -> Result.success(emptyList<AdminSubscription>())
+            "listUsers" -> Result.success(emptyList<AdminUser>())
+            "listWalletTransactions" -> Result.success(emptyList<WalletTransaction>())
+            "listServices" -> Result.success(emptyList<AdminService>())
             "getPaymentConfig" -> Result.success<Any?>(null)
             else -> error("unexpected $name")
         }
