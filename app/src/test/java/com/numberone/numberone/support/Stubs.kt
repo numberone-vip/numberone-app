@@ -15,6 +15,7 @@ inline fun <reified T : Any> stubOf(crossinline answer: (String) -> Any?): T =
                 "hashCode" -> 0
                 else -> false
             }
-            else -> answer(method.name)
+            // Kotlin mangles names of functions returning an inline class (Result), e.g. signIn-0E7RQCE.
+            else -> answer(method.name.substringBefore('-'))
         }
     } as T
