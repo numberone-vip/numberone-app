@@ -1,6 +1,18 @@
 package com.numberone.numberone.support
 
+import java.lang.reflect.Modifier
 import java.lang.reflect.Proxy
+
+/**
+ * A suspend interface function that returns Result is called expecting the underlying value,
+ * not the wrapper. Unwrap the stubbed Result so success and failure reach the caller correctly.
+ */
+private val resultValueField by lazy {
+    Result::class.java.declaredFields.first { !Modifier.isStatic(it.modifiers) }.apply { isAccessible = true }
+}
+
+internal fun unwrapResult(value: Any?): Any? =
+    if (value is Result<*>) resultValueField.get(value) else value
 
 /**
  * Builds an implementation of interface [T] at runtime. [answer] receives the called method
@@ -16,6 +28,6 @@ inline fun <reified T : Any> stubOf(crossinline answer: (String) -> Any?): T =
                 else -> false
             }
             // Kotlin mangles names of functions returning an inline class (Result), e.g. signIn-0E7RQCE.
-            else -> answer(method.name.substringBefore('-'))
+            else -> unwrapResult(answer(method.name.substringBefore('-')))
         }
     } as T
