@@ -3,6 +3,7 @@ package com.numberone.numberone.notifications
 import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import com.numberone.numberone.core.log.AppLog
 import com.numberone.numberone.di.AppContainer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -26,12 +27,14 @@ object PushTokenRegistrar {
         try {
             if (FirebaseApp.getApps(context).isEmpty()) return
             val token = fetchToken() ?: return
-            // Result is intentionally ignored: registration is retried on the next Home visit.
+            // Failure is not shown to the user: registration is retried on the next Home visit.
             AppContainer.virtualNumberRepository.registerDeviceToken(token)
+                .onFailure { AppLog.warn("Push", "device token registration failed", it) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            // Firebase unavailable or delayed: stay silent, never crash.
+            // Firebase unavailable or delayed: never crash, but record why.
+            AppLog.warn("Push", "push registration skipped", e)
         }
     }
 

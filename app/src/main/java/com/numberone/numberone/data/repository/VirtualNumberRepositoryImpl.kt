@@ -1,9 +1,11 @@
 package com.numberone.numberone.data.repository
 
 import com.numberone.numberone.core.localization.tr
+import com.numberone.numberone.core.error.AppException
 import com.numberone.numberone.core.error.ErrorMapper
-import com.numberone.numberone.core.error.UserFacingException
+import com.numberone.numberone.core.log.AppLog
 import com.numberone.numberone.data.remote.FiveSimDataSource
+import com.numberone.numberone.data.remote.FiveSimGateway
 import com.numberone.numberone.domain.model.VirtualNumberCatalog
 import com.numberone.numberone.domain.model.VirtualNumberOrder
 import com.numberone.numberone.domain.model.VirtualNumberQuote
@@ -11,7 +13,7 @@ import com.numberone.numberone.domain.repository.VirtualNumberRepository
 import kotlinx.coroutines.CancellationException
 
 class VirtualNumberRepositoryImpl(
-    private val source: FiveSimDataSource = FiveSimDataSource()
+    private val source: FiveSimGateway = FiveSimDataSource()
 ) : VirtualNumberRepository {
 
     override suspend fun catalog(): Result<VirtualNumberCatalog> = guard { source.catalog() }
@@ -59,46 +61,21 @@ class VirtualNumberRepositoryImpl(
     }
 
     /**
-     * Runs one backend call and converts any failure into a short, user-facing message.
-     * Cancellation is rethrown so that a leaving screen stops its polling immediately.
+     * Runs one backend call and wraps any failure as a typed [AppException].
+     * The UI turns it into text via ErrorMapper. Cancellation is rethrown so that a
+     * leaving screen stops its polling immediately.
      */
     private suspend fun <T> guard(block: suspend () -> T): Result<T> = try {
         Result.success(block())
     } catch (e: CancellationException) {
         throw e
     } catch (e: Throwable) {
-        Result.failure(UserFacingException(userMessage(e)))
-    }
-
-    private fun userMessage(error: Throwable): String {
-        if (error is UserFacingException) return error.message.orEmpty()
-        val raw = error.message.orEmpty()
-        val lower = raw.lowercase()
-        return when {
-            // Messages written in Arabic by this app (validation) are already user-facing.
-            raw.any { it in '\u0600'..'\u06FF' } -> raw
-            "no stock" in lower ->
-                tr("لا يوجد مخزون لهذا الاختيار حالياً. جرّب مشغلاً أو دولة أخرى.")
-            "insufficient" in lower ->
-                tr("الرصيد غير كافٍ لإتمام الشراء.")
-            "not confirmed" in lower || "reconcil" in lower ||
-                "persistence is pending" in lower || "retained" in lower ->
-                tr("عملية الشراء قيد المراجعة. لن يُخصم المبلغ مرتين، حاول لاحقاً أو تواصل مع الدعم.")
-            "already used with different" in lower ->
-                tr("معرّف الطلب مستخدم بتفاصيل مختلفة. أعد المحاولة من جديد.")
-            "still pending" in lower ->
-                tr("لديك طلب سابق قيد المراجعة. انتظر اكتماله قبل طلب رقم جديد.")
-            "not found" in lower ->
-                tr("لم يتم العثور على هذا التفعيل.")
-            "session" in lower || "authentication required" in lower ->
-                tr("انتهت الجلسة. يرجى تسجيل الدخول مجدداً.")
-            "failed (4" in lower ->
-                tr("لا توجد أرقام متاحة لهذا الاختيار الآن. جرّب لاحقاً.")
-            else -> ErrorMapper.toUserMessage(error)
-        }
+        AppLog.warn(TAG, "virtual number call failed", e)
+        Result.failure(AppException(ErrorMapper.classify(e), e))
     }
 
     private companion object {
+        const val TAG = "VirtualNumber"
         val UUID_REGEX = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
     }
 }

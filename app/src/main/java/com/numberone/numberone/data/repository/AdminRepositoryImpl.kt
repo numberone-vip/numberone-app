@@ -1,6 +1,11 @@
 package com.numberone.numberone.data.repository
 
+import com.numberone.numberone.core.error.AppError
+import com.numberone.numberone.core.error.AppException
+import com.numberone.numberone.core.log.AppLog
 import com.numberone.numberone.core.localization.tr
+import com.numberone.numberone.data.remote.AdminRpc
+import com.numberone.numberone.data.remote.SupabaseAdminRpc
 import com.numberone.numberone.data.remote.SupabaseClientProvider
 import com.numberone.numberone.data.remote.rpcJson
 import com.numberone.numberone.data.remote.rpcRaw
@@ -32,8 +37,10 @@ private data class UserIdRow(@SerialName("user_id") val userId: String = "")
  * [numberResult] / [booleanResult]. These throw an exception whose message names the RPC and
  * the decoding problem, so the admin panel can show the real cause instead of a generic error.
  */
-class AdminRepositoryImpl : AdminRepository {
-    private val db get() = SupabaseClientProvider.client.postgrest
+class AdminRepositoryImpl(
+    private val rpc: AdminRpc = SupabaseAdminRpc()
+) : AdminRepository {
+    private companion object { const val TAG = "AdminRepo" }
     private val dateRegex = Regex("^\\d{4}-\\d{2}-\\d{2}$")
     private val bscRegex = Regex("^0x[0-9a-fA-F]{40}$")
     private val phoneRegex = Regex("^\\+[1-9][0-9]{7,14}$")
@@ -48,7 +55,8 @@ class AdminRepositoryImpl : AdminRepository {
         return try {
             rpcJson.decodeFromString(ListSerializer(serializer<T>()), text)
         } catch (e: Exception) {
-            throw IllegalStateException("$rpc: ${e.message ?: e::class.simpleName}", e)
+            AppLog.error(TAG, "admin RPC $rpc: undecodable response", e)
+            throw AppException(AppError.ServerResponse, e)
         }
     }
 
@@ -66,7 +74,10 @@ class AdminRepositoryImpl : AdminRepository {
         }
         val parsed = runCatching { rpcJson.parseToJsonElement(raw) }.getOrNull()
         return parsed?.let { pick(it) }
-            ?: throw IllegalStateException("$rpc: unexpected response: ${raw.take(200)}")
+            ?: run {
+                AppLog.error(TAG, "admin RPC $rpc: unexpected response shape")
+                throw AppException(AppError.ServerResponse)
+            }
     }
 
     /** Reads a boolean result. A successful call with no boolean body counts as true. */
@@ -78,24 +89,24 @@ class AdminRepositoryImpl : AdminRepository {
     // ---- Summary & shams ----------------------------------------------------
 
     override suspend fun getSummary() = runCatching {
-        val deposits = rows<AdminWalletDeposit>("admin_list_wallet_deposits", db.rpcRaw("admin_list_wallet_deposits"))
+        val deposits = rows<AdminWalletDeposit>("admin_list_wallet_deposits", rpc.rpcRaw("admin_list_wallet_deposits"))
         AdminSummary(
-            customers = rows<AdminCustomer>("admin_list_customers", db.rpcRaw("admin_list_customers")).size,
-            wallets = rows<AdminWalletBalance>("admin_list_wallet_balances", db.rpcRaw("admin_list_wallet_balances")).size,
+            customers = rows<AdminCustomer>("admin_list_customers", rpc.rpcRaw("admin_list_customers")).size,
+            wallets = rows<AdminWalletBalance>("admin_list_wallet_balances", rpc.rpcRaw("admin_list_wallet_balances")).size,
             deposits = deposits.size,
-            subscriptions = rows<AdminSubscription>("admin_list_subscriptions", db.rpcRaw("admin_list_subscriptions")).size,
+            subscriptions = rows<AdminSubscription>("admin_list_subscriptions", rpc.rpcRaw("admin_list_subscriptions")).size,
             pendingDeposits = deposits.count { isOpenStatus(it.status) }
         )
     }
 
     override suspend fun listShamCashTopUps() = runCatching {
-        rows<AdminShamCashTopUp>("admin_list_sham_cash_topups", db.rpcRaw("admin_list_sham_cash_topups"))
+        rows<AdminShamCashTopUp>("admin_list_sham_cash_topups", rpc.rpcRaw("admin_list_sham_cash_topups"))
     }
 
     override suspend fun approveShamCashTopUp(requestId: String, creditedUsdt: Double) = runCatching {
         require(uuidRegex.matches(requestId)) { tr("معرّف غير صالح") }
         require(creditedUsdt.isFinite() && creditedUsdt > 0.0 && creditedUsdt <= 1_000_000.0) { tr("مبلغ USDT غير صالح") }
-        val raw = db.rpcRaw(
+        val raw = rpc.rpcRaw(
             "admin_approve_sham_cash_topup",
             buildJsonObject { put("p_request_id", requestId); put("p_credited_usdt_amount", creditedUsdt) }
         )
@@ -105,7 +116,7 @@ class AdminRepositoryImpl : AdminRepository {
     override suspend fun rejectShamCashTopUp(requestId: String, reason: String) = runCatching {
         require(uuidRegex.matches(requestId)) { tr("معرّف غير صالح") }
         require(reason.isNotBlank()) { tr("سبب الرفض مطلوب") }
-        val raw = db.rpcRaw(
+        val raw = rpc.rpcRaw(
             "admin_reject_sham_cash_topup",
             buildJsonObject { put("p_request_id", requestId); put("p_reason", reason.trim()) }
         )
@@ -115,14 +126,14 @@ class AdminRepositoryImpl : AdminRepository {
     // ---- Orders -------------------------------------------------------------
 
     override suspend fun listOrders() = runCatching {
-        rows<Order>("admin_list_orders", db.rpcRaw("admin_list_orders"))
+        rows<Order>("admin_list_orders", rpc.rpcRaw("admin_list_orders"))
     }
 
     override suspend fun approveOrder(orderId: String, phoneNumber: String, accessCode: String, expiryDate: String) = runCatching {
         require(orderId.isNotBlank() && phoneNumber.isNotBlank() && accessCode.isNotBlank()) { tr("جميع الحقول مطلوبة") }
         require(dateRegex.matches(expiryDate.trim())) { tr("صيغة التاريخ yyyy-MM-dd") }
         java.time.LocalDate.parse(expiryDate.trim())
-        db.rpcRaw(
+        rpc.rpcRaw(
             "admin_approve_order",
             buildJsonObject {
                 put("p_order_id", orderId); put("p_phone_number", phoneNumber.trim())
@@ -134,7 +145,7 @@ class AdminRepositoryImpl : AdminRepository {
 
     override suspend fun rejectOrder(orderId: String, reason: String) = runCatching {
         require(orderId.isNotBlank() && reason.isNotBlank()) { tr("سبب الرفض مطلوب") }
-        db.rpcRaw("admin_reject_order", buildJsonObject { put("p_order_id", orderId); put("p_reason", reason.trim()) })
+        rpc.rpcRaw("admin_reject_order", buildJsonObject { put("p_order_id", orderId); put("p_reason", reason.trim()) })
         Unit
     }
 
@@ -146,16 +157,16 @@ class AdminRepositoryImpl : AdminRepository {
     // ---- Command-center additions ------------------------------------------
 
     override suspend fun listDeposits() = runCatching {
-        rows<AdminWalletDeposit>("admin_list_wallet_deposits", db.rpcRaw("admin_list_wallet_deposits"))
+        rows<AdminWalletDeposit>("admin_list_wallet_deposits", rpc.rpcRaw("admin_list_wallet_deposits"))
     }
 
     override suspend fun listSubscriptions() = runCatching {
-        rows<AdminSubscription>("admin_list_subscriptions", db.rpcRaw("admin_list_subscriptions"))
+        rows<AdminSubscription>("admin_list_subscriptions", rpc.rpcRaw("admin_list_subscriptions"))
     }
 
     override suspend fun getPaymentConfig() = runCatching {
         // The RPC may return a single object or a one-row table; accept both.
-        val element = rpcJson.parseToJsonElement(db.rpcRaw("get_payment_config"))
+        val element = rpcJson.parseToJsonElement(rpc.rpcRaw("get_payment_config"))
         val obj = when (element) {
             is JsonObject -> element
             is JsonArray -> element.firstOrNull() as? JsonObject
@@ -167,29 +178,33 @@ class AdminRepositoryImpl : AdminRepository {
     override suspend fun updatePaymentConfig(config: AppPaymentConfig) = runCatching {
         val wallet = config.binanceWalletAddress.trim()
         require(wallet.isEmpty() || bscRegex.matches(wallet)) { tr("عنوان محفظة BEP20 غير صالح (يبدأ بـ 0x ويتكون من 42 خانة)") }
-        require(config.sypUsdRate.isFinite() && config.sypUsdRate >= 0.0 && config.sypUsdRate <= 10_000_000.0) { tr("سعر الصرف غير صالح") }
+        require(config.binanceNetwork.equals("BEP20", ignoreCase = true)) { tr("شبكة الإيداع المدعومة هي BEP20 فقط") }
+        require(config.shamCashName.length <= 120) { tr("اسم صاحب حساب شام كاش طويل جداً") }
+        require(config.sypUsdRate.isFinite() && config.sypUsdRate >= 0.0 && config.sypUsdRate <= 10_000_000.0) { tr("سعر صرف الليرة غير صالح") }
         require(config.promoBannerText.length <= 300) { tr("نص البانر طويل (الحد 300 حرف)") }
-        // Live RPC currently persists only the Binance BEP20 address and Sham Cash account.
-        // Do not send the extra V4-only fields: the live signature rejects them.
-        db.rpcRaw(
+        // Match the live five-argument public RPC signature exactly.
+        rpc.rpcRaw(
             "admin_update_payment_config",
             buildJsonObject {
-                put("p_binance_address", wallet)
+                put("p_binance_wallet_address", wallet)
                 put("p_sham_cash_account", config.shamCashAccount.trim())
+                put("p_sham_cash_name", config.shamCashName.trim())
+                put("p_syp_usd_rate", config.sypUsdRate)
+                put("p_promo_banner_text", config.promoBannerText.trim())
             }
         )
         Unit
     }
 
     override suspend fun listServices() = runCatching {
-        rows<AdminService>("admin_list_services", db.rpcRaw("admin_list_services"))
+        rows<AdminService>("admin_list_services", rpc.rpcRaw("admin_list_services"))
     }
 
     override suspend fun upsertService(draft: ServiceDraft) = runCatching {
         require(draft.name.isNotBlank()) { tr("اسم الخدمة مطلوب") }
         require(draft.price.isFinite() && draft.price >= 0.0 && draft.price <= 1_000_000.0) { tr("السعر غير صالح") }
         draft.id?.let { require(it.isNotBlank()) { tr("معرّف غير صالح") } }
-        db.rpcRaw(
+        rpc.rpcRaw(
             "admin_upsert_service",
             buildJsonObject {
                 draft.id?.let { put("p_id", it.trim()) }
@@ -209,13 +224,13 @@ class AdminRepositoryImpl : AdminRepository {
     override suspend fun deleteService(serviceId: String) = runCatching {
         require(serviceId.isNotBlank()) { tr("معرّف غير صالح") }
         try {
-            db.rpcRaw("admin_delete_service", buildJsonObject { put("p_id", serviceId) })
+            rpc.rpcRaw("admin_delete_service", buildJsonObject { put("p_id", serviceId) })
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
             val m = e.message.orEmpty().lowercase()
             if ("foreign key" in m || "violates" in m || "in_use" in m) {
-                throw IllegalStateException(tr("لا يمكن حذف خدمة مرتبطة بطلبات أو اشتراكات. عطّلها بدلاً من حذفها."))
+                throw AppException(AppError.ServiceInUse, e)
             }
             throw e
         }
@@ -227,12 +242,12 @@ class AdminRepositoryImpl : AdminRepository {
     override suspend fun listUsers() = runCatching {
         // Uses the EXISTING admin_list_customers / admin_list_wallet_balances functions.
         // Role comes from admin_list_admin_ids(); if that is not deployed the role stays unknown (null).
-        val balances = rows<AdminWalletBalance>("admin_list_wallet_balances", db.rpcRaw("admin_list_wallet_balances"))
+        val balances = rows<AdminWalletBalance>("admin_list_wallet_balances", rpc.rpcRaw("admin_list_wallet_balances"))
             .associateBy { it.userId }
         val adminIds = runCatching {
-            rows<UserIdRow>("admin_list_admin_ids", db.rpcRaw("admin_list_admin_ids")).map { it.userId }.toSet()
+            rows<UserIdRow>("admin_list_admin_ids", rpc.rpcRaw("admin_list_admin_ids")).map { it.userId }.toSet()
         }.getOrNull()
-        rows<AdminCustomer>("admin_list_customers", db.rpcRaw("admin_list_customers")).map {
+        rows<AdminCustomer>("admin_list_customers", rpc.rpcRaw("admin_list_customers")).map {
             val w = balances[it.userId]
             AdminUser(
                 userId = it.userId,
@@ -249,7 +264,7 @@ class AdminRepositoryImpl : AdminRepository {
         require(limit in 1..500) { tr("عدد الصفوف غير صالح") }
         rows<WalletTransaction>(
             "admin_list_wallet_transactions",
-            db.rpcRaw("admin_list_wallet_transactions", buildJsonObject { put("p_limit", limit) })
+            rpc.rpcRaw("admin_list_wallet_transactions", buildJsonObject { put("p_limit", limit) })
         )
     }
 
@@ -258,7 +273,7 @@ class AdminRepositoryImpl : AdminRepository {
         require(uuidRegex.matches(userId)) { tr("معرّف غير صالح") }
         require(amount.isFinite() && amount != 0.0 && kotlin.math.abs(amount) <= 1_000_000.0) { tr("مبلغ USDT غير صالح") }
         require(note.isNotBlank()) { tr("ملاحظة التدقيق مطلوبة") }
-        val raw = db.rpcRaw(
+        val raw = rpc.rpcRaw(
             "admin_adjust_wallet_balance",
             buildJsonObject { put("p_user_id", userId); put("p_amount", amount); put("p_note", note.trim()); put("p_request_id", requestId) }
         )
@@ -274,7 +289,7 @@ class AdminRepositoryImpl : AdminRepository {
         java.time.LocalDate.parse(expiryDate.trim())
         require(accessCode.trim().length in 8..256) { tr("رمز الوصول يجب أن يكون بين 8 و256 خانة") }
         require(phoneRegex.matches(phoneNumber.trim())) { tr("رقم الهاتف غير صالح") }
-        db.rpcRaw(
+        rpc.rpcRaw(
             "admin_add_subscription_for_user",
             buildJsonObject {
                 put("p_user_id", userId); put("p_service_id", serviceId.trim())
@@ -296,7 +311,7 @@ class AdminRepositoryImpl : AdminRepository {
         }
         require(uuidRegex.matches(subscriptionId)) { tr("معرّف غير صالح") }
         if (accessCode.isNotBlank()) require(accessCode.trim().length in 8..256) { tr("رمز الوصول يجب أن يكون بين 8 و256 خانة") }
-        db.rpcRaw(
+        rpc.rpcRaw(
             "admin_reset_subscription_access",
             buildJsonObject {
                 put("p_subscription_id", subscriptionId)
