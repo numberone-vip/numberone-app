@@ -13,11 +13,10 @@ import io.github.jan.supabase.auth.auth
  * credit, ownership, duplicate TXID, expiry) is enforced by Supabase RPCs / RLS / Edge Functions.
  */
 class WalletRepositoryImpl(
-    private val walletDataSource: WalletDataSource = SupabaseWalletDataSource(),
-    /** Source of the signed-in user id. Injected so the session check can be tested. */
-    private val userIdProvider: () -> String? = { SupabaseClientProvider.client.auth.currentUserOrNull()?.id }
+    private val walletDataSource: WalletDataSource = SupabaseWalletDataSource()
 ) : WalletRepository {
-    private fun currentUserId(): String = userIdProvider()
+    private val supabase = SupabaseClientProvider.client
+    private fun currentUserId() = supabase.auth.currentUserOrNull()?.id
         ?: throw IllegalStateException(tr("يرجى تسجيل الدخول أولاً"))
 
     private companion object {
@@ -89,5 +88,4 @@ class WalletRepositoryImpl(
         walletDataSource.submitShamCashReceipt(id, bytes, mimeType, extension)
     }
     override suspend fun getMyShamCashTopUps() = runCatching { currentUserId(); walletDataSource.getMyShamCashTopUps() }
-    override suspend fun getPaymentConfig() = runCatching { currentUserId(); walletDataSource.getPaymentConfig() }
 }
