@@ -337,6 +337,33 @@ private fun SubscriptionCard(vm: AdminViewModel, sub: AdminSubscription) {
         sub.adminNote?.takeIf { it.isNotBlank() }?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        var smsOpen by remember(sub.id) { mutableStateOf(false) }
+        var sender by remember(sub.id) { mutableStateOf("Number One") }
+        var body by remember(sub.id) { mutableStateOf("") }
+        OutlinedButton(onClick = { smsOpen = true }, enabled = !vm.actionLoading, modifier = Modifier.fillMaxWidth()) {
+            Text(tr("إرسال كود / رسالة SMS للعميل"), fontWeight = FontWeight.Bold)
+        }
+        if (smsOpen) {
+            AlertDialog(
+                onDismissRequest = { smsOpen = false },
+                title = { Text(tr("إرسال كود SMS للعميل"), fontWeight = FontWeight.Bold) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(value = sender, onValueChange = { sender = it }, label = { Text(tr("المرسل (مثال: Facebook / WhatsApp)")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(value = body, onValueChange = { body = it }, label = { Text(tr("نص الرسالة أو كود التفعيل")) }, minLines = 2, modifier = Modifier.fillMaxWidth())
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (sender.isNotBlank() && body.isNotBlank()) {
+                            vm.sendSubscriptionSms(sub.id, sender, body)
+                            smsOpen = false; body = ""
+                        }
+                    }) { Text(tr("إرسال الآن"), color = successColor(), fontWeight = FontWeight.Bold) }
+                },
+                dismissButton = { TextButton(onClick = { smsOpen = false }) { Text(tr("إلغاء")) } }
+            )
+        }
     }
 }
 
