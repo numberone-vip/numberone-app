@@ -32,6 +32,7 @@ sealed class AppError(val category: Category) {
     object ServiceUnavailable : AppError(Category.BUSINESS)
     object PaymentUnavailable : AppError(Category.BUSINESS)
     object WalletMissing : AppError(Category.SERVER)
+    object ReceiptMissing : AppError(Category.BUSINESS)
 
     /** A message that the app itself wrote in Arabic (validation); shown as-is. */
     data class Localized(val text: String) : AppError(Category.VALIDATION)
@@ -106,6 +107,10 @@ fun AppError.message(arabic: Boolean): String {
         AppError.WalletMissing -> t(
             "تعذّر العثور على محفظتك. تواصل مع الدعم.",
             "We could not find your wallet. Please contact support."
+        )
+        AppError.ReceiptMissing -> t(
+            "لم نستلم ملف الإيصال. أعد رفعه ثم حاول مجدداً.",
+            "We did not receive the receipt file. Upload it again and retry."
         )
         AppError.Unknown -> t("حدث خطأ غير متوقع. حاول مرة أخرى.", "Something went wrong. Please try again.")
     }

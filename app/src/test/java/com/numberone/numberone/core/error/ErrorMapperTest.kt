@@ -69,6 +69,12 @@ class ErrorMapperTest {
         assertEquals(AppError.NoStock, ErrorMapper.classify(Exception("Service is out of stock")))
     }
 
+    @Test fun purchase_path_messages_are_classified() {
+        assertEquals(AppError.ServiceUnavailable, ErrorMapper.classify(Exception("Yearly price is unavailable")))
+        assertEquals(AppError.ReceiptMissing, ErrorMapper.classify(Exception("Receipt file not found")))
+        assertEquals(AppError.TooManyPendingOrders, ErrorMapper.classify(Exception("Too many orders are awaiting fulfillment")))
+    }
+
     @Test fun null_and_unknown_fall_back_to_unknown() {
         assertEquals(AppError.Unknown, ErrorMapper.classify(null))
         assertEquals(AppError.Unknown, ErrorMapper.classify(RuntimeException("something odd")))
