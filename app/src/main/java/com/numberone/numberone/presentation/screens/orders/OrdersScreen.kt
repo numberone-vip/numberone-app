@@ -139,7 +139,7 @@ private fun OrderCard(order: Order, onUploadReceipt: (() -> Unit)?) {
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Filled.Image, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(tr("  رفع إثبات الدفع"), fontWeight = FontWeight.Bold)
+                Text(tr("رفع إثبات الدفع"), fontWeight = FontWeight.Bold)
             }
             Text(
                 tr("أرسل صورة الإيصال ورقم المعاملة لبدء مراجعة الطلب."),
@@ -219,7 +219,7 @@ private fun UploadReceiptDialog(
                     label = { Text(tr("رقم المعاملة (TXID)")) },
                     singleLine = true,
                     isError = txHash.isNotBlank() && !valid,
-                    supportingText = { Text(tr("64 خانة سداسية عشرية، مع أو بدون 0x")) },
+                    supportingText = { Text(tr("يتكوّن من 64 حرفاً ورقماً (مع أو بدون 0x)")) },
                     textStyle = ltrStyle,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -230,7 +230,7 @@ private fun UploadReceiptDialog(
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Icon(Icons.Filled.Image, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(tr("  اختيار صورة الإيصال"), style = MaterialTheme.typography.labelLarge)
+                    Text(tr("اختيار صورة الإيصال"), style = MaterialTheme.typography.labelLarge)
                 }
                 when {
                     reading -> Text(

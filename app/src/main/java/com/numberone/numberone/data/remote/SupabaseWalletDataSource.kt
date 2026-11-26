@@ -133,6 +133,12 @@ class SupabaseWalletDataSource : WalletDataSource {
         )
     }
 
+    suspend fun getDepositWalletAddress(): String? = runCatching {
+        @Serializable data class Row(@SerialName("wallet_address") val walletAddress: String? = null, @SerialName("is_enabled") val isEnabled: Boolean = true)
+        val rows = rpcJson.decodeFromString<List<Row>>(supabase.postgrest.from("payment_settings").select().data)
+        rows.firstOrNull { it.isEnabled }?.walletAddress?.trim()?.takeIf { it.isNotBlank() }
+    }.getOrNull()
+
     override suspend fun getMyShamCashTopUps(): List<ShamCashTopUp> =
         supabase.postgrest.rpcDecode("wallet_get_my_sham_cash_topups", buildJsonObject { put("p_limit", 50) })
 }

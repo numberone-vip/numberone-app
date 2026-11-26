@@ -306,7 +306,7 @@ fun ReceiptPreviewCard(
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Filled.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(tr("  تغيير الصورة"))
+                Text(tr("تغيير الصورة"))
             }
             TextButton(onClick = onRemove, enabled = !loading, modifier = Modifier.weight(1f)) {
                 Text(tr("إزالة"), color = dangerColor(), fontWeight = FontWeight.SemiBold)

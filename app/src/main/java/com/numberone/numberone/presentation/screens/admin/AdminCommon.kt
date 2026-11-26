@@ -133,7 +133,7 @@ internal fun ReviewActions(
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Filled.Image, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(tr("  معاينة الإيصال"), style = MaterialTheme.typography.labelLarge)
+                Text(tr("معاينة الإيصال"), style = MaterialTheme.typography.labelLarge)
             }
         }
         if (canDecide) {

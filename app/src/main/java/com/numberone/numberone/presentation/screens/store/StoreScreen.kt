@@ -179,7 +179,7 @@ private fun PendingPaymentCard(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = txInvalid,
-            label = { Text(tr("رقم المعاملة TXID (64 خانة)")) },
+            label = { Text(tr("رقم المعاملة (64 خانة)")) },
             textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
             supportingText = {
                 Text(

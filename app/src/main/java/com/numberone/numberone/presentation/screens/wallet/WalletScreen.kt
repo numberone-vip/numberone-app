@@ -244,7 +244,9 @@ private fun exactUsdt(value: Double): String =
 @Composable
 private fun BinanceSection(vm: AppViewModel) {
     val selected = vm.deposits.firstOrNull { it.id == vm.selectedDeposit && isOpenStatus(it.status) }
-    val address = vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
+    var liveDepositAddress by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) { liveDepositAddress = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getDepositWalletAddress() }
+    val address = liveDepositAddress ?: vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
 
     NOCard {
         DepositProgress(current = if (selected == null) 1 else 2)
