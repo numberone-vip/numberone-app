@@ -136,7 +136,7 @@ class AdminRepositoryImpl(
         rpc.rpcRaw(
             "admin_approve_order",
             buildJsonObject {
-                put("p_order_id", orderId); put("p_phone_number", cleanP)
+                put("p_order_id", orderId); put("p_phone_number", phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim())
                 put("p_access_code", accessCode.trim()); put("p_expiry_date", expiryDate.trim())
             }
         )
@@ -293,7 +293,7 @@ class AdminRepositoryImpl(
             "admin_add_subscription_for_user",
             buildJsonObject {
                 put("p_user_id", userId); put("p_service_id", serviceId.trim())
-                put("p_access_code", accessCode.trim()); put("p_phone_number", cleanP)
+                put("p_access_code", accessCode.trim()); put("p_phone_number", phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim())
                 put("p_expiry_date", expiryDate.trim())
                 put("p_admin_note", "Assigned manually from admin panel")
             }
