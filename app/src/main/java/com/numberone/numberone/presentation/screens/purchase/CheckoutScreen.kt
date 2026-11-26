@@ -93,7 +93,7 @@ fun CheckoutScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            IconBadge(Icons.Filled.PhoneAndroid, size = 48.dp)
+            ServiceBrandBadge(service.name)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 val flag = flagEmoji(service.countryCode)
@@ -236,6 +236,22 @@ fun CheckoutScreen(
             },
             dismissButton = { TextButton(onClick = { confirmOpen = false }) { Text(tr("إلغاء")) } }
         )
+    }
+}
+
+@Composable
+private fun ServiceBrandBadge(name: String) {
+    val n = name.lowercase()
+    val (bg, fg, tag) = when {
+        "whatsapp" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF25D366), androidx.compose.ui.graphics.Color.White, "WA")
+        "telegram" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF229ED9), androidx.compose.ui.graphics.Color.White, "TG")
+        "facebook" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF1877F2), androidx.compose.ui.graphics.Color.White, "FB")
+        "google" in n -> Triple(androidx.compose.ui.graphics.Color(0xFFEA4335), androidx.compose.ui.graphics.Color.White, "G")
+        "tiktok" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF111111), androidx.compose.ui.graphics.Color(0xFF25F4EE), "TT")
+        else -> Triple(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), MaterialTheme.colorScheme.primary, "VIP")
+    }
+    Surface(shape = RoundedCornerShape(14.dp), color = bg, modifier = Modifier.size(48.dp)) {
+        androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) { Text(tag, color = fg, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium) }
     }
 }
 

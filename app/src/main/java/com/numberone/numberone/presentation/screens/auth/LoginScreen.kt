@@ -62,6 +62,34 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onCreateAccountClick: () -> Unit
 ) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences("numberone_onboarding", android.content.Context.MODE_PRIVATE) }
+    var showOb by remember { mutableStateOf(!prefs.getBoolean("seen", false)) }
+    var idx by remember { mutableStateOf(0) }
+    if (showOb) {
+        val slides = listOf(
+            Triple(tr("أرقام فورية بلمسة واحدة"), tr("استقبل رموز التفعيل لواتساب وتيليجرام خلال ثوانٍ وبشكل تلقائي."), "⚡"),
+            Triple(tr("أرقام خاصة دائمة (VIP)"), tr("أرقام حقيقية مخصصة لك وحدك تقبلها المنصات الحساسة مثل فيسبوك."), "👑"),
+            Triple(tr("شحن سريع وآمن 100%"), tr("اشحن محفظتك بسهولة عبر USDT (BEP20) أو شام كاش وتابع عملياتك فوراً."), "💎")
+        )
+        androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.background, modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+            androidx.compose.foundation.layout.Column(modifier = androidx.compose.ui.Modifier.fillMaxSize().padding(24.dp), verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween, horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                androidx.compose.foundation.layout.Row(modifier = androidx.compose.ui.Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
+                    androidx.compose.material3.TextButton(onClick = { prefs.edit().putBoolean("seen", true).apply(); showOb = false }) { Text(tr("تخطي"), fontWeight = FontWeight.Bold) }
+                }
+                androidx.compose.foundation.layout.Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)) {
+                    Text(slides[idx].third, style = MaterialTheme.typography.displayLarge)
+                    Text(slides[idx].first, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    Text(slides[idx].second, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+                androidx.compose.material3.Button(onClick = { if (idx < 2) idx++ else { prefs.edit().putBoolean("seen", true).apply(); showOb = false } }, modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(52.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
+                    Text(if (idx < 2) tr("التالي") else tr("ابدأ الآن"), fontWeight = FontWeight.Black)
+                }
+            }
+        }
+        return
+    }
+
     val state = viewModel.uiState
     val palette = authPalette()
     val scope = rememberCoroutineScope()

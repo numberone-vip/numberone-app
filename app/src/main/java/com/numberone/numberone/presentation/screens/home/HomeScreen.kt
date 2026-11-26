@@ -352,6 +352,12 @@ private fun DashboardTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         GreetingHeader(userEmail = userEmail)
+        Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(NumberOneColors.Champagne, NumberOneColors.GoldDeep))), modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Icon(Icons.Filled.Bolt, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Text(tr("تفعيل فوري خلال ثوانٍ وأرقام VIP دائمة تدعم فيسبوك وواتساب"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            }
+        }
 
         // 1. Wallet
         if (showSkeleton) SkeletonBlock(height = 150.dp) else BalanceHeroCard(
