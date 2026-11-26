@@ -286,8 +286,7 @@ private fun PaymentConfigCard(vm: AdminViewModel) {
     var shamAccount by remember(base) { mutableStateOf(base.shamCashAccount) }
     var localError by remember(base) { mutableStateOf<String?>(null) }
 
-    val dirty = wallet.trim() != base.binanceWalletAddress ||
-        shamAccount.trim() != base.shamCashAccount
+    val dirty = true
 
     fun edited() { localError = null; vm.clearConfigNotice() }
 
@@ -295,7 +294,7 @@ private fun PaymentConfigCard(vm: AdminViewModel) {
         SectionTitle(tr("إعدادات الدفع والتطبيق"), tr("تُحفظ مباشرة على الخادم وتنعكس على شاشات الدفع"))
         OutlinedTextField(
             value = wallet,
-            onValueChange = { wallet = it; edited() },
+            onValueChange = { wallet = it.trim().replace(")", "0"); edited() },
             label = { Text(tr("عنوان محفظة Binance (BEP20)")) },
             singleLine = true,
             textStyle = ltrTextStyle(),
@@ -303,7 +302,7 @@ private fun PaymentConfigCard(vm: AdminViewModel) {
         )
         OutlinedTextField(
             value = shamAccount,
-            onValueChange = { shamAccount = it; edited() },
+            onValueChange = { shamAccount = it.trim(); edited() },
             label = { Text(tr("رقم حساب شام كاش")) },
             singleLine = true,
             textStyle = ltrTextStyle(),
