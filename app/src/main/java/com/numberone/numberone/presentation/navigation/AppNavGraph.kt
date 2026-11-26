@@ -68,6 +68,13 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
         }
     }
 
+    LaunchedEffect(appViewModel.sessionExpired) {
+        if (appViewModel.sessionExpired) {
+            appViewModel.acknowledgeSessionExpired()
+            signOutToLogin()
+        }
+    }
+
     NavHost(navController = navController, startDestination = AppRoutes.LOGIN) {
         composable(AppRoutes.LOGIN) {
             LoginScreen(

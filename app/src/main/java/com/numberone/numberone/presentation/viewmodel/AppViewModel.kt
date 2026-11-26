@@ -1,5 +1,8 @@
 package com.numberone.numberone.presentation.viewmodel
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import com.numberone.numberone.core.error.AppError
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.core.localization.trf
@@ -255,13 +258,20 @@ class AppViewModel : ViewModel() {
 
     fun loadHistory() { run { history = AppContainer.walletRepository.getMyOrders().getOrThrow() } }
 
+    /** Set when a request fails because the session is no longer valid; the navigation layer sends the user to sign-in. */
+    var sessionExpired by mutableStateOf(false); private set
+
+    fun acknowledgeSessionExpired() { sessionExpired = false }
+
+    override fun onTaskFailed(e: Throwable) {
+        if (ErrorMapper.classify(e) == AppError.SessionExpired) sessionExpired = true
+    }
+
+    /** Local sign-out always completes, even when the network call fails, so the device never keeps the old account on screen. */
     fun signOut(onDone: () -> Unit) {
-        run {
-            try {
-                AppContainer.userRepository.signOut().getOrThrow()
-            } finally {
-                clearSessionState()
-            }
+        viewModelScope.launch {
+            runCatching { AppContainer.userRepository.signOut() }
+            clearSessionState()
             onDone()
         }
     }

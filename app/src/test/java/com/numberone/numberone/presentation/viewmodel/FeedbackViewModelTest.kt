@@ -74,6 +74,19 @@ class FeedbackViewModelTest {
         assertFalse(vm.loading)
     }
 
+    private class Hooked : FeedbackViewModel() {
+        var failed: Throwable? = null
+        override fun onTaskFailed(e: Throwable) { failed = e }
+        fun exec(task: suspend () -> Unit) = run(task)
+    }
+
+    @Test fun failed_task_reports_the_failure_to_the_subclass() = runTest {
+        val vm = Hooked()
+        val boom = IOException("socket")
+        vm.exec { throw boom }
+        assertEquals(boom, vm.failed)
+    }
+
     @Test fun a_new_task_clears_the_previous_error() = runTest {
         val vm = Plain()
         vm.exec { throw IOException("first") }
