@@ -535,13 +535,13 @@ private fun GetNumberCard(onInstant: () -> Unit, onPrivate: () -> Unit) {
                 Button(onClick = onInstant, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Text(tr("رقم تفعيل فوري"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
-                        Text(tr("كود سريع لمرة واحدة • واتساب وتيليجرام"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f))
+                        Text(tr("كود سريع لمرة واحدة • 1346 تطبيق حول العالم"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f))
                     }
                 }
                 OutlinedButton(onClick = onPrivate, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Text(tr("رقم خاص دائم (VIP)"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
-                        Text(tr("مخصص لك • يقبله فيسبوك والمنصات الحساسة"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(tr("مخصص لك • يقبله فيسبوك وواتساب وجميع المنصات العالمية"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
