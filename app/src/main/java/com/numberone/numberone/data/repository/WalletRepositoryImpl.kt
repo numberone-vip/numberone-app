@@ -30,6 +30,11 @@ class WalletRepositoryImpl(
         require(UUID_REGEX.matches(v)) { tr("معرّف غير صالح") }
         return v
     }
+    private fun requireServiceId(value: String): String {
+        val v = value.trim()
+        require(v.isNotBlank()) { tr("معرّف الخدمة غير صالح") }
+        return v
+    }
 
     /** Accepts a BEP20 hash with or without the 0x prefix; sends 64 lowercase hex chars. */
     private fun normalizeTxHash(raw: String): String {
@@ -60,7 +65,7 @@ class WalletRepositoryImpl(
     override suspend fun getServices() = runCatching { currentUserId(); walletDataSource.getServices() }
     override suspend fun getMyOrders() = runCatching { walletDataSource.getMyOrders(currentUserId()) }
     override suspend fun createOrder(serviceId: String) = runCatching {
-        val id = requireUuid(serviceId); currentUserId(); walletDataSource.createOrder(id)
+        val id = requireServiceId(serviceId); currentUserId(); walletDataSource.createOrder(id)
     }
     override suspend fun uploadReceipt(orderId: String, bytes: ByteArray, mimeType: String, extension: String) = runCatching {
         val id = requireUuid(orderId); currentUserId(); walletDataSource.uploadReceipt(id, bytes, mimeType, extension)
@@ -73,7 +78,7 @@ class WalletRepositoryImpl(
         walletDataSource.submitOrderPayment(id, hash, receiptPath)
     }
     override suspend fun purchaseServiceWithWallet(serviceId: String, requestId: String) = runCatching {
-        val sid = requireUuid(serviceId); val rid = requireUuid(requestId)
+        val sid = requireServiceId(serviceId); val rid = requireUuid(requestId)
         currentUserId(); walletDataSource.purchaseServiceWithWallet(sid, rid)
     }
 

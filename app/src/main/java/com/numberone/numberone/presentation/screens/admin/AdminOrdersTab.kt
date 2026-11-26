@@ -122,7 +122,7 @@ internal fun LazyListScope.orderItems(
             shape = RoundedCornerShape(14.dp)
         ) {
             Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(tr("  إسناد اشتراك لمستخدم"), fontWeight = FontWeight.Bold)
+            Text(tr("إسناد اشتراك لمستخدم"), fontWeight = FontWeight.Bold)
         }
     }
     item {

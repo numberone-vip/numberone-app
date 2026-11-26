@@ -127,7 +127,7 @@ private data class MainTab(val label: String, val icon: ImageVector, val selecte
 // A function (not a val) so the labels follow the selected language.
 private fun mainTabs() = listOf(
     MainTab(tr("الرئيسية"), Icons.Outlined.Home, Icons.Filled.Home),
-    MainTab(tr("المتجر الرقمي"), Icons.Outlined.SimCard, Icons.Filled.SimCard),
+    MainTab(tr("أرقام خاصة"), Icons.Outlined.SimCard, Icons.Filled.SimCard),
     MainTab(tr("فوري"), Icons.Outlined.Bolt, Icons.Filled.Bolt)
 )
 
@@ -373,7 +373,7 @@ private fun DashboardTab(
                     )
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Text(tr("  شحن الرصيد"), fontWeight = FontWeight.Bold)
+                    Text(tr("شحن الرصيد"), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -493,7 +493,7 @@ private fun ActiveNumberCard(number: ActiveNumber, onViewMessages: () -> Unit) {
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Filled.Sms, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(tr("  عرض الرسائل"), fontWeight = FontWeight.Bold)
+                Text(tr("عرض الرسائل"), fontWeight = FontWeight.Bold)
             }
         }
     }

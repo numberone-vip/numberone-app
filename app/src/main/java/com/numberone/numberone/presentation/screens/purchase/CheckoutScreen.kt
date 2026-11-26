@@ -190,7 +190,7 @@ fun CheckoutScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Filled.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(tr("  اشترِ الآن من رصيدك"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                Text(tr("اشترِ الآن من رصيدك"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
             }
             if (walletBalance != null && inStock && !hasFunds) {
                     Text(
@@ -209,7 +209,7 @@ fun CheckoutScreen(
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Text(tr("  اشحن المحفظة"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                            Text(tr("اشحن المحفظة"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -221,7 +221,7 @@ fun CheckoutScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Filled.CurrencyBitcoin, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(tr("  الدفع بتحويل USDT (BEP20)"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text(tr("الدفع بتحويل USDT (BEP20)"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
             }
         }
 

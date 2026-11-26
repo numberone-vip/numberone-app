@@ -64,7 +64,7 @@ internal fun LazyListScope.serviceItems(
             shape = RoundedCornerShape(14.dp)
         ) {
             Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(tr("  إضافة خدمة جديدة"), fontWeight = FontWeight.Bold)
+            Text(tr("إضافة خدمة جديدة"), fontWeight = FontWeight.Bold)
         }
     }
     if (vm.services.isEmpty() && !vm.loading) {
