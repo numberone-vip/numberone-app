@@ -89,7 +89,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(tr("رصيدك"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        "%.2f USDT".format(vm.wallet.balance),
+                        ltr("%.2f USDT".format(java.util.Locale.US, vm.wallet.balance)),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black
                     )
@@ -101,25 +101,12 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
             )
         }
 
-        if (vm.services.isEmpty() && !vm.loading) EmptyState(tr("لا توجد خدمات متاحة حالياً. حاول لاحقاً."))
+        FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
 
-        vm.services.forEach { service ->
-            CheckoutScreen(
-                service = service,
-                enabled = !vm.loading,
-                walletBalance = vm.wallet.balance,
-                onTopUp = onTopUp,
-                onWalletPurchase = { selectedServiceId -> vm.buy(selectedServiceId) },
-                onManualPayment = { selectedServiceId ->
-                    receipt = null
-                    vm.createManualOrder(selectedServiceId)
-                }
-            )
-        }
-
-        vm.pendingOrder?.let { order ->
+        val activeOrder = vm.pendingOrder
+        if (activeOrder != null) {
             PendingPaymentCard(
-                order = order,
+                order = activeOrder,
                 txHash = vm.txHash,
                 onTxHashChange = vm::setTxHash,
                 loading = vm.loading,
@@ -134,6 +121,23 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 },
                 onCancelReceipt = { receipt = null }
             )
+            androidx.compose.material3.OutlinedButton(onClick = { receipt = null; vm.cancelPendingOrder() }, modifier = Modifier.fillMaxWidth()) { Text(tr("إلغاء هذا الطلب"), color = com.numberone.numberone.core.components.dangerColor(), fontWeight = FontWeight.Bold) }
+        } else {
+            if (vm.services.isEmpty() && !vm.loading) EmptyState(tr("لا توجد خدمات متاحة حالياً. حاول لاحقاً."))
+
+            vm.services.forEach { service ->
+                CheckoutScreen(
+                    service = service,
+                    enabled = !vm.loading,
+                    walletBalance = vm.wallet.balance,
+                    onTopUp = onTopUp,
+                    onWalletPurchase = { selectedServiceId -> vm.buy(selectedServiceId) },
+                    onManualPayment = { selectedServiceId ->
+                        receipt = null
+                        vm.createManualOrder(selectedServiceId)
+                    }
+                )
+            }
         }
 
         FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
@@ -167,7 +171,10 @@ private fun PendingPaymentCard(
             emphasized = true
         )
         CopyRow(label = tr("الشبكة"), value = order.network)
-        CopyRow(label = tr("عنوان التحويل"), value = order.walletAddress, monospace = true)
+        var liveCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+        LaunchedEffect(Unit) { liveCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
+        val destWallet = order.walletAddress.ifBlank { liveCfg.usdtAddress.orEmpty() }
+        CopyRow(label = tr("عنوان التحويل"), value = destWallet, monospace = true)
         CopyRow(label = tr("رقم الطلب"), value = order.orderId, monospace = true)
     }
 

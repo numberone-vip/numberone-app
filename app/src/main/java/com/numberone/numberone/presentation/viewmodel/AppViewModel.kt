@@ -206,6 +206,8 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    fun cancelPendingOrder() { pendingOrder = null; _txHash = ""; message = tr("تم إلغاء الطلب") }
+    fun cancelSelectedDeposit() { selectedDeposit = ""; shamSelected = ""; message = tr("تم إلغاء المعاملة") }
     fun createManualOrder(serviceId: String) {
         run {
             pendingOrder = AppContainer.walletRepository.createOrder(serviceId).getOrThrow()

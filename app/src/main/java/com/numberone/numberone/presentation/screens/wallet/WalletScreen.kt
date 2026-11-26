@@ -296,6 +296,7 @@ private fun BinanceSection(vm: AppViewModel) {
             onCheck = vm::checkDeposit,
             expiresAt = depositExpiry(selected.createdAt)
         )
+        androidx.compose.material3.OutlinedButton(onClick = vm::cancelSelectedDeposit, modifier = Modifier.fillMaxWidth()) { Text(tr("إلغاء المعاملة"), color = com.numberone.numberone.core.components.dangerColor(), fontWeight = FontWeight.Bold) }
     }
 
     NOCard {
