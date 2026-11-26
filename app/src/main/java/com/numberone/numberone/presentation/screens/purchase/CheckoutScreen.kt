@@ -68,8 +68,8 @@ import com.numberone.numberone.domain.model.Service
 fun CheckoutScreen(
     service: Service,
     enabled: Boolean,
-    onWalletPurchase: (String) -> Unit,
-    onManualPayment: (String) -> Unit,
+    onWalletPurchase: (String, Int) -> Unit,
+    onManualPayment: (String, Int) -> Unit,
     walletBalance: Double? = null,
     onTopUp: (() -> Unit)? = null
 ) {
@@ -81,7 +81,9 @@ fun CheckoutScreen(
     val available = selected.availableCount ?: 0
     val inStock = available > 0
     val stockColor = if (inStock) successColor() else dangerColor()
-    val price = selected.price
+    var fallbackMonths by remember(service.id) { mutableStateOf(1) }
+    val activeMonths = if (options.size > 1) 1 else fallbackMonths
+    val price = selected.price * activeMonths
     val priceText = formatAmount(price)
     val hasFunds = walletBalance == null || walletBalance >= price
     val walletPurchaseEnabled = enabled && inStock && hasFunds
@@ -97,7 +99,7 @@ fun CheckoutScreen(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 val flag = flagEmoji(service.countryCode)
-                val duration = serviceDurationLabel(service.name) ?: tr("اشتراك شهري • 30 يوم")
+                val duration = serviceDurationLabel(service.name) ?: when (activeMonths) { 3 -> tr("اشتراك 3 أشهر • 90 يوم"); 6 -> tr("اشتراك 6 أشهر • 180 يوم"); 12 -> tr("اشتراك سنة كاملة • 365 يوم"); else -> tr("اشتراك شهري • 30 يوم") }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (flag != null) {
                         Text(flag, fontSize = 18.sp)
@@ -154,7 +156,6 @@ fun CheckoutScreen(
         }
 
         Text(tr("اختر مدة الاشتراك:"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-        var fallbackMonths by remember(service.id) { mutableStateOf(1) }
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (options.size > 1) {
                 options.forEachIndexed { idx, option ->
@@ -197,7 +198,7 @@ fun CheckoutScreen(
                     Text(trf("اشترِ الآن من رصيدك • {0} USDT", ltr(priceText)), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                 }
             }
-            OutlinedButton(onClick = { onManualPayment(selected.id) }, enabled = manualPaymentEnabled, modifier = Modifier.fillMaxWidth().height(44.dp), shape = RoundedCornerShape(14.dp)) {
+            OutlinedButton(onClick = { onManualPayment(selected.id, activeMonths) }, enabled = manualPaymentEnabled, modifier = Modifier.fillMaxWidth().height(44.dp), shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Filled.CurrencyBitcoin, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(tr("أو اطلب بتحويل USDT مباشر"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
             }
@@ -229,7 +230,7 @@ fun CheckoutScreen(
             confirmButton = {
                 TextButton(onClick = {
                     confirmOpen = false
-                    onWalletPurchase(selected.id)
+                    onWalletPurchase(selected.id, activeMonths)
                 }) {
                     Text(tr("تأكيد الخصم"), color = successColor(), fontWeight = FontWeight.Bold)
                 }
