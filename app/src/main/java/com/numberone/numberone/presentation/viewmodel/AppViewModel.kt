@@ -128,20 +128,20 @@ class AppViewModel : ViewModel() {
     fun topUp() {
         val value = amount.trim().toDoubleOrNull()
         if (value == null || !value.isFinite() || value <= 0 || value > 100000) {
-            error = tr("أدخل مبلغاً صحيحاً (حتى 100000 USDT)"); return
+            error = tr("أدخل مبلغاً صحيحاً، بحد أقصى 100000 USDT"); return
         }
         run {
             val req = AppContainer.walletRepository.createTopUpRequest(com.numberone.numberone.domain.model.CreateWalletTopUp(value)).getOrThrow()
             selectedDeposit = req.id
             deposits = AppContainer.walletRepository.getMyTopUpRequests().getOrThrow()
-            message = tr("أرسل المبلغ الظاهر بالضبط عبر شبكة BEP20 ثم اضغط تحقق من الإيداع.")
+            message = tr("أرسل المبلغ بالضبط كما يظهر، عبر شبكة BEP20، ثم اضغط «تحقق من الإيداع».")
         }
     }
 
     /** Automatic matching: the server finds the Binance deposit by unique amount, so no TXID is needed. */
     fun checkDeposit() {
         val id = selectedDeposit
-        if (id.isBlank()) { error = tr("اختر طلب إيداع أولاً"); return }
+        if (id.isBlank()) { error = tr("اختر طلب الإيداع أولاً"); return }
         run {
             val response = AppContainer.walletRepository.verifyDeposit(id, "").getOrThrow()
             message = response
@@ -152,8 +152,8 @@ class AppViewModel : ViewModel() {
 
     fun submitDeposit() {
         val id = selectedDeposit
-        if (id.isBlank()) { error = tr("اختر طلب إيداع أولاً"); return }
-        if (!txHashRegex.matches(txHash.trim())) { error = tr("أدخل رقم معاملة صالحاً بطول 64 خانة"); return }
+        if (id.isBlank()) { error = tr("اختر طلب الإيداع أولاً"); return }
+        if (!txHashRegex.matches(txHash.trim())) { error = tr("أدخل رقم معاملة صالحاً من 64 خانة"); return }
         run {
             AppContainer.walletRepository.submitDepositTransaction(id, txHash).getOrThrow()
             val response = AppContainer.walletRepository.verifyDeposit(id, txHash).getOrThrow()
