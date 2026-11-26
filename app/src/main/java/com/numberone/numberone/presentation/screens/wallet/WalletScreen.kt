@@ -510,6 +510,8 @@ private fun ShamSection(
     onConfirmReceipt: () -> Unit,
     onRemoveReceipt: () -> Unit
 ) {
+    var liveCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+    LaunchedEffect(Unit) { liveCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
     val awaitingReceipt = vm.shamTopUps.filter { isOpenStatus(it.status) && it.receiptPath == null }
     val active = awaitingReceipt.firstOrNull { it.id == vm.shamSelected } ?: awaitingReceipt.firstOrNull()
 
