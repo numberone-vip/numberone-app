@@ -202,9 +202,9 @@ class AdminViewModel(
         if (loading) return
         viewModelScope.launch {
             loading = true
-            repository.sendSubscriptionSms(subscriptionId, sender, body)
-                .onSuccess { message = tr("تم إرسال الرسالة إلى صندوق وارد العميل") }
-                .onFailure { error = ErrorMapper.toMessage(it) }
+            adminRepo.sendSubscriptionSms(subscriptionId, sender, body)
+                .onSuccess { showSuccess(tr("تم إرسال الرسالة إلى صندوق وارد العميل")) }
+                .onFailure { showError(ErrorMapper.toMessage(it)) }
             loading = false
         }
     }
