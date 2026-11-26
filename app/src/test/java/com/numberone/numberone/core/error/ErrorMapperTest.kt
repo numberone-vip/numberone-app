@@ -54,6 +54,13 @@ class ErrorMapperTest {
         assertEquals(AppError.ServiceInUse, ErrorMapper.classify(AppException(AppError.ServiceInUse)))
     }
 
+    @Test fun money_server_messages_are_classified_precisely() {
+        assertEquals(AppError.TooManyPendingOrders, ErrorMapper.classify(Exception("Too many orders are awaiting payment review")))
+        assertEquals(AppError.PendingOrderExists, ErrorMapper.classify(Exception("You already have a pending payment order")))
+        assertEquals(AppError.OrderExpired, ErrorMapper.classify(Exception("Order is expired or cannot accept payment")))
+        assertEquals(AppError.InsufficientBalance, ErrorMapper.classify(Exception("Insufficient wallet balance")))
+    }
+
     @Test fun null_and_unknown_fall_back_to_unknown() {
         assertEquals(AppError.Unknown, ErrorMapper.classify(null))
         assertEquals(AppError.Unknown, ErrorMapper.classify(RuntimeException("something odd")))

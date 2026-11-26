@@ -1,5 +1,6 @@
 package com.numberone.numberone.presentation.viewmodel
 
+import com.numberone.numberone.core.error.AppError
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.core.localization.trf
 import androidx.compose.runtime.*
@@ -186,9 +187,15 @@ class AppViewModel : ViewModel() {
     fun buy(serviceId: String) {
         run {
             val requestId = walletRequestIds.getOrPut(serviceId) { java.util.UUID.randomUUID().toString() }
-            val result = AppContainer.walletRepository.purchaseServiceWithWallet(serviceId, requestId).getOrThrow()
+            val result = try {
+                AppContainer.walletRepository.purchaseServiceWithWallet(serviceId, requestId).getOrThrow()
+            } catch (e: Exception) {
+                // Insufficient balance is a final outcome for this attempt: the next try is a new purchase.
+                if (ErrorMapper.classify(e) == AppError.InsufficientBalance) walletRequestIds.remove(serviceId)
+                throw e
+            }
             walletRequestIds.remove(serviceId)
-            message = trf("تم إنشاء الطلب {0} وحُجز المبلغ بنجاح", result.orderId)
+            message = trf("تم إنشاء الطلب {0} وخُصم المبلغ من محفظتك بنجاح", result.orderId)
             wallet = AppContainer.walletRepository.getWallet().getOrThrow()
             transactions = AppContainer.walletRepository.getTransactions().getOrThrow()
         }
@@ -204,12 +211,12 @@ class AppViewModel : ViewModel() {
 
     fun submitManualOrder(bytes: ByteArray, mimeType: String, extension: String) {
         val order = pendingOrder
-        if (order == null) { error = tr("أنشئ طلب الدفع أولاً"); return }
-        if (!txHashRegex.matches(txHash.trim())) { error = tr("أدخل رقم معاملة صالحاً بطول 64 خانة قبل رفع الإيصال"); return }
+        if (order == null) { error = tr("أنشئ طلب الدفع أولاً، ثم أرسل الإيصال"); return }
+        if (!txHashRegex.matches(txHash.trim())) { error = tr("أدخل رقم معاملة صالحاً من 64 خانة قبل رفع الإيصال"); return }
         run {
             val path = AppContainer.walletRepository.uploadReceipt(order.orderId, bytes, mimeType, extension).getOrThrow()
             AppContainer.walletRepository.submitOrderPayment(order.orderId, txHash, path).getOrThrow()
-            message = tr("تم إرسال إثبات الدفع بنجاح. الطلب قيد المراجعة.")
+            message = tr("تم إرسال إثبات الدفع. طلبك قيد المراجعة الآن.")
             pendingOrder = null
             _txHash = ""
             history = AppContainer.walletRepository.getMyOrders().getOrThrow()
@@ -226,11 +233,11 @@ class AppViewModel : ViewModel() {
      */
     fun submitReceiptForOrder(orderId: String, txHash: String, bytes: ByteArray, mimeType: String, extension: String) {
         if (orderId.isBlank()) { error = tr("طلب غير صالح"); return }
-        if (!isValidTxHash(txHash)) { error = tr("أدخل رقم معاملة صالحاً بطول 64 خانة قبل رفع الإيصال"); return }
+        if (!isValidTxHash(txHash)) { error = tr("أدخل رقم معاملة صالحاً من 64 خانة قبل رفع الإيصال"); return }
         run {
             val path = AppContainer.walletRepository.uploadReceipt(orderId, bytes, mimeType, extension).getOrThrow()
             AppContainer.walletRepository.submitOrderPayment(orderId, txHash.trim(), path).getOrThrow()
-            message = tr("تم إرسال إثبات الدفع بنجاح. الطلب قيد المراجعة.")
+            message = tr("تم إرسال إثبات الدفع. طلبك قيد المراجعة الآن.")
             history = AppContainer.walletRepository.getMyOrders().getOrThrow()
         }
     }
