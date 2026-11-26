@@ -167,7 +167,26 @@ Deno.serve(async (req) => {
     });
     if (creditError) {
       console.error("Wallet credit RPC failed", creditError.message);
-      throw new Error("Verified deposit could not be credited; support review is required");
+      // A concurrent or repeated check may have credited the request already: report success, not an error.
+      const { data: current } = await adminClient
+        .from("wallet_deposit_requests")
+        .select("status")
+        .eq("id", requestId)
+        .maybeSingle();
+      if (current?.status === "credited") {
+        return reply({ status: "already_credited", amount: Number(depositRequest.requested_amount), currency: "USDT" });
+      }
+      // The submitted transaction hash does not match the verified deposit: the customer must fix it.
+      if (current && String(current.status) === "submitted") {
+        return reply({
+          status: "not_verified",
+          message: "رقم المعاملة المُرسَل لا يطابق الإيداع المؤكد. تحقق من الرقم وأعد الإرسال، أو تواصل مع الدعم مع رقم الطلب.",
+        }, 200);
+      }
+      return reply({
+        status: "not_verified",
+        message: "تعذّر إضافة الإيداع الآن. تواصل مع الدعم مع رقم الطلب، ولن يُضاف الرصيد مرتين.",
+      }, 200);
     }
 
     return reply({
