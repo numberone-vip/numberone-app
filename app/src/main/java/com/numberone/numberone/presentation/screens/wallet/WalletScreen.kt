@@ -243,10 +243,18 @@ private fun exactUsdt(value: Double): String =
 
 @Composable
 private fun BinanceSection(vm: AppViewModel) {
-    val selected = vm.deposits.firstOrNull { it.id == vm.selectedDeposit && isOpenStatus(it.status) }
-    var liveDepositAddress by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(Unit) { liveDepositAddress = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getDepositWalletAddress() }
-    val address = liveDepositAddress ?: vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
+    fun isFreshOpen(d: WalletTopUp): Boolean {
+        if (!isOpenStatus(d.status)) return false
+        if (d.status.equals("pending", true)) {
+            val exp = parseInstantOrNull(d.createdAt)?.plusSeconds(24L * 3600)?.toEpochMilli()
+            if (exp != null && exp <= System.currentTimeMillis()) return false
+        }
+        return true
+    }
+    val selected = vm.deposits.firstOrNull { it.id == vm.selectedDeposit && isFreshOpen(it) }
+    var liveCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+    LaunchedEffect(Unit) { liveCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
+    val address = liveCfg.usdtAddress ?: vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
 
     NOCard {
         DepositProgress(current = if (selected == null) 1 else 2)
@@ -604,11 +612,11 @@ private fun ActiveShamRequest(
             }
         }
         Column {
-            if (PaymentConfig.SHAM_CASH_ACCOUNT_NAME.isNotBlank()) {
-                TicketRow(label = tr("اسم صاحب الحساب"), value = PaymentConfig.SHAM_CASH_ACCOUNT_NAME, copyValue = PaymentConfig.SHAM_CASH_ACCOUNT_NAME)
+            if ((liveCfg.shamName ?: (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT)_NAME).isNotBlank()) {
+                TicketRow(label = tr("اسم صاحب الحساب"), value = (liveCfg.shamName ?: (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT)_NAME), copyValue = (liveCfg.shamName ?: (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT)_NAME))
             }
-            if (PaymentConfig.SHAM_CASH_ACCOUNT.isNotBlank()) {
-                TicketRow(label = tr("حساب شام كاش"), value = PaymentConfig.SHAM_CASH_ACCOUNT, copyValue = PaymentConfig.SHAM_CASH_ACCOUNT, monospace = true)
+            if ((liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT).isNotBlank()) {
+                TicketRow(label = tr("حساب شام كاش"), value = (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT), copyValue = (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT), monospace = true)
             }
             TicketRow(label = tr("رقم الطلب"), value = "#" + topUp.id.take(8), copyValue = topUp.id, monospace = true)
         }

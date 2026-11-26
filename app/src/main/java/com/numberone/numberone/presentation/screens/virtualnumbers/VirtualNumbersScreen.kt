@@ -156,7 +156,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             .onFailure { say(it.message ?: tr("تعذر تحميل كتالوج الأرقام")) }
         catalogLoading = false
         // Recover the latest activation after navigating away or reopening the screen.
-        repository.latestActivation().onSuccess { latest -> if (latest != null) order = latest }
+        repository.latestActivation().onSuccess { latest -> if (latest != null && isLive(latest.status)) order = latest }
     }
 
     LaunchedEffect(selectedCountry?.countryCode, selectedService?.code) {
@@ -197,7 +197,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                 )
                 say(tr("وصل رمز تفعيل جديد"))
             }
-            if (!isLive(fresh.status)) break
+            if (!isLive(fresh.status)) { if (fresh.status.uppercase() in setOf("CANCELLED", "CANCELED", "EXPIRED", "TIMEOUT")) order = null; break }
         }
     }
 
@@ -376,7 +376,8 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                             onCancel = {
                                 runAction(
                                     action = { repository.cancel(activeOrder.activationId) },
-                                    successMessage = tr("تم إلغاء الرقم وتحديث الاسترداد إن وُجد")
+                                    successMessage = tr("تم إلغاء الرقم وتحديث الاسترداد إن وُجد"),
+                                    afterSuccess = { order = null }
                                 )
                             },
                             onDismiss = { order = null }

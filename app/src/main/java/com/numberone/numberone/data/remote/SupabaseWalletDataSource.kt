@@ -133,11 +133,20 @@ class SupabaseWalletDataSource : WalletDataSource {
         )
     }
 
-    suspend fun getDepositWalletAddress(): String? = runCatching {
-        @Serializable data class Row(@SerialName("wallet_address") val walletAddress: String? = null, @SerialName("is_enabled") val isEnabled: Boolean = true)
-        val rows = rpcJson.decodeFromString<List<Row>>(supabase.postgrest.from("payment_settings").select().data)
-        rows.firstOrNull { it.isEnabled }?.walletAddress?.trim()?.takeIf { it.isNotBlank() }
-    }.getOrNull()
+    @Serializable data class LiveDepositConfig(
+        val usdtAddress: String? = null,
+        val shamAccount: String? = null,
+        val shamName: String? = null
+    )
+    suspend fun getLiveDepositConfig(): LiveDepositConfig = runCatching {
+        @Serializable data class PayRow(@SerialName("wallet_address") val walletAddress: String? = null, @SerialName("is_enabled") val isEnabled: Boolean = true)
+        @Serializable data class AppRow(@SerialName("binance_bep20_address") val bsc: String? = null, @SerialName("sham_cash_account") val shamAcc: String? = null, @SerialName("sham_cash_name") val shamName: String? = null)
+        val payRows = runCatching { rpcJson.decodeFromString<List<PayRow>>(supabase.postgrest.from("payment_settings").select().data) }.getOrDefault(emptyList())
+        val appRows = runCatching { rpcJson.decodeFromString<List<AppRow>>(supabase.postgrest.from("app_settings").select().data) }.getOrDefault(emptyList())
+        val app = appRows.firstOrNull()
+        val usdt = payRows.firstOrNull { it.isEnabled }?.walletAddress?.trim()?.takeIf { it.isNotBlank() } ?: app?.bsc?.trim()?.takeIf { it.isNotBlank() }
+        LiveDepositConfig(usdtAddress = usdt, shamAccount = app?.shamAcc?.trim()?.takeIf { it.isNotBlank() }, shamName = app?.shamName?.trim()?.takeIf { it.isNotBlank() })
+    }.getOrDefault(LiveDepositConfig())
 
     override suspend fun getMyShamCashTopUps(): List<ShamCashTopUp> =
         supabase.postgrest.rpcDecode("wallet_get_my_sham_cash_topups", buildJsonObject { put("p_limit", 50) })
