@@ -243,10 +243,18 @@ private fun exactUsdt(value: Double): String =
 
 @Composable
 private fun BinanceSection(vm: AppViewModel) {
-    val selected = vm.deposits.firstOrNull { it.id == vm.selectedDeposit && isOpenStatus(it.status) }
-    var liveDepositAddress by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(Unit) { liveDepositAddress = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getDepositWalletAddress() }
-    val address = liveDepositAddress ?: vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
+    fun isFreshOpen(d: WalletTopUp): Boolean {
+        if (!isOpenStatus(d.status)) return false
+        if (d.status.equals("pending", true)) {
+            val exp = parseInstantOrNull(d.createdAt)?.plusSeconds(24L * 3600)?.toEpochMilli()
+            if (exp != null && exp <= System.currentTimeMillis()) return false
+        }
+        return true
+    }
+    val selected = vm.deposits.firstOrNull { it.id == vm.selectedDeposit && isFreshOpen(it) }
+    var liveCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+    LaunchedEffect(Unit) { liveCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
+    val address = liveCfg.usdtAddress ?: vm.pendingOrder?.walletAddress?.takeIf { it.isNotBlank() }
 
     NOCard {
         DepositProgress(current = if (selected == null) 1 else 2)
@@ -502,6 +510,8 @@ private fun ShamSection(
     onConfirmReceipt: () -> Unit,
     onRemoveReceipt: () -> Unit
 ) {
+    var liveCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+    LaunchedEffect(Unit) { liveCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
     val awaitingReceipt = vm.shamTopUps.filter { isOpenStatus(it.status) && it.receiptPath == null }
     val active = awaitingReceipt.firstOrNull { it.id == vm.shamSelected } ?: awaitingReceipt.firstOrNull()
 
@@ -604,12 +614,12 @@ private fun ActiveShamRequest(
             }
         }
         Column {
-            if (PaymentConfig.SHAM_CASH_ACCOUNT_NAME.isNotBlank()) {
-                TicketRow(label = tr("اسم صاحب الحساب"), value = PaymentConfig.SHAM_CASH_ACCOUNT_NAME, copyValue = PaymentConfig.SHAM_CASH_ACCOUNT_NAME)
-            }
-            if (PaymentConfig.SHAM_CASH_ACCOUNT.isNotBlank()) {
-                TicketRow(label = tr("حساب شام كاش"), value = PaymentConfig.SHAM_CASH_ACCOUNT, copyValue = PaymentConfig.SHAM_CASH_ACCOUNT, monospace = true)
-            }
+            var shamCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+            LaunchedEffect(Unit) { shamCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
+            val sName = shamCfg.shamName ?: PaymentConfig.SHAM_CASH_ACCOUNT_NAME
+            val sAcc = shamCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT
+            if (sName.isNotBlank()) { TicketRow(label = tr("اسم صاحب الحساب"), value = sName, copyValue = sName) }
+            if (sAcc.isNotBlank()) { TicketRow(label = tr("حساب شام كاش"), value = sAcc, copyValue = sAcc, monospace = true) }
             TicketRow(label = tr("رقم الطلب"), value = "#" + topUp.id.take(8), copyValue = topUp.id, monospace = true)
         }
     }
