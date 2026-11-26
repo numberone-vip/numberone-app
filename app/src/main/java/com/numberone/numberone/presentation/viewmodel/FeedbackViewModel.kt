@@ -20,6 +20,9 @@ open class FeedbackViewModel : ViewModel() {
 
     protected open fun describeError(e: Throwable): String = ErrorMapper.toUserMessage(e)
 
+    /** Called after a task fails, so a subclass can react (for example, to an expired session). */
+    protected open fun onTaskFailed(e: Throwable) {}
+
     /** Runs [task] unless another task is in flight. Cancellation is rethrown, never shown. */
     protected fun run(task: suspend () -> Unit) {
         if (loading) return
@@ -31,6 +34,7 @@ open class FeedbackViewModel : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 error = describeError(e)
+                onTaskFailed(e)
             } finally {
                 loading = false
             }
