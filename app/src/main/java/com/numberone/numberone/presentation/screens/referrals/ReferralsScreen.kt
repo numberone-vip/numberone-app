@@ -33,7 +33,7 @@ fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
                 }
             }
             if (vm.myReferralCode.isNotBlank()) {
-                CopyField(label = tr("كود الدعوة"), value = vm.myReferralCode, monospace = true)
+                CopyField(label = tr("كود الدعوة"), value = vm.myReferralCode)
                 OutlinedButton(
                     onClick = {
                         val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, "سجّل في تطبيق Number One واستخدم كود الإحالة الخاص بي: ${vm.myReferralCode}") }
