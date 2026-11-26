@@ -90,7 +90,7 @@ class SupabaseWalletDataSource : WalletDataSource {
 
     override suspend fun createOrder(serviceId: String): PaymentOrderCreation = createOrderWithMonths(serviceId, 1)
     override suspend fun createOrderWithMonths(serviceId: String, months: Int): PaymentOrderCreation =
-        supabase.postgrest.rpcDecode<List<PaymentOrderCreation>>("create_order", buildJsonObject { put("p_service_id", serviceId); if (months > 1) put("p_months", months) }).single()
+        supabase.postgrest.rpcDecode<List<PaymentOrderCreation>>("create_order", buildJsonObject { put("p_service_id", serviceId); if (months >= 12) put("p_period", "yearly") }).single()
 
     override suspend fun uploadReceipt(orderId: String, bytes: ByteArray, mimeType: String, extension: String): String {
         require(bytes.isNotEmpty() && bytes.size <= 5 * 1024 * 1024) { tr("إيصال الدفع يجب ألا يتجاوز 5 ميغابايت") }
@@ -117,7 +117,7 @@ class SupabaseWalletDataSource : WalletDataSource {
 
     override suspend fun purchaseServiceWithWallet(serviceId: String, requestId: String): WalletOrderResult = purchaseServiceWithWalletMonths(serviceId, requestId, 1)
     override suspend fun purchaseServiceWithWalletMonths(serviceId: String, requestId: String, months: Int): WalletOrderResult =
-        supabase.postgrest.rpcDecode<List<WalletOrderResult>>("create_wallet_order", buildJsonObject { put("p_service_id", serviceId); put("p_request_id", requestId); if (months > 1) put("p_months", months) }).single()
+        supabase.postgrest.rpcDecode<List<WalletOrderResult>>("create_wallet_order", buildJsonObject { put("p_service_id", serviceId); put("p_request_id", requestId); if (months >= 12) put("p_period", "yearly") }).single()
 
 
     override suspend fun createShamCashTopUp(paymentMethod: String, paidAmount: Double): String =

@@ -99,7 +99,7 @@ fun CheckoutScreen(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 val flag = flagEmoji(service.countryCode)
-                val duration = serviceDurationLabel(service.name) ?: when (activeMonths) { 3 -> tr("اشتراك 3 أشهر • 90 يوم"); 6 -> tr("اشتراك 6 أشهر • 180 يوم"); 12 -> tr("اشتراك سنة كاملة • 365 يوم"); else -> tr("اشتراك شهري • 30 يوم") }
+                val duration = serviceDurationLabel(service.name) ?: if (activeMonths >= 12) tr("اشتراك سنوي • 365 يوم") else tr("اشتراك شهري • 30 يوم")
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (flag != null) {
                         Text(flag, fontSize = 18.sp)
@@ -163,7 +163,7 @@ fun CheckoutScreen(
                     FilterChip(selected = option.id == selected.id, onClick = { selectedId = option.id }, label = { Text("$lbl • ${formatAmount(option.price)} USDT", fontWeight = FontWeight.Bold) }, enabled = true)
                 }
             } else {
-                listOf(1 to tr("شهر واحد"), 3 to tr("3 أشهر"), 6 to tr("6 أشهر"), 12 to tr("سنة كاملة")).forEach { (m, lbl) ->
+                listOf(1 to tr("اشتراك شهري"), 12 to tr("اشتراك سنوي")).forEach { (m, lbl) ->
                     FilterChip(selected = fallbackMonths == m, onClick = { fallbackMonths = m }, label = { Text(lbl, fontWeight = FontWeight.Bold) }, enabled = true)
                 }
             }
