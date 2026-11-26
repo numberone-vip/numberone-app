@@ -340,7 +340,7 @@ private fun SubscriptionCard(vm: AdminViewModel, sub: AdminSubscription) {
         var smsOpen by remember(sub.id) { mutableStateOf(false) }
         var sender by remember(sub.id) { mutableStateOf("Number One") }
         var body by remember(sub.id) { mutableStateOf("") }
-        androidx.compose.material3.OutlinedButton(onClick = { smsOpen = true }, enabled = !vm.actionLoading, modifier = Modifier.fillMaxWidth()) {
+        androidx.compose.material3.OutlinedButton(onClick = { smsOpen = true }, enabled = !vm.loading, modifier = Modifier.fillMaxWidth()) {
             Text(tr("إرسال كود / رسالة SMS للعميل"), fontWeight = FontWeight.Bold)
         }
         if (smsOpen) {

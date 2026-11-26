@@ -197,4 +197,15 @@ class AdminViewModel(
         message = tr("تم تحديث وصول الاشتراك")
         reload()
     }
+
+    fun sendSubscriptionSms(subscriptionId: String, sender: String, body: String) {
+        if (loading) return
+        viewModelScope.launch {
+            loading = true
+            repo.sendSubscriptionSms(subscriptionId, sender, body)
+                .onSuccess { message = tr("تم إرسال الرسالة إلى صندوق وارد العميل") }
+                .onFailure { error = ErrorMapper.toMessage(it) }
+            loading = false
+        }
+    }
 }
