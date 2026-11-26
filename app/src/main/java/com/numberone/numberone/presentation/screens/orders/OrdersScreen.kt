@@ -62,22 +62,31 @@ import com.numberone.numberone.presentation.util.isWalletOrder
 import com.numberone.numberone.presentation.util.stage
 import com.numberone.numberone.presentation.util.waitingForCustomer
 import com.numberone.numberone.presentation.viewmodel.AppViewModel
+import com.numberone.numberone.presentation.viewmodel.EngagementViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun OrdersScreen(vm: AppViewModel, onBack: () -> Unit) {
+fun OrdersScreen(vm: AppViewModel, engagementVm: EngagementViewModel? = null, onBack: () -> Unit) {
     LaunchedEffect(Unit) { vm.loadHistory() }
     var uploadFor by remember { mutableStateOf<Order?>(null) }
+    var reviewFor by remember { mutableStateOf<Order?>(null) }
 
     NOScaffold(title = tr("سجل المشتريات"), onBack = onBack) {
-        FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
+        FeedbackBanner(loading = vm.loading || (engagementVm?.loading == true), error = vm.error ?: engagementVm?.error, message = vm.message ?: engagementVm?.message)
         if (vm.history.isEmpty() && !vm.loading) EmptyState(tr("لا توجد مشتريات بعد"))
         vm.history.forEach { order ->
             val upload: (() -> Unit)? = if (order.waitingForCustomer()) ({ uploadFor = order }) else null
-            OrderCard(order = order, onUploadReceipt = upload)
+            val canReview = order.status.uppercase() in setOf("COMPLETED", "APPROVED", "DELIVERED", "ACTIVE") && (engagementVm?.reviewedOrderIds?.contains(order.id) != true)
+            OrderCard(order = order, onUploadReceipt = upload, onReview = if (canReview && engagementVm != null) ({ reviewFor = order }) else null)
         }
+    }
+
+    reviewFor?.let { order ->
+        var rating by remember(order.id) { mutableStateOf(5) }
+        var comment by remember(order.id) { mutableStateOf("") }
+        AlertDialog(onDismissRequest = { reviewFor = null }, title = { Text(tr("تقييم الطلب"), fontWeight = FontWeight.Bold) }, text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Text(order.serviceName.ifBlank { tr("طلب شراء") }, fontWeight = FontWeight.SemiBold); Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { (1..5).forEach { star -> OutlinedButton(onClick = { rating = star }, shape = RoundedCornerShape(10.dp)) { Text(if (star <= rating) "★ $star" else "☆ $star", fontWeight = FontWeight.Bold, color = if (star <= rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) } } }; OutlinedTextField(value = comment, onValueChange = { if (it.length <= 1000) comment = it }, label = { Text(tr("اكتب رأيك حول الخدمة (اختياري)")) }, maxLines = 4, modifier = Modifier.fillMaxWidth()) } }, confirmButton = { TextButton(enabled = engagementVm?.loading != true, onClick = { engagementVm?.submitOrderReview(order.id, rating, comment) { reviewFor = null } }) { Text(tr("إرسال التقييم"), color = successColor(), fontWeight = FontWeight.Bold) } }, dismissButton = { TextButton(onClick = { reviewFor = null }) { Text(tr("إلغاء")) } })
     }
 
     uploadFor?.let { order ->
@@ -91,7 +100,7 @@ fun OrdersScreen(vm: AppViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-private fun OrderCard(order: Order, onUploadReceipt: (() -> Unit)?) {
+private fun OrderCard(order: Order, onUploadReceipt: (() -> Unit)?, onReview: (() -> Unit)? = null) {
     NOCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -147,6 +156,7 @@ private fun OrderCard(order: Order, onUploadReceipt: (() -> Unit)?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        if (onReview != null) { OutlinedButton(onClick = onReview, modifier = Modifier.fillMaxWidth().height(44.dp), shape = RoundedCornerShape(14.dp)) { Text(tr("★ تقييم الطلب"), fontWeight = FontWeight.Bold) } }
     }
 }
 

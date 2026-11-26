@@ -107,6 +107,7 @@ import com.numberone.numberone.presentation.navigation.AppRoutes
 import com.numberone.numberone.presentation.screens.store.StoreBody
 import com.numberone.numberone.presentation.screens.virtualnumbers.VirtualNumbersScreen
 import com.numberone.numberone.presentation.viewmodel.AppViewModel
+import com.numberone.numberone.presentation.viewmodel.EngagementViewModel
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -150,6 +151,7 @@ private class ActiveNumber(
 @Composable
 fun HomeScreen(
     vm: AppViewModel,
+    engagementVm: EngagementViewModel? = null,
     userEmail: String?,
     isAdmin: Boolean,
     onNavigate: (String) -> Unit,
@@ -197,6 +199,7 @@ fun HomeScreen(
             when (page) {
                 TAB_HOME -> DashboardTab(
                     vm = vm,
+                    engagementVm = engagementVm,
                     userEmail = userEmail,
                     isAdmin = isAdmin,
                     onNavigate = onNavigate,
@@ -317,6 +320,7 @@ private fun BottomTabItem(
 @Composable
 private fun DashboardTab(
     vm: AppViewModel,
+    engagementVm: EngagementViewModel? = null,
     userEmail: String?,
     isAdmin: Boolean,
     onNavigate: (String) -> Unit,
@@ -328,6 +332,7 @@ private fun DashboardTab(
 
     LaunchedEffect(Unit) {
         vm.loadDashboard()
+        engagementVm?.refreshUnreadCount()
         repository.latestActivation().onSuccess { apiActivation = it }
     }
 
@@ -351,7 +356,7 @@ private fun DashboardTab(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        GreetingHeader(userEmail = userEmail)
+        GreetingHeader(userEmail = userEmail, unreadNotifications = engagementVm?.unreadCount ?: 0, onNotifications = { onNavigate(AppRoutes.NOTIFICATIONS) })
         Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(NumberOneColors.Champagne, NumberOneColors.GoldDeep))), modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(Icons.Filled.Bolt, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
@@ -418,6 +423,7 @@ private fun DashboardTab(
                     Modifier.weight(1f).fillMaxHeight()
                 )
             }
+            ActionRow(tr("الإحالات والمكافآت"), tr("شارك كود الدعوة واحصل على مكافآت"), Icons.Filled.CardGiftcard, { onNavigate(AppRoutes.REFERRALS) })
             ActionRow(tr("الدعم الفني"), tr("المساعدة وخدمة العملاء"), Icons.Filled.SupportAgent, { onNavigate(AppRoutes.SUPPORT) })
             if (isAdmin) {
                 ActionRow(
@@ -587,7 +593,7 @@ private fun GetNumberCard(onInstant: () -> Unit, onPrivate: () -> Unit) {
 }
 
 @Composable
-private fun GreetingHeader(userEmail: String?) {
+private fun GreetingHeader(userEmail: String?, unreadNotifications: Int = 0, onNotifications: () -> Unit = {}) {
     val name = userEmail?.substringBefore("@")?.takeIf { it.isNotBlank() }
     val initial = name?.firstOrNull()?.uppercaseChar()?.toString() ?: "N"
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -609,6 +615,9 @@ private fun GreetingHeader(userEmail: String?) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        }
+        androidx.compose.material3.BadgedBox(badge = { if (unreadNotifications > 0) androidx.compose.material3.Badge { Text(unreadNotifications.toString()) } }) {
+            androidx.compose.material3.IconButton(onClick = onNotifications) { Icon(Icons.Filled.Notifications, contentDescription = tr("الإشعارات"), tint = MaterialTheme.colorScheme.primary) }
         }
     }
 }

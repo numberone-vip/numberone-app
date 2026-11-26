@@ -184,6 +184,23 @@ fun CheckoutScreen(
             )
         }
 
+        var promoOpen by remember(service.id) { mutableStateOf(false) }
+        var promoCodeInput by remember(service.id) { mutableStateOf("") }
+        var promoChecking by remember(service.id) { mutableStateOf(false) }
+        var promoPreview by remember(service.id) { mutableStateOf<com.numberone.numberone.domain.model.PromoValidationResult?>(null) }
+        var promoError by remember(service.id) { mutableStateOf<String?>(null) }
+        val promoScope = rememberCoroutineScope()
+        androidx.compose.material3.TextButton(onClick = { promoOpen = !promoOpen }, modifier = Modifier.fillMaxWidth()) { Text(if (promoOpen) tr("إخفاء كوبون الخصم") else tr("لديك كوبون خصم؟ (معاينة الخصم)"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold) }
+        if (promoOpen) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.OutlinedTextField(value = promoCodeInput, onValueChange = { promoCodeInput = it.uppercase(); promoPreview = null; promoError = null }, label = { Text(tr("كود الكوبون")) }, singleLine = true, modifier = Modifier.weight(1f))
+                    Button(onClick = { promoChecking = true; promoError = null; promoPreview = null; promoScope.launch { com.numberone.numberone.di.AppContainer.engagementRepository.validatePromoCode(promoCodeInput, price).onSuccess { promoPreview = it }.onFailure { promoError = com.numberone.numberone.core.error.ErrorMapper.toUserMessage(it) }; promoChecking = false } }, enabled = promoCodeInput.trim().length >= 2 && !promoChecking, shape = RoundedCornerShape(12.dp)) { Text(if (promoChecking) "..." else tr("تحقق"), fontWeight = FontWeight.Bold) }
+                }
+                promoPreview?.let { res -> Text(trf("الكوبون صالح ({0}) • الخصم: {1} {3} • المبلغ بعد الخصم: {2} {3}", res.code, formatAmount(res.discountAmount), formatAmount(res.finalAmount), res.currency), style = MaterialTheme.typography.bodySmall, color = successColor(), fontWeight = FontWeight.Bold) }
+                promoError?.let { err -> Text(err, style = MaterialTheme.typography.bodySmall, color = dangerColor()) }
+            }
+        }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
