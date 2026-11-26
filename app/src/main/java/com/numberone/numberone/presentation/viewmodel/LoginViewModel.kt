@@ -4,9 +4,11 @@ import com.numberone.numberone.core.localization.tr
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.numberone.numberone.core.error.AppError
 import com.numberone.numberone.core.error.ErrorMapper
 import com.numberone.numberone.core.security.BiometricAuthManager
 import com.numberone.numberone.di.AppContainer
+import com.numberone.numberone.domain.repository.UserRepository
 import com.numberone.numberone.notifications.PushTokenRegistrar
 import kotlinx.coroutines.launch
 
@@ -21,7 +23,13 @@ data class LoginUiState(
     val errorMessage: String? = null, val notice: String? = null
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val userRepo: UserRepository = AppContainer.userRepository,
+    /** Forgets the saved fingerprint credentials. Defaults to the Android-backed implementation. */
+    private val clearSavedCredentials: () -> Unit = { BiometricAuthManager.clear(AppContainer.applicationContext()) },
+    /** Runs after a successful sign-in (binds the device push token). */
+    private val onSignedIn: suspend () -> Unit = { PushTokenRegistrar.registerCurrent() }
+) : ViewModel() {
     var uiState by mutableStateOf(LoginUiState()); private set
     fun onEmailChange(v: String) { uiState = uiState.copy(email = v, errorMessage = null, notice = null) }
     fun onPasswordChange(v: String) { uiState = uiState.copy(password = v, errorMessage = null, notice = null) }
@@ -62,13 +70,12 @@ class LoginViewModel : ViewModel() {
     private fun performLogin(email: String, password: String, viaBiometric: Boolean) {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null, notice = null)
-            val result = AppContainer.userRepository.signIn(email, password)
+            val result = userRepo.signIn(email, password)
             val error = result.exceptionOrNull()
             // The saved password no longer works (changed elsewhere): forget it instead of retrying forever.
             if (viaBiometric && error != null) {
-                val raw = error.message.orEmpty().lowercase()
-                if ("invalid login" in raw || "invalid_credentials" in raw) {
-                    BiometricAuthManager.clear(AppContainer.applicationContext())
+                if (ErrorMapper.classify(error) == AppError.InvalidCredentials) {
+                    clearSavedCredentials()
                 }
             }
             uiState = uiState.copy(
@@ -78,7 +85,7 @@ class LoginViewModel : ViewModel() {
                 errorMessage = if (result.isFailure) ErrorMapper.toUserMessage(error) else null
             )
             // Bind this device's FCM token to the new session right away (Home also retries).
-            if (result.isSuccess) PushTokenRegistrar.registerCurrent()
+            if (result.isSuccess) onSignedIn()
         }
     }
 
@@ -98,10 +105,10 @@ class LoginViewModel : ViewModel() {
         }
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null, notice = null)
-            val result = AppContainer.userRepository.signUp(email, password)
+            val result = userRepo.signUp(email, password)
             if (result.isSuccess) {
                 // Sign-up may open a session automatically; end it so the user lands on Sign-In.
-                runCatching { AppContainer.userRepository.signOut() }
+                runCatching { userRepo.signOut() }
                 uiState = LoginUiState(
                     email = email,
                     isRegistered = true,

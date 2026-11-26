@@ -13,7 +13,7 @@ import kotlinx.serialization.json.put
  * Calls one authenticated Supabase Edge Function. The 5SIM bearer token is never shipped
  * to Android; the Edge Function calls 5SIM and delegates all wallet mutations to DB RPCs.
  */
-class FiveSimDataSource {
+class FiveSimDataSource : FiveSimGateway {
     private val supabase = SupabaseClientProvider.client
 
     @Serializable
@@ -33,13 +33,13 @@ class FiveSimDataSource {
         val platform: String? = null
     )
 
-    suspend fun catalog(): VirtualNumberCatalog = invoke(Request(action = "catalog"))
+    override suspend fun catalog(): VirtualNumberCatalog = invoke(Request(action = "catalog"))
 
-    suspend fun quote(countryCode: String, serviceCode: String): VirtualNumberQuote = invoke(
+    override suspend fun quote(countryCode: String, serviceCode: String): VirtualNumberQuote = invoke(
         Request(action = "quote", countryCode = countryCode, serviceCode = serviceCode)
     )
 
-    suspend fun purchase(
+    override suspend fun purchase(
         countryCode: String,
         serviceCode: String,
         operator: String,
@@ -54,23 +54,23 @@ class FiveSimDataSource {
         )
     )
 
-    suspend fun poll(activationId: String): VirtualNumberOrder = invoke(
+    override suspend fun poll(activationId: String): VirtualNumberOrder = invoke(
         Request(action = "poll", activationId = activationId)
     )
 
-    suspend fun latestActivation(): VirtualNumberOrder? =
+    override suspend fun latestActivation(): VirtualNumberOrder? =
         invoke<LatestResponse>(Request(action = "latest_activation")).activation
 
     /** Refreshes the active activation to return the newest SMS received on that same number. */
-    suspend fun requestNextSms(activationId: String): VirtualNumberOrder = invoke(
+    override suspend fun requestNextSms(activationId: String): VirtualNumberOrder = invoke(
         Request(action = "request_next_sms", activationId = activationId)
     )
 
-    suspend fun cancel(activationId: String): VirtualNumberOrder = invoke(
+    override suspend fun cancel(activationId: String): VirtualNumberOrder = invoke(
         Request(action = "cancel", activationId = activationId)
     )
 
-    suspend fun registerDeviceToken(token: String) {
+    override suspend fun registerDeviceToken(token: String) {
         invoke<EmptyResponse>(Request(action = "register_device_token", fcmToken = token, platform = "android"))
     }
 

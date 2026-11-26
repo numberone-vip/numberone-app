@@ -2,6 +2,7 @@ package com.numberone.numberone.data.remote
 
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.core.error.UserFacingException
+import com.numberone.numberone.core.log.AppLog
 import com.numberone.numberone.domain.model.UserProfile
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -40,6 +41,8 @@ class SupabaseAuthDataSource {
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        // Optional check: sign-up continues without it. Logged so a broken RPC is visible.
+        AppLog.warn("Auth", "email availability check unavailable", e)
         null
     }
 

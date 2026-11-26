@@ -1,10 +1,13 @@
 package com.numberone.numberone
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.content.Intent
 import android.os.Process
 import android.util.Log
+import com.numberone.numberone.core.error.ErrorPresentation
 import com.numberone.numberone.core.localization.AppStrings
+import com.numberone.numberone.core.log.AppLog
 import com.numberone.numberone.di.AppContainer
 import com.numberone.numberone.notifications.PushTokenRegistrar
 import java.io.File
@@ -32,6 +35,13 @@ class NumberOneApplication : Application() {
             Process.killProcess(Process.myPid())
         }
         super.onCreate()
+        ErrorPresentation.showTechnicalDetails = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        AppLog.sink = { level, tag, message, t ->
+            when (level) {
+                AppLog.Level.WARN -> Log.w(tag, message, t)
+                AppLog.Level.ERROR -> Log.e(tag, message, t)
+            }
+        }
         AppContainer.initialize(this)
         val safe = CoroutineExceptionHandler { _, _ -> }
         CoroutineScope(SupervisorJob() + Dispatchers.Main + safe).launch {

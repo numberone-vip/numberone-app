@@ -7,8 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.numberone.numberone.core.error.ErrorMapper
+import com.numberone.numberone.core.error.ErrorPresentation
 import com.numberone.numberone.di.AppContainer
+import com.numberone.numberone.domain.repository.AdminRepository
+import com.numberone.numberone.domain.repository.UserRepository
 import com.numberone.numberone.domain.model.AdminService
 import com.numberone.numberone.domain.model.AdminShamCashTopUp
 import com.numberone.numberone.domain.model.AdminSubscription
@@ -23,10 +25,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /** UI state only. Every action is authorized by the server (is_admin() inside each RPC). */
-class AdminViewModel : ViewModel() {
-    var loading by mutableStateOf(false); private set
-    var error by mutableStateOf<String?>(null); private set
-    var message by mutableStateOf<String?>(null); private set
+class AdminViewModel(
+    private val adminRepo: AdminRepository = AppContainer.adminRepository,
+    private val userRepo: UserRepository = AppContainer.userRepository
+) : FeedbackViewModel() {
     var summary by mutableStateOf<AdminSummary?>(null); private set
     var shamTopUps by mutableStateOf<List<AdminShamCashTopUp>>(emptyList()); private set
     var orders by mutableStateOf<List<Order>>(emptyList()); private set
@@ -55,32 +57,7 @@ class AdminViewModel : ViewModel() {
     fun fail(msg: String) { error = msg; message = null }
     fun closeReceipt() { receiptUrl = null }
 
-    /**
-     * Admin-only error text: the friendly message plus the real exception, so a failing RPC
-     * (missing function, wrong parameter, decode mismatch, RLS denial) is identifiable.
-     */
-    private fun detailOf(e: Throwable): String {
-        val friendly = ErrorMapper.toUserMessage(e)
-        val technical = listOfNotNull(e::class.simpleName, e.message?.takeIf { it.isNotBlank() })
-            .joinToString(": ")
-        return if (technical.isBlank() || technical in friendly) friendly else "$friendly\n\n[$technical]"
-    }
-
-    private fun run(task: suspend () -> Unit) {
-        if (loading) return
-        viewModelScope.launch {
-            loading = true; error = null; message = null
-            try {
-                task()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                error = detailOf(e)
-            } finally {
-                loading = false
-            }
-        }
-    }
+    override fun describeError(e: Throwable): String = ErrorPresentation.describe(e)
 
     /**
      * Refreshes every section. Each section is independent: one failing RPC is reported in
@@ -88,10 +65,10 @@ class AdminViewModel : ViewModel() {
      * successful write followed by a refresh can't be displayed as a failed write.
      */
     private suspend fun reload() {
-        val repo = AppContainer.adminRepository
+        val repo = adminRepo
         val failed = mutableListOf<String>()
         fun <T> report(label: String, result: Result<T>, apply: (T) -> Unit) {
-            result.onSuccess(apply).onFailure { e -> failed += "$label (${detailOf(e).lineSequence().last()})" }
+            result.onSuccess(apply).onFailure { e -> failed += "$label (${describeError(e).lineSequence().last()})" }
         }
         report(tr("الملخص"), repo.getSummary()) { summary = it }
         report(tr("طلبات الشام كاش"), repo.listShamCashTopUps()) { shamTopUps = it }
@@ -108,37 +85,37 @@ class AdminViewModel : ViewModel() {
     }
 
     fun load() = run {
-        check(AppContainer.userRepository.isAdmin().getOrThrow()) { tr("غير مصرح بالوصول") }
+        check(userRepo.isAdmin().getOrThrow()) { tr("غير مصرح بالوصول") }
         reload()
     }
 
     fun approveShamCash(id: String, usdt: Double) = run {
-        val credited = AppContainer.adminRepository.approveShamCashTopUp(id, usdt).getOrThrow()
+        val credited = adminRepo.approveShamCashTopUp(id, usdt).getOrThrow()
         message = trf("تم اعتماد الطلب وإضافة {0} USDT", credited)
         reload()
     }
 
     fun rejectShamCash(id: String, reason: String) = run {
-        AppContainer.adminRepository.rejectShamCashTopUp(id, reason).getOrThrow()
+        adminRepo.rejectShamCashTopUp(id, reason).getOrThrow()
         message = tr("تم رفض الطلب")
         reload()
     }
 
     fun approveOrder(id: String, phone: String, code: String, expiry: String) = run {
-        AppContainer.adminRepository.approveOrder(id, phone, code, expiry).getOrThrow()
+        adminRepo.approveOrder(id, phone, code, expiry).getOrThrow()
         message = tr("تم اعتماد الطلب")
         reload()
     }
 
     fun rejectOrder(id: String, reason: String) = run {
-        AppContainer.adminRepository.rejectOrder(id, reason).getOrThrow()
+        adminRepo.rejectOrder(id, reason).getOrThrow()
         message = tr("تم رفض الطلب")
         reload()
     }
 
     fun showReceipt(path: String?) {
         if (path.isNullOrBlank()) { fail(tr("لا يوجد إيصال")); return }
-        run { receiptUrl = AppContainer.adminRepository.getReceiptUrl(path).getOrThrow() }
+        run { receiptUrl = adminRepo.getReceiptUrl(path).getOrThrow() }
     }
 
     // ---- Payment & app config ------------------------------------------------
@@ -148,14 +125,14 @@ class AdminViewModel : ViewModel() {
         viewModelScope.launch {
             loading = true; error = null; message = null; configNotice = null
             try {
-                AppContainer.adminRepository.updatePaymentConfig(config).getOrThrow()
-                paymentConfig = AppContainer.adminRepository.getPaymentConfig().getOrNull() ?: config
+                adminRepo.updatePaymentConfig(config).getOrThrow()
+                paymentConfig = adminRepo.getPaymentConfig().getOrNull() ?: config
                 configNotice = tr("تم حفظ الإعدادات بنجاح")
                 configNoticeIsError = false
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                configNotice = detailOf(e)
+                configNotice = describeError(e)
                 configNoticeIsError = true
             } finally {
                 loading = false
@@ -166,13 +143,13 @@ class AdminViewModel : ViewModel() {
     // ---- Services catalog ----------------------------------------------------
 
     fun saveService(draft: ServiceDraft) = run {
-        AppContainer.adminRepository.upsertService(draft).getOrThrow()
+        adminRepo.upsertService(draft).getOrThrow()
         message = if (draft.id == null) tr("تمت إضافة الخدمة") else tr("تم حفظ الخدمة")
-        services = AppContainer.adminRepository.listServices().getOrThrow()
+        services = adminRepo.listServices().getOrThrow()
     }
 
     fun setServiceActive(service: AdminService, active: Boolean) = run {
-        AppContainer.adminRepository.upsertService(
+        adminRepo.upsertService(
             ServiceDraft(
                 id = service.id,
                 name = service.name,
@@ -184,32 +161,32 @@ class AdminViewModel : ViewModel() {
             )
         ).getOrThrow()
         message = if (active) tr("تم تفعيل الخدمة") else tr("تم تعطيل الخدمة")
-        services = AppContainer.adminRepository.listServices().getOrThrow()
+        services = adminRepo.listServices().getOrThrow()
     }
 
     fun deleteService(id: String) = run {
-        AppContainer.adminRepository.deleteService(id).getOrThrow()
+        adminRepo.deleteService(id).getOrThrow()
         message = tr("تم حذف الخدمة")
-        services = AppContainer.adminRepository.listServices().getOrThrow()
+        services = adminRepo.listServices().getOrThrow()
     }
 
     // ---- Users & wallets -----------------------------------------------------
 
     fun adjustBalance(userId: String, amount: Double, note: String, requestId: String) = run {
-        val newBalance = AppContainer.adminRepository.adjustWalletBalance(userId, amount, note, requestId).getOrThrow()
+        val newBalance = adminRepo.adjustWalletBalance(userId, amount, note, requestId).getOrThrow()
         // The write has succeeded. Set the success message before refreshing; reload() never throws.
         message = trf("تم تحديث الرصيد. الرصيد الجديد: {0} USDT", newBalance)
         reload()
     }
 
     fun assignSubscription(userId: String, serviceId: String, phone: String, code: String, expiry: String) = run {
-        AppContainer.adminRepository.assignSubscription(userId, serviceId, phone, code, expiry).getOrThrow()
+        adminRepo.assignSubscription(userId, serviceId, phone, code, expiry).getOrThrow()
         message = tr("تم إسناد الاشتراك للمستخدم")
         reload()
     }
 
     fun resetAccess(subscriptionId: String, code: String, expiry: String) = run {
-        AppContainer.adminRepository.resetSubscriptionAccess(subscriptionId, code, expiry).getOrThrow()
+        adminRepo.resetSubscriptionAccess(subscriptionId, code, expiry).getOrThrow()
         message = tr("تم تحديث وصول الاشتراك")
         reload()
     }
