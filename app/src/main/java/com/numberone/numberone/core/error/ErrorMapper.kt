@@ -47,7 +47,8 @@ object ErrorMapper {
             "cannot accept payment" in lower -> AppError.OrderExpired
             "activation not found" in lower -> AppError.NotFound
             "wallet not found" in lower -> AppError.WalletMissing
-            "service not found" in lower -> AppError.ServiceUnavailable
+            "service not found" in lower || "price is unavailable" in lower -> AppError.ServiceUnavailable
+            "receipt file not found" in lower -> AppError.ReceiptMissing
             "payment is not configured" in lower -> AppError.PaymentUnavailable
             "failed (4" in lower -> AppError.ProviderUnavailable
             "invalid login" in lower || "invalid_credentials" in lower -> AppError.InvalidCredentials
