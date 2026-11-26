@@ -90,7 +90,7 @@ class SupabaseWalletDataSource : WalletDataSource {
 
     override suspend fun createOrder(serviceId: String): PaymentOrderCreation = createOrderWithMonths(serviceId, 1)
     override suspend fun createOrderWithMonths(serviceId: String, months: Int): PaymentOrderCreation =
-        supabase.postgrest.rpcDecode<List<PaymentOrderCreation>>("create_order", buildJsonObject { put("p_service_id", serviceId); if (months >= 12) put("p_period", "yearly") }).single()
+        supabase.postgrest.rpcDecode<List<PaymentOrderCreation>>("create_order", buildJsonObject { put("p_service_id", serviceId) }).single()
 
     override suspend fun uploadReceipt(orderId: String, bytes: ByteArray, mimeType: String, extension: String): String {
         require(bytes.isNotEmpty() && bytes.size <= 5 * 1024 * 1024) { tr("إيصال الدفع يجب ألا يتجاوز 5 ميغابايت") }
