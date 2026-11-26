@@ -189,11 +189,11 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun buy(serviceId: String) {
+    fun buy(serviceId: String, months: Int = 1) {
         run {
             val requestId = walletRequestIds.getOrPut(serviceId) { java.util.UUID.randomUUID().toString() }
             val result = try {
-                AppContainer.walletRepository.purchaseServiceWithWallet(serviceId, requestId).getOrThrow()
+                AppContainer.walletRepository.purchaseServiceWithWalletMonths(serviceId, requestId, months).getOrThrow()
             } catch (e: Exception) {
                 // Insufficient balance is a final outcome for this attempt: the next try is a new purchase.
                 if (ErrorMapper.classify(e) == AppError.InsufficientBalance) walletRequestIds.remove(serviceId)
@@ -208,9 +208,9 @@ class AppViewModel : ViewModel() {
 
     fun cancelPendingOrder() { pendingOrder = null; _txHash = ""; message = tr("تم إلغاء الطلب") }
     fun cancelSelectedDeposit() { selectedDeposit = ""; shamSelected = ""; message = tr("تم إلغاء المعاملة") }
-    fun createManualOrder(serviceId: String) {
+    fun createManualOrder(serviceId: String, months: Int = 1) {
         run {
-            pendingOrder = AppContainer.walletRepository.createOrder(serviceId).getOrThrow()
+            pendingOrder = AppContainer.walletRepository.createOrderWithMonths(serviceId, months).getOrThrow()
             val order = pendingOrder
             message = trf("حوّل {0} {1} إلى عنوان المحفظة أدناه، ثم أرسل صورة الإيصال ورقم المعاملة خلال 20 دقيقة.", order?.price, order?.currency)
         }

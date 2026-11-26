@@ -20,9 +20,11 @@ interface WalletDataSource {
     suspend fun getServices(): List<Service>
     suspend fun getMyOrders(userId: String): List<Order>
     suspend fun createOrder(serviceId: String): PaymentOrderCreation
+    suspend fun createOrderWithMonths(serviceId: String, months: Int): PaymentOrderCreation = createOrder(serviceId)
     suspend fun uploadReceipt(orderId: String, bytes: ByteArray, mimeType: String, extension: String): String
     suspend fun submitOrderPayment(orderId: String, transactionHash: String, receiptPath: String): Boolean
     suspend fun purchaseServiceWithWallet(serviceId: String, requestId: String): WalletOrderResult
+    suspend fun purchaseServiceWithWalletMonths(serviceId: String, requestId: String, months: Int): WalletOrderResult = purchaseServiceWithWallet(serviceId, requestId)
     suspend fun createShamCashTopUp(paymentMethod: String, paidAmount: Double): String
     suspend fun submitShamCashReceipt(requestId: String, bytes: ByteArray, mimeType: String, extension: String): Boolean
     suspend fun getMyShamCashTopUps(): List<ShamCashTopUp>

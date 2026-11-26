@@ -64,8 +64,9 @@ class WalletRepositoryImpl(
     }
     override suspend fun getServices() = runCatching { currentUserId(); walletDataSource.getServices() }
     override suspend fun getMyOrders() = runCatching { walletDataSource.getMyOrders(currentUserId()) }
-    override suspend fun createOrder(serviceId: String) = runCatching {
-        val id = requireServiceId(serviceId); currentUserId(); walletDataSource.createOrder(id)
+    override suspend fun createOrder(serviceId: String) = createOrderWithMonths(serviceId, 1)
+    override suspend fun createOrderWithMonths(serviceId: String, months: Int) = runCatching {
+        val id = requireServiceId(serviceId); currentUserId(); walletDataSource.createOrderWithMonths(id, months.coerceIn(1, 24))
     }
     override suspend fun uploadReceipt(orderId: String, bytes: ByteArray, mimeType: String, extension: String) = runCatching {
         val id = requireUuid(orderId); currentUserId(); walletDataSource.uploadReceipt(id, bytes, mimeType, extension)
@@ -77,9 +78,10 @@ class WalletRepositoryImpl(
         require(receiptPath.startsWith("$uid/$id/") && !receiptPath.contains("..")) { tr("مسار الإيصال غير صالح") }
         walletDataSource.submitOrderPayment(id, hash, receiptPath)
     }
-    override suspend fun purchaseServiceWithWallet(serviceId: String, requestId: String) = runCatching {
+    override suspend fun purchaseServiceWithWallet(serviceId: String, requestId: String) = purchaseServiceWithWalletMonths(serviceId, requestId, 1)
+    override suspend fun purchaseServiceWithWalletMonths(serviceId: String, requestId: String, months: Int) = runCatching {
         val sid = requireServiceId(serviceId); val rid = requireUuid(requestId)
-        currentUserId(); walletDataSource.purchaseServiceWithWallet(sid, rid)
+        currentUserId(); walletDataSource.purchaseServiceWithWalletMonths(sid, rid, months.coerceIn(1, 24))
     }
 
     override suspend fun createShamCashTopUp(paymentMethod: String, paidAmount: Double) = runCatching {
