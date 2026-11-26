@@ -42,6 +42,9 @@ object ErrorMapper {
                 "persistence is pending" in lower || "retained" in lower -> AppError.PendingReview
             "already used with different" in lower -> AppError.DuplicateRequest
             "still pending" in lower -> AppError.PendingOrderExists
+            "pending payment order" in lower -> AppError.PendingOrderExists
+            "too many orders" in lower -> AppError.TooManyPendingOrders
+            "cannot accept payment" in lower -> AppError.OrderExpired
             "not found" in lower -> AppError.NotFound
             "failed (4" in lower -> AppError.ProviderUnavailable
             "invalid login" in lower || "invalid_credentials" in lower -> AppError.InvalidCredentials

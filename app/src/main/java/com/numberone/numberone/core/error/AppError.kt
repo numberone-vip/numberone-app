@@ -27,6 +27,8 @@ sealed class AppError(val category: Category) {
     object NotFound : AppError(Category.BUSINESS)
     object ProviderUnavailable : AppError(Category.SERVER)
     object ServiceInUse : AppError(Category.BUSINESS)
+    object TooManyPendingOrders : AppError(Category.BUSINESS)
+    object OrderExpired : AppError(Category.BUSINESS)
 
     /** A message that the app itself wrote in Arabic (validation); shown as-is. */
     data class Localized(val text: String) : AppError(Category.VALIDATION)
@@ -55,7 +57,7 @@ fun AppError.message(arabic: Boolean): String {
         AppError.WeakPassword -> t("كلمة المرور ضعيفة. استخدم 8 أحرف على الأقل", "Password is too weak. Use at least 8 characters.")
         AppError.SessionExpired -> t("انتهت الجلسة. يرجى تسجيل الدخول مجدداً", "Your session has expired. Please sign in again.")
         AppError.RateLimited -> t("محاولات كثيرة. انتظر قليلاً ثم حاول مجدداً", "Too many attempts. Wait a moment and try again.")
-        AppError.InsufficientBalance -> t("الرصيد غير كافٍ لإتمام العملية", "Insufficient balance to complete this action.")
+        AppError.InsufficientBalance -> t("رصيد محفظتك غير كافٍ لإتمام هذا الشراء. اشحن المحفظة ثم حاول مجدداً.", "Your wallet balance is not enough for this purchase. Top up your wallet and try again.")
         AppError.NoStock -> t(
             "لا يوجد مخزون لهذا الاختيار حالياً. جرّب مشغلاً أو دولة أخرى.",
             "No stock available for this selection right now. Try another operator or country."
@@ -70,8 +72,8 @@ fun AppError.message(arabic: Boolean): String {
             "This request ID was already used with different details. Please try again."
         )
         AppError.PendingOrderExists -> t(
-            "لديك طلب سابق قيد المراجعة. انتظر اكتماله قبل طلب رقم جديد.",
-            "You have a previous order still in progress. Wait for it to finish before requesting a new number."
+            "لديك طلب دفع سابق لم يكتمل بعد. أكمل الدفع أو انتظر انتهاء مهلته قبل طلب رقم جديد.",
+            "You have an unfinished payment order. Complete the payment or wait for it to expire before requesting a new number."
         )
         AppError.NotFound -> t("لم يتم العثور على هذا التفعيل.", "This activation was not found.")
         AppError.ProviderUnavailable -> t(
@@ -81,6 +83,14 @@ fun AppError.message(arabic: Boolean): String {
         AppError.ServiceInUse -> t(
             "لا يمكن حذف خدمة مرتبطة بطلبات أو اشتراكات. عطّلها بدلاً من حذفها.",
             "This service is linked to orders or subscriptions and cannot be deleted. Disable it instead."
+        )
+        AppError.TooManyPendingOrders -> t(
+            "لديك عدد كبير من الطلبات قيد المراجعة. انتظر حتى تكتمل قبل إنشاء طلب جديد.",
+            "You have too many orders under review. Wait for them to complete before creating a new one."
+        )
+        AppError.OrderExpired -> t(
+            "انتهت مهلة الدفع لهذا الطلب. أنشئ طلباً جديداً للمتابعة.",
+            "The payment window for this order has expired. Create a new order to continue."
         )
         AppError.Unknown -> t("حدث خطأ غير متوقع. حاول مرة أخرى.", "Something went wrong. Please try again.")
     }
