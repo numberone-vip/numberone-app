@@ -197,4 +197,9 @@ class AdminViewModel(
         message = tr("تم تحديث وصول الاشتراك")
         reload()
     }
+
+    fun sendSubscriptionSms(subscriptionId: String, sender: String, body: String) = run {
+        adminRepo.sendSubscriptionSms(subscriptionId, sender, body).getOrThrow()
+        message = tr("تم إرسال الرسالة إلى صندوق وارد العميل")
+    }
 }

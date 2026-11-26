@@ -136,7 +136,7 @@ class AdminRepositoryImpl(
         rpc.rpcRaw(
             "admin_approve_order",
             buildJsonObject {
-                put("p_order_id", orderId); put("p_phone_number", phoneNumber.trim())
+                put("p_order_id", orderId); put("p_phone_number", phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim())
                 put("p_access_code", accessCode.trim()); put("p_expiry_date", expiryDate.trim())
             }
         )
@@ -288,12 +288,12 @@ class AdminRepositoryImpl(
         require(dateRegex.matches(expiryDate.trim())) { tr("صيغة التاريخ yyyy-MM-dd") }
         java.time.LocalDate.parse(expiryDate.trim())
         require(accessCode.trim().length in 8..256) { tr("رمز الوصول يجب أن يكون بين 8 و256 خانة") }
-        require(phoneRegex.matches(phoneNumber.trim())) { tr("رقم الهاتف غير صالح") }
+        val cleanP = phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim(); require(phoneRegex.matches(cleanP)) { tr("رقم الهاتف غير صالح") }
         rpc.rpcRaw(
             "admin_add_subscription_for_user",
             buildJsonObject {
                 put("p_user_id", userId); put("p_service_id", serviceId.trim())
-                put("p_access_code", accessCode.trim()); put("p_phone_number", phoneNumber.trim())
+                put("p_access_code", accessCode.trim()); put("p_phone_number", phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim())
                 put("p_expiry_date", expiryDate.trim())
                 put("p_admin_note", "Assigned manually from admin panel")
             }
@@ -301,6 +301,12 @@ class AdminRepositoryImpl(
         Unit
     }
 
+    override suspend fun sendSubscriptionSms(subscriptionId: String, sender: String, body: String) = runCatching {
+        require(uuidRegex.matches(subscriptionId)) { tr("معرّف غير صالح") }
+        require(sender.isNotBlank() && body.isNotBlank()) { tr("المرسل ونص الرسالة مطلوبان") }
+        rpc.rpcRaw("admin_send_subscription_sms", buildJsonObject { put("p_subscription_id", subscriptionId); put("p_sender", sender.trim()); put("p_body", body.trim()) })
+        Unit
+    }
     override suspend fun resetSubscriptionAccess(subscriptionId: String, accessCode: String, expiryDate: String) = runCatching {
         require(subscriptionId.isNotBlank()) { tr("معرّف غير صالح") }
         val date = expiryDate.trim()
