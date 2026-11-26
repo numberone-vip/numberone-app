@@ -82,6 +82,7 @@ class AppViewModel : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 error = ErrorMapper.toUserMessage(e)
+                if (ErrorMapper.classify(e) == AppError.SessionExpired) sessionExpired = true
             } finally {
                 loading = false
             }
@@ -262,10 +263,6 @@ class AppViewModel : ViewModel() {
     var sessionExpired by mutableStateOf(false); private set
 
     fun acknowledgeSessionExpired() { sessionExpired = false }
-
-    override fun onTaskFailed(e: Throwable) {
-        if (ErrorMapper.classify(e) == AppError.SessionExpired) sessionExpired = true
-    }
 
     /** Local sign-out always completes, even when the network call fails, so the device never keeps the old account on screen. */
     fun signOut(onDone: () -> Unit) {
