@@ -38,7 +38,10 @@ import com.numberone.numberone.presentation.screens.support.SupportScreen
 import com.numberone.numberone.presentation.screens.wallet.WalletScreen
 import com.numberone.numberone.presentation.screens.virtualnumbers.VirtualNumbersScreen
 import com.numberone.numberone.core.components.NOScaffold
+import com.numberone.numberone.presentation.screens.notifications.NotificationsScreen
+import com.numberone.numberone.presentation.screens.referrals.ReferralsScreen
 import com.numberone.numberone.presentation.viewmodel.AppViewModel
+import com.numberone.numberone.presentation.viewmodel.EngagementViewModel
 import com.numberone.numberone.presentation.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 
@@ -55,6 +58,7 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
     }
 
     val appViewModel = remember { AppViewModel() }
+    val engagementViewModel = remember { EngagementViewModel() }
     val loginViewModel = remember { LoginViewModel() }
     var isAdmin by remember { mutableStateOf(false) }
 
@@ -110,6 +114,7 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
         composable(AppRoutes.HOME) {
             HomeScreen(
                 vm = appViewModel,
+                engagementVm = engagementViewModel,
                 userEmail = currentUser?.email,
                 isAdmin = isAdmin,
                 onNavigate = { route -> navController.navigate(route) },
@@ -127,7 +132,7 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
             )
         }
         composable(AppRoutes.PURCHASE_HISTORY) {
-            OrdersScreen(vm = appViewModel, onBack = { navController.popBackStack() })
+            OrdersScreen(vm = appViewModel, engagementVm = engagementViewModel, onBack = { navController.popBackStack() })
         }
         composable(AppRoutes.VIRTUAL_NUMBERS) {
             VirtualNumbersScreen(
@@ -154,6 +159,8 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
                 userEmail = currentUser?.email
             )
         }
+        composable(AppRoutes.NOTIFICATIONS) { NotificationsScreen(vm = engagementViewModel, onBack = { navController.popBackStack() }) }
+        composable(AppRoutes.REFERRALS) { ReferralsScreen(vm = engagementViewModel, onBack = { navController.popBackStack() }) }
         composable(AppRoutes.SUPPORT) {
             SupportScreen(onBack = { navController.popBackStack() })
         }
