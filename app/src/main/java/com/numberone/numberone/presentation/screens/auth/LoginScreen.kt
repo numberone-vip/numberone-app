@@ -99,6 +99,32 @@ fun LoginScreen(
         label = "loginReveal"
     )
 
+    val obPrefs = remember(context) { context.getSharedPreferences("numberone_onboarding", android.content.Context.MODE_PRIVATE) }
+    var showOb by remember { mutableStateOf(!obPrefs.getBoolean("seen", false)) }
+    var obIdx by remember { mutableStateOf(0) }
+    if (showOb) {
+        val slides = listOf(
+            Triple(tr("أرقام فورية بلمسة واحدة"), tr("استقبل رموز التفعيل لواتساب وتيليجرام خلال ثوانٍ وبشكل تلقائي."), "⚡"),
+            Triple(tr("أرقام خاصة دائمة (VIP)"), tr("أرقام حقيقية مخصصة لك وحدك تقبلها المنصات الحساسة مثل فيسبوك."), "👑"),
+            Triple(tr("شحن سريع وآمن 100%"), tr("اشحن محفظتك بسهولة عبر USDT (BEP20) أو شام كاش وتابع عملياتك فوراً."), "💎")
+        )
+        Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { obPrefs.edit().putBoolean("seen", true).apply(); showOb = false }) { Text(tr("تخطي"), fontWeight = FontWeight.Bold) }
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(slides[obIdx].third, style = MaterialTheme.typography.displayLarge)
+                    Text(slides[obIdx].first, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                    Text(slides[obIdx].second, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                }
+                Button(onClick = { if (obIdx < 2) obIdx++ else { obPrefs.edit().putBoolean("seen", true).apply(); showOb = false } }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp)) {
+                    Text(if (obIdx < 2) tr("التالي") else tr("ابدأ الآن"), fontWeight = FontWeight.Black)
+                }
+            }
+        }
+        return
+    }
     AuthScaffold(
         palette = palette,
         headerHeight = 268.dp,

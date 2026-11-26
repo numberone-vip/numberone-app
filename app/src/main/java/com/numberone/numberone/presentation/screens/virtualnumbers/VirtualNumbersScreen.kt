@@ -287,6 +287,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                     BalanceHeader(balance = vm.wallet.balance, currency = vm.wallet.currency)
                 }
 
+                if (catalog.services.isNotEmpty()) { item { Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("whatsapp" to "واتساب","telegram" to "تيليجرام","facebook" to "فيسبوك","google" to "غوغل","tiktok" to "تيك توك").forEach { (c, l) -> catalog.services.firstOrNull { it.code.equals(c, true) || c in it.name.lowercase() }?.let { m -> FilterChip(selected = selectedService?.code == m.code, onClick = { selectedService = m }, label = { Text(tr(l), fontWeight = FontWeight.Bold) }) } } } } }
                 item { CountryPicker(country = selectedCountry, onClick = { countrySearch = ""; countrySheetOpen = true }) }
                 item { ServicePicker(service = selectedService, totalCount = catalog.services.size, onClick = { serviceSearch = ""; serviceSheetOpen = true }) }
 
