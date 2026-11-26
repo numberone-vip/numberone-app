@@ -2,6 +2,7 @@ package com.numberone.numberone.presentation.screens.purchase
 
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.core.localization.trf
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
