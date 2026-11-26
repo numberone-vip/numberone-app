@@ -61,6 +61,14 @@ class ErrorMapperTest {
         assertEquals(AppError.InsufficientBalance, ErrorMapper.classify(Exception("Insufficient wallet balance")))
     }
 
+    @Test fun virtual_number_and_wallet_errors_are_not_mislabelled() {
+        assertEquals(AppError.NotFound, ErrorMapper.classify(Exception("Activation not found")))
+        assertEquals(AppError.WalletMissing, ErrorMapper.classify(Exception("Wallet not found for authenticated user")))
+        assertEquals(AppError.ServiceUnavailable, ErrorMapper.classify(Exception("Service not found")))
+        assertEquals(AppError.PaymentUnavailable, ErrorMapper.classify(Exception("Payment is not configured")))
+        assertEquals(AppError.NoStock, ErrorMapper.classify(Exception("Service is out of stock")))
+    }
+
     @Test fun null_and_unknown_fall_back_to_unknown() {
         assertEquals(AppError.Unknown, ErrorMapper.classify(null))
         assertEquals(AppError.Unknown, ErrorMapper.classify(RuntimeException("something odd")))

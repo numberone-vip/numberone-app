@@ -36,7 +36,7 @@ object ErrorMapper {
             error is IOException -> AppError.Network
             // Messages written in Arabic by this app (validation) are already user-facing.
             containsArabic(raw) -> AppError.Localized(raw)
-            "no stock" in lower -> AppError.NoStock
+            "no stock" in lower || "out of stock" in lower -> AppError.NoStock
             "insufficient" in lower -> AppError.InsufficientBalance
             "payment not confirmed" in lower || "reconcil" in lower ||
                 "persistence is pending" in lower || "retained" in lower -> AppError.PendingReview
@@ -45,7 +45,10 @@ object ErrorMapper {
             "pending payment order" in lower -> AppError.PendingOrderExists
             "too many orders" in lower -> AppError.TooManyPendingOrders
             "cannot accept payment" in lower -> AppError.OrderExpired
-            "not found" in lower -> AppError.NotFound
+            "activation not found" in lower -> AppError.NotFound
+            "wallet not found" in lower -> AppError.WalletMissing
+            "service not found" in lower -> AppError.ServiceUnavailable
+            "payment is not configured" in lower -> AppError.PaymentUnavailable
             "failed (4" in lower -> AppError.ProviderUnavailable
             "invalid login" in lower || "invalid_credentials" in lower -> AppError.InvalidCredentials
             "email not confirmed" in lower -> AppError.EmailNotConfirmed

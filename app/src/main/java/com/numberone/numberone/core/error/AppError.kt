@@ -29,6 +29,9 @@ sealed class AppError(val category: Category) {
     object ServiceInUse : AppError(Category.BUSINESS)
     object TooManyPendingOrders : AppError(Category.BUSINESS)
     object OrderExpired : AppError(Category.BUSINESS)
+    object ServiceUnavailable : AppError(Category.BUSINESS)
+    object PaymentUnavailable : AppError(Category.BUSINESS)
+    object WalletMissing : AppError(Category.SERVER)
 
     /** A message that the app itself wrote in Arabic (validation); shown as-is. */
     data class Localized(val text: String) : AppError(Category.VALIDATION)
@@ -91,6 +94,18 @@ fun AppError.message(arabic: Boolean): String {
         AppError.OrderExpired -> t(
             "انتهت مهلة الدفع لهذا الطلب. أنشئ طلباً جديداً للمتابعة.",
             "The payment window for this order has expired. Create a new order to continue."
+        )
+        AppError.ServiceUnavailable -> t(
+            "هذه الخدمة غير متاحة حالياً. اختر خدمة أخرى.",
+            "This service is not available right now. Choose another one."
+        )
+        AppError.PaymentUnavailable -> t(
+            "الدفع اليدوي غير متاح حالياً. حاول لاحقاً.",
+            "Manual payment is not available right now. Try again later."
+        )
+        AppError.WalletMissing -> t(
+            "تعذّر العثور على محفظتك. تواصل مع الدعم.",
+            "We could not find your wallet. Please contact support."
         )
         AppError.Unknown -> t("حدث خطأ غير متوقع. حاول مرة أخرى.", "Something went wrong. Please try again.")
     }
