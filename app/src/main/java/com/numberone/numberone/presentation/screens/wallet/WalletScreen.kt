@@ -614,12 +614,12 @@ private fun ActiveShamRequest(
             }
         }
         Column {
-            if ((liveCfg.shamName ?: (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT)_NAME).isNotBlank()) {
-                TicketRow(label = tr("اسم صاحب الحساب"), value = (liveCfg.shamName ?: (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT)_NAME), copyValue = (liveCfg.shamName ?: (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT)_NAME))
-            }
-            if ((liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT).isNotBlank()) {
-                TicketRow(label = tr("حساب شام كاش"), value = (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT), copyValue = (liveCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT), monospace = true)
-            }
+            var shamCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
+            LaunchedEffect(Unit) { shamCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
+            val sName = shamCfg.shamName ?: PaymentConfig.SHAM_CASH_ACCOUNT_NAME
+            val sAcc = shamCfg.shamAccount ?: PaymentConfig.SHAM_CASH_ACCOUNT
+            if (sName.isNotBlank()) { TicketRow(label = tr("اسم صاحب الحساب"), value = sName, copyValue = sName) }
+            if (sAcc.isNotBlank()) { TicketRow(label = tr("حساب شام كاش"), value = sAcc, copyValue = sAcc, monospace = true) }
             TicketRow(label = tr("رقم الطلب"), value = "#" + topUp.id.take(8), copyValue = topUp.id, monospace = true)
         }
     }
