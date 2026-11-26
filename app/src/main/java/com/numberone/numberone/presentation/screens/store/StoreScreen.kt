@@ -134,6 +134,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 },
                 onCancelReceipt = { receipt = null }
             )
+            androidx.compose.material3.OutlinedButton(onClick = { receipt = null; vm.cancelPendingOrder() }, modifier = Modifier.fillMaxWidth()) { Text(tr("إلغاء هذا الطلب"), color = com.numberone.numberone.core.components.dangerColor(), fontWeight = FontWeight.Bold) }
         }
 
         FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
