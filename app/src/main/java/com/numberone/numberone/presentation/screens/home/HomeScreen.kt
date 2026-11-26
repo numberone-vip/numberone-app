@@ -393,6 +393,7 @@ private fun DashboardTab(
             active.forEach { number ->
                 ActiveNumberCard(
                     number = number,
+                    userEmail = userEmail,
                     onViewMessages = {
                         if (number.instant) onOpenTab(TAB_INSTANT) else onNavigate(AppRoutes.SMS_INBOX)
                     }
@@ -468,7 +469,33 @@ private fun findActiveNumbers(vm: AppViewModel, api: VirtualNumberOrder?): List<
 }
 
 @Composable
-private fun ActiveNumberCard(number: ActiveNumber, onViewMessages: () -> Unit) {
+private fun ActiveNumberCard(number: ActiveNumber, userEmail: String? = null, onViewMessages: () -> Unit) {
+    val ctx = LocalContext.current
+    var askCodeOpen by remember { mutableStateOf(false) }
+    if (askCodeOpen) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { askCodeOpen = false },
+            title = { Text(tr("طلب كود تحقق جديد (SMS)"), fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(tr("اختر التطبيق الذي طلبت منه الكود وسيتم إرسال طلبك فوراً:"), style = MaterialTheme.typography.bodySmall)
+                    listOf("WhatsApp", "Facebook", "Telegram", "Google", "TikTok", tr("تطبيق آخر")).forEach { appName ->
+                        androidx.compose.material3.OutlinedButton(
+                            onClick = {
+                                askCodeOpen = false
+                                val msg = "طلب كود تحقق جديد (VIP)\nالرقم: ${number.phone}\nالتطبيق: $appName\nالحساب: ${userEmail ?: "-"}"
+                                val uri = android.net.Uri.parse("https://t.me" + android.net.Uri.encode(msg))
+                                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri)) }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(appName, fontWeight = FontWeight.Bold) }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { askCodeOpen = false }) { Text(tr("إغلاق")) } }
+        )
+    }
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
@@ -500,6 +527,16 @@ private fun ActiveNumberCard(number: ActiveNumber, onViewMessages: () -> Unit) {
             ) {
                 Icon(Icons.Filled.Sms, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text(tr("عرض الرسائل"), fontWeight = FontWeight.Bold)
+            }
+            if (!number.instant) {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { askCodeOpen = true },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Filled.Bolt, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(tr("طلب كود جديد الآن (SMS)"), fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -598,7 +635,7 @@ private fun PrivateNumbersTab(vm: AppViewModel) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(tr("الأرقام الخاصة (VIP)"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
                 Text(
-                    tr("أرقام خاصة شهرية وسنوية تُجهَّز وتُسلَّم يدوياً من الإدارة."),
+                    tr("أرقام خاصة مخصصة لك من شهر حتى سنة كاملة • تدعم واتساب وفيسبوك وكافة المنصات"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

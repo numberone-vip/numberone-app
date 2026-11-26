@@ -89,7 +89,7 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(tr("رصيدك"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        "%.2f USDT".format(vm.wallet.balance),
+                        ltr("%.2f USDT".format(java.util.Locale.US, vm.wallet.balance)),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black
                     )
