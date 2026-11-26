@@ -287,7 +287,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                     BalanceHeader(balance = vm.wallet.balance, currency = vm.wallet.currency)
                 }
 
-                if (catalog.services.isNotEmpty()) { item { Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("whatsapp" to "واتساب","telegram" to "تيليجرام","facebook" to "فيسبوك","google" to "غوغل","tiktok" to "تيك توك").forEach { (c, l) -> catalog.services.firstOrNull { it.code.equals(c, true) || c in it.name.lowercase() }?.let { m -> FilterChip(selected = selectedService?.code == m.code, onClick = { selectedService = m }, label = { Text(tr(l), fontWeight = FontWeight.Bold) }) } } } } }
+                if (catalog.services.isNotEmpty()) { item { Row(modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("whatsapp" to "واتساب","telegram" to "تيليجرام","facebook" to "فيسبوك","google" to "غوغل","tiktok" to "تيك توك").forEach { (c, l) -> catalog.services.firstOrNull { it.code.equals(c, true) || c in it.name.lowercase() }?.let { m -> FilterChip(selected = selectedService?.code == m.code, onClick = { selectedService = m }, label = { Text(tr(l), fontWeight = FontWeight.Bold) }) } } } } }
                 item { CountryPicker(country = selectedCountry, onClick = { countrySearch = ""; countrySheetOpen = true }) }
                 item { ServicePicker(service = selectedService, totalCount = catalog.services.size, onClick = { serviceSearch = ""; serviceSheetOpen = true }) }
 
@@ -649,11 +649,11 @@ private fun PriceSummary(
     val remaining = balance - finalPrice
     NOCard {
         SectionTitle(title = tr("ملخص السعر"))
-        PriceRow(label = tr("السعر الأساسي"), value = "%.4f %s".format(basePrice, currency))
-        PriceRow(label = tr("سعرك"), value = "%.4f %s".format(finalPrice, currency), emphasized = true)
+        PriceRow(label = tr("سعر الرقم"), value = ltr(String.format(java.util.Locale.US, "%.2f %s", finalPrice, currency)), emphasized = true)
+        PriceRow(label = tr("رصيدك الحالي"), value = ltr(String.format(java.util.Locale.US, "%.2f %s", balance, currency)))
         PriceRow(
             label = tr("الرصيد بعد الشراء"),
-            value = "%.2f %s".format(remaining, currency),
+            value = ltr(String.format(java.util.Locale.US, "%.2f %s", remaining, currency)),
             warning = remaining < 0
         )
     }
