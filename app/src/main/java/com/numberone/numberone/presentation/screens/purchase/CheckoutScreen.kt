@@ -153,17 +153,17 @@ fun CheckoutScreen(
             }
         }
 
-        if (options.size > 1) {
-            Text(tr("اختر السعر المناسب"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                options.forEach { option ->
-                    val optionLabel = "${formatAmount(option.price)} USDT"
-                    FilterChip(
-                        selected = option.id == selected.id,
-                        onClick = { selectedId = option.id },
-                        label = { Text(optionLabel) },
-                        enabled = true
-                    )
+        Text(tr("اختر مدة الاشتراك:"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        var fallbackMonths by remember(service.id) { mutableStateOf(1) }
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (options.size > 1) {
+                options.forEachIndexed { idx, option ->
+                    val lbl = serviceDurationLabel(option.name) ?: when (idx) { 0 -> tr("شهر واحد"); 1 -> tr("3 أشهر"); 2 -> tr("6 أشهر"); else -> tr("سنة كاملة") }
+                    FilterChip(selected = option.id == selected.id, onClick = { selectedId = option.id }, label = { Text("$lbl • ${formatAmount(option.price)} USDT", fontWeight = FontWeight.Bold) }, enabled = true)
+                }
+            } else {
+                listOf(1 to tr("شهر واحد"), 3 to tr("3 أشهر"), 6 to tr("6 أشهر"), 12 to tr("سنة كاملة")).forEach { (m, lbl) ->
+                    FilterChip(selected = fallbackMonths == m, onClick = { fallbackMonths = m }, label = { Text(lbl, fontWeight = FontWeight.Bold) }, enabled = true)
                 }
             }
         }
