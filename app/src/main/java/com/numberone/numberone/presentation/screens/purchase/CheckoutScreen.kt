@@ -97,7 +97,7 @@ fun CheckoutScreen(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 val flag = flagEmoji(service.countryCode)
-                val duration = serviceDurationLabel(service.name)
+                val duration = serviceDurationLabel(service.name) ?: tr("اشتراك شهري • 30 يوم")
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (flag != null) {
                         Text(flag, fontSize = 18.sp)
@@ -114,7 +114,10 @@ fun CheckoutScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (duration != null) {
+                }
+                Text(tr("رقم خاص مخصص لك • يدعم فيسبوك، واتساب، وتيليجرام"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    run {
                         Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)) {
                             Text(
                                 duration,
@@ -183,47 +186,23 @@ fun CheckoutScreen(
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            Button(
-                onClick = { confirmOpen = true },
-                enabled = walletPurchaseEnabled,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Filled.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(tr("اشترِ الآن من رصيدك"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-            }
-            if (walletBalance != null && inStock && !hasFunds) {
-                    Text(
-                        text = trf(
-                            "رصيدك {0} USDT أقل من السعر — اشحن محفظتك أو ادفع بتحويل USDT.",
-                            ltr(formatAmount(walletBalance))
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = warningColor()
-                    )
-                    if (onTopUp != null) {
-                        Button(
-                            onClick = onTopUp,
-                            enabled = enabled,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Text(tr("اشحن المحفظة"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
+            if (walletBalance != null && inStock && !hasFunds && onTopUp != null) {
+                Button(onClick = onTopUp, enabled = enabled, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(trf("اشحن رصيدك للشراء ({0} USDT)", ltr(priceText)), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                }
+            } else {
+                Button(onClick = { confirmOpen = true }, enabled = walletPurchaseEnabled, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) {
+                    Icon(Icons.Filled.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(trf("اشترِ الآن من رصيدك • {0} USDT", ltr(priceText)), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                 }
             }
-            OutlinedButton(
-                onClick = { onManualPayment(selected.id) },
-                enabled = manualPaymentEnabled,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Filled.CurrencyBitcoin, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(tr("الدفع بتحويل USDT (BEP20)"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+            OutlinedButton(onClick = { onManualPayment(selected.id) }, enabled = manualPaymentEnabled, modifier = Modifier.fillMaxWidth().height(44.dp), shape = RoundedCornerShape(14.dp)) {
+                Icon(Icons.Filled.CurrencyBitcoin, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(tr("أو اطلب بتحويل USDT مباشر"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
             }
         }
+    }
 
     if (confirmOpen) {
         AlertDialog(

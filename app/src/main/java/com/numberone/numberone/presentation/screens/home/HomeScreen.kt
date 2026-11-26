@@ -359,7 +359,7 @@ private fun DashboardTab(
             amount = ltr("${formatAmount(vm.wallet.balance)} ${vm.wallet.currency}"),
             footer = {
                 Text(
-                    tr("طرق الشحن: USDT (BEP20) • شام كاش"),
+                    tr("الشحن عبر USDT • BEP20 أو شام كاش"),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White.copy(alpha = 0.72f)
                 )
@@ -518,19 +518,25 @@ private fun GetNumberCard(onInstant: () -> Unit, onPrivate: () -> Unit) {
             ) {
                 Icon(Icons.Filled.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(30.dp))
             }
-            Text(tr("احصل على رقمك الافتراضي"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Text(tr("اختر باقة الرقم المناسبة لك"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
             Text(
-                tr("لا توجد أرقام نشطة حالياً. اختر رقماً فورياً للتفعيل السريع، أو اشترك برقم خاص مخصص لك."),
+                tr("حدد نوع الرقم حسب احتياجك الفوري أو الدائم"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                Button(onClick = onInstant, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(14.dp)) {
-                    Text(tr("رقم لطلب كود مرة واحدة"), fontWeight = FontWeight.Bold)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = onInstant, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text(tr("رقم تفعيل فوري"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
+                        Text(tr("كود سريع لمرة واحدة • واتساب وتيليجرام"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f))
+                    }
                 }
-                OutlinedButton(onClick = onPrivate, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(14.dp)) {
-                    Text(tr("رقم اشتراك شهري ودائم"), fontWeight = FontWeight.Bold)
+                OutlinedButton(onClick = onPrivate, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text(tr("رقم خاص دائم (VIP)"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
+                        Text(tr("مخصص لك • يقبله فيسبوك والمنصات الحساسة"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }
@@ -584,7 +590,7 @@ private fun PrivateNumbersTab(vm: AppViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(tr("أرقامي"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                Text(tr("الأرقام الخاصة (VIP)"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
                 Text(
                     tr("أرقام خاصة شهرية وسنوية تُجهَّز وتُسلَّم يدوياً من الإدارة."),
                     style = MaterialTheme.typography.bodySmall,
