@@ -198,14 +198,8 @@ class AdminViewModel(
         reload()
     }
 
-    fun sendSubscriptionSms(subscriptionId: String, sender: String, body: String) {
-        if (loading) return
-        viewModelScope.launch {
-            loading = true
-            adminRepo.sendSubscriptionSms(subscriptionId, sender, body)
-                .onSuccess { say(tr("تم إرسال الرسالة إلى صندوق وارد العميل")) }
-                .onFailure { showError(ErrorMapper.toMessage(it)) }
-            loading = false
-        }
+    fun sendSubscriptionSms(subscriptionId: String, sender: String, body: String) = run {
+        adminRepo.sendSubscriptionSms(subscriptionId, sender, body).getOrThrow()
+        message = tr("تم إرسال الرسالة إلى صندوق وارد العميل")
     }
 }
