@@ -1,5 +1,8 @@
 package com.numberone.numberone.presentation.viewmodel
 
+import com.numberone.numberone.core.error.AppError
+import com.numberone.numberone.core.error.ErrorMapper
+import com.numberone.numberone.core.session.SessionEvents
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.core.localization.trf
 import androidx.compose.runtime.getValue
@@ -58,6 +61,10 @@ class AdminViewModel(
     fun closeReceipt() { receiptUrl = null }
 
     override fun describeError(e: Throwable): String = ErrorPresentation.describe(e)
+
+    override fun onTaskFailed(e: Throwable) {
+        if (ErrorMapper.classify(e) == AppError.SessionExpired) SessionEvents.markExpired()
+    }
 
     /**
      * Refreshes every section. Each section is independent: one failing RPC is reported in

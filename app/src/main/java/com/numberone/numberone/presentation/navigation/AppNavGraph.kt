@@ -1,5 +1,7 @@
 package com.numberone.numberone.presentation.navigation
 
+import androidx.compose.runtime.collectAsState
+import com.numberone.numberone.core.session.SessionEvents
 import com.numberone.numberone.core.localization.tr
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -68,9 +70,10 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
         }
     }
 
-    LaunchedEffect(appViewModel.sessionExpired) {
-        if (appViewModel.sessionExpired) {
-            appViewModel.acknowledgeSessionExpired()
+    val sessionExpired by SessionEvents.expired.collectAsState()
+    LaunchedEffect(sessionExpired) {
+        if (sessionExpired) {
+            SessionEvents.acknowledge()
             signOutToLogin()
         }
     }
