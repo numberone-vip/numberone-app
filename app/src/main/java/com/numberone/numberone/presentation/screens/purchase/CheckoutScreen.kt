@@ -262,16 +262,36 @@ fun CheckoutScreen(
 @Composable
 private fun ServiceBrandBadge(name: String) {
     val n = name.lowercase()
-    val (bg, fg, tag) = when {
-        "whatsapp" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF25D366), androidx.compose.ui.graphics.Color.White, "WA")
-        "telegram" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF229ED9), androidx.compose.ui.graphics.Color.White, "TG")
-        "facebook" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF1877F2), androidx.compose.ui.graphics.Color.White, "FB")
-        "google" in n -> Triple(androidx.compose.ui.graphics.Color(0xFFEA4335), androidx.compose.ui.graphics.Color.White, "G")
-        "tiktok" in n -> Triple(androidx.compose.ui.graphics.Color(0xFF111111), androidx.compose.ui.graphics.Color(0xFF25F4EE), "TT")
-        else -> Triple(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), MaterialTheme.colorScheme.primary, "VIP")
+    val gold = androidx.compose.ui.graphics.Color(0xFFD4AF37)
+    val isMultiOrVip = "/" in n || "vip" in n || "multi" in n || "all" in n
+    val tag = when {
+        isMultiOrVip -> "VIP"
+        "whatsapp" in n -> "WA"
+        "telegram" in n -> "TG"
+        "facebook" in n -> "FB"
+        "google" in n -> "G"
+        "tiktok" in n -> "TT"
+        else -> "VIP"
     }
-    Surface(shape = RoundedCornerShape(14.dp), color = bg, modifier = Modifier.size(48.dp)) {
-        androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) { Text(tag, color = fg, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium) }
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = androidx.compose.ui.graphics.Color(0xFF171510),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, gold.copy(alpha = if (isMultiOrVip) 0.85f else 0.45f)),
+        modifier = Modifier.size(52.dp)
+    ) {
+        androidx.compose.foundation.layout.Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    listOf(gold.copy(alpha = 0.24f), androidx.compose.ui.graphics.Color.Transparent)
+                )
+            )
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("👑", fontSize = 14.sp)
+                Text(tag, color = gold, fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelMedium)
+            }
+        }
     }
 }
 
