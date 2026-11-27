@@ -35,9 +35,9 @@ fun SettingsScreen(onBack: () -> Unit, onLogout: () -> Unit, userEmail: String? 
     val language by prefs.appLanguage.collectAsState(initial = AppLanguage.ENGLISH)
     val theme by prefs.appTheme.collectAsState(initial = "dark")
 
-    var myUserId by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+    val myUserId = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        myUserId = AppContainer.userRepository.getCurrentUser().getOrNull()?.id.orEmpty()
+        myUserId.value = AppContainer.userRepository.getCurrentUser().getOrNull()?.id.orEmpty()
     }
     NOScaffold(title = tr("حسابي"), onBack = onBack) {
         // Profile
@@ -58,10 +58,10 @@ fun SettingsScreen(onBack: () -> Unit, onLogout: () -> Unit, userEmail: String? 
                     )
                 }
             }
-            if (myUserId.isNotBlank()) {
+            if (myUserId.value.isNotBlank()) {
                 com.numberone.numberone.core.components.CopyField(
                     label = tr("معرّف حسابك (ID)"),
-                    value = myUserId
+                    value = myUserId.value
                 )
             }
         }
