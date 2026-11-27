@@ -86,7 +86,8 @@ fun CheckoutScreen(
     val stockColor = if (inStock) successColor() else dangerColor()
     var fallbackMonths by remember(service.id) { mutableStateOf(1) }
     val activeMonths = if (options.size > 1) 1 else fallbackMonths
-    val price = selected.price * activeMonths
+    val rawAnnual = selected.price * activeMonths
+    val price = if (activeMonths >= 12) kotlin.math.round(rawAnnual * 0.75 * 100.0) / 100.0 else rawAnnual
     val priceText = formatAmount(price)
     val hasFunds = walletBalance == null || walletBalance >= price
     val walletPurchaseEnabled = enabled && inStock && hasFunds
@@ -115,8 +116,9 @@ fun CheckoutScreen(
                         )
                     }
                     Text(
-                        service.country,
+                        if (service.country.trim() in listOf("1+", "+1", "1")) "🇺🇸 " + tr("الولايات المتحدة (+1)") else service.country,
                         style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -159,15 +161,38 @@ fun CheckoutScreen(
         }
 
         Text(tr("اختر مدة الاشتراك:"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-        Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(1 to tr("اشتراك شهري"), 12 to tr("اشتراك سنوي")).forEach { (m, lbl) ->
-                val chipPrice = formatAmount(selected.price * m)
-                FilterChip(
-                    selected = fallbackMonths == m,
+                val rawP = selected.price * m
+                val discP = if (m >= 12) kotlin.math.round(rawP * 0.75 * 100.0) / 100.0 else rawP
+                val chipPrice = formatAmount(discP)
+                val isSel = fallbackMonths == m
+                Surface(
                     onClick = { fallbackMonths = m },
-                    label = { Text("$lbl • $chipPrice USDT", fontWeight = FontWeight.Bold) },
-                    enabled = true
-                )
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (isSel) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (isSel) 1.5.dp else 1.dp,
+                        color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text(lbl, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        Text(ltr("$chipPrice USDT"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                        if (m >= 12) {
+                            Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.primary) {
+                                Text(tr("خصم 25% 🔥"), modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimary)
+                            }
+                        } else {
+                            Text(tr("30 يوم"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
             }
         }
 
