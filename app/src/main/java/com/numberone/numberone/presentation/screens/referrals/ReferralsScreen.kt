@@ -55,8 +55,15 @@ fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
                 }
                 OutlinedButton(
                     onClick = {
-                        val msg = Uri.encode(buildReferralShareMessage(vm.myReferralCode))
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me"))) }
+                        val text = buildReferralShareMessage(vm.myReferralCode)
+                        val wa = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; setPackage("com.whatsapp"); putExtra(Intent.EXTRA_TEXT, text) }
+                        runCatching { context.startActivity(wa) }.onFailure {
+                            val wab = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; setPackage("com.whatsapp.w4b"); putExtra(Intent.EXTRA_TEXT, text) }
+                            runCatching { context.startActivity(wab) }.onFailure {
+                                val fb = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }
+                                runCatching { context.startActivity(Intent.createChooser(fb, tr("مشاركة كود الدعوة"))) }
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(14.dp)
                 ) {

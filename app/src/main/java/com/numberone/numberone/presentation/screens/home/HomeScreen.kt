@@ -443,7 +443,7 @@ private fun DashboardTab(
                         Button(onClick = { val c = engagementVm?.myReferralCode.orEmpty(); if (c.isNotBlank()) { val i = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, buildReferralShareMessage(c)) }; runCatching { shareCtx.startActivity(android.content.Intent.createChooser(i, tr("مشاركة كود الدعوة"))) } } else onNavigate(AppRoutes.REFERRALS) }, modifier = Modifier.weight(1f).height(42.dp), shape = RoundedCornerShape(12.dp)) {
                             Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(tr("مشاركة الآن"), fontWeight = FontWeight.Bold)
                         }
-                        OutlinedButton(onClick = { onNavigate(AppRoutes.REFERRALS) }, modifier = Modifier.weight(1f).height(42.dp), shape = RoundedCornerShape(12.dp)) { Text(tr("كودي وإدخال كود"), fontWeight = FontWeight.Bold) }
+                        OutlinedButton(onClick = { onNavigate(AppRoutes.REFERRALS) }, modifier = Modifier.weight(1f).height(42.dp), shape = RoundedCornerShape(12.dp)) { Text(tr("صفحة الإحالات"), fontWeight = FontWeight.Bold) }
                     }
                 }
             }
