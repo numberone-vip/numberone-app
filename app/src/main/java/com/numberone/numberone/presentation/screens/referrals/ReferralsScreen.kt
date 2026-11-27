@@ -21,8 +21,8 @@ fun buildReferralShareMessage(code: String): String =
     "🎁 هدية خاصة لك في تطبيق Number One للأرقام الافتراضية والخاصة VIP!\n\n" +
     "✨ احصل على رقمك الفوري أو الخاص لتفعيل واتساب وتيليجرام وفيسبوك بأعلى جودة وأسرع وصول للأكواد.\n\n" +
     "🔑 استخدم كود الدعوة الخاص بي عند التسجيل:\n👉 $code\n\n" +
-    "📲 رابط تحميل التطبيق مباشرة:\nhttps://github.com\n\n" +
-    "افتح التطبيق ← الإحالات والمكافآت ← أدخل الكود لتحصل على مكافأتك فوراً! 🚀"
+    "📲 رابط تحميل التطبيق الرسمي:\nhttps://saamabbas83-arch.github.io/numberone-app/?ref=$code\n\n" +
+    "افتح الرابط وحمّل التطبيق، ثم أدخل الكود في قسم الإحالات والمكافآت! 🚀"
 
 @Composable
 fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
