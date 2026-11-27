@@ -105,7 +105,9 @@ import com.numberone.numberone.core.components.statusTone
 import com.numberone.numberone.core.components.successColor
 import com.numberone.numberone.core.theme.NumberOneColors
 import com.numberone.numberone.core.util.parseInstantOrNull
+import com.numberone.numberone.data.remote.SupabaseClientProvider
 import com.numberone.numberone.di.AppContainer
+import io.github.jan.supabase.auth.auth
 import com.numberone.numberone.domain.model.VirtualNumberOrder
 import com.numberone.numberone.notifications.PushTokenRegistrar
 import com.numberone.numberone.presentation.navigation.AppRoutes
@@ -638,6 +640,40 @@ private fun GreetingHeader(userEmail: String?, unreadNotifications: Int = 0, onN
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            val uid = remember { SupabaseClientProvider.client.auth.currentUserOrNull()?.id.orEmpty() }
+            if (uid.isNotBlank()) {
+                val clip = androidx.compose.ui.platform.LocalClipboardManager.current
+                val ctx = LocalContext.current
+                Spacer(Modifier.height(4.dp))
+                Surface(
+                    onClick = {
+                        clip.setText(androidx.compose.ui.text.AnnotatedString(uid))
+                        android.widget.Toast.makeText(ctx, tr("تم نسخ معرّف حسابك (ID)"), android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Text(
+                            text = ltr("ID: ${uid.take(8)}…"),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            Icons.Filled.ContentCopy,
+                            contentDescription = tr("نسخ"),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
+                }
+            }
         }
         androidx.compose.material3.BadgedBox(badge = { if (unreadNotifications > 0) androidx.compose.material3.Badge { Text(unreadNotifications.toString()) } }) {
             androidx.compose.material3.IconButton(onClick = onNotifications) { Icon(Icons.Filled.Notifications, contentDescription = tr("الإشعارات"), tint = MaterialTheme.colorScheme.primary) }
