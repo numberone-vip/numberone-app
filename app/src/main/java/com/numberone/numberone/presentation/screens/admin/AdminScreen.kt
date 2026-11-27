@@ -11,6 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
@@ -61,7 +68,10 @@ fun AdminScreen(onBack: () -> Unit) {
     val vm = remember { AdminViewModel() }
     LaunchedEffect(Unit) { vm.load() }
 
-    var tab by remember { mutableIntStateOf(TAB_OVERVIEW) }
+    val pagerState = rememberPagerState(pageCount = { 5 })
+    val tab = pagerState.currentPage
+    val pagerScope = rememberCoroutineScope()
+    val listStates = remember { List(5) { LazyListState() } }
     var orderFilter by remember { mutableStateOf(OrderFilter.ACTION) }
     var orderQuery by remember { mutableStateOf("") }
     var shamPendingOnly by remember { mutableStateOf(true) }
@@ -90,6 +100,24 @@ fun AdminScreen(onBack: () -> Unit) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            when (tab) {
+                TAB_SERVICES -> ExtendedFloatingActionButton(
+                    onClick = { serviceEditor = null; serviceEditorOpen = true },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(tr("خدمة جديدة")) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+                TAB_ORDERS -> ExtendedFloatingActionButton(
+                    onClick = { assignUser = null; assignOpen = true },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(tr("منح اشتراك")) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        },
         topBar = {
             NOTopBar(
                 title = tr("لوحة الإدارة"),
@@ -114,7 +142,7 @@ fun AdminScreen(onBack: () -> Unit) {
                 labels.forEachIndexed { index, label ->
                     Tab(
                         selected = tab == index,
-                        onClick = { tab = index },
+                        onClick = { pagerScope.launch { pagerState.animateScrollToPage(index) } },
                         text = { Text(label, maxLines = 1) }
                     )
                 }
@@ -132,52 +160,58 @@ fun AdminScreen(onBack: () -> Unit) {
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                when (tab) {
-                    TAB_OVERVIEW -> overviewItems(
-                        vm = vm,
-                        actionOrders = actionOrders,
-                        waitingOrders = waitingOrders,
-                        actionSham = actionSham,
-                        waitingSham = waitingSham,
-                        onGo = { tab = it }
-                    )
-                    TAB_ORDERS -> orderItems(
-                        vm = vm,
-                        filter = orderFilter,
-                        onFilter = { orderFilter = it },
-                        query = orderQuery,
-                        onQuery = { orderQuery = it },
-                        txidIndex = txidIndex,
-                        onAssign = { assignUser = null; assignOpen = true },
-                        onApprove = { approveOrder = it },
-                        onReject = { rejectOrder = it }
-                    )
-                    TAB_SHAM -> shamItems(
-                        vm = vm,
-                        pendingOnly = shamPendingOnly,
-                        openCount = actionSham,
-                        onFilter = { shamPendingOnly = it },
-                        onApprove = { t, usdt -> vm.approveShamCash(t.id, usdt) },
-                        onReject = { rejectSham = it }
-                    )
-                    TAB_SERVICES -> serviceItems(
-                        vm = vm,
-                        onAdd = { serviceEditor = null; serviceEditorOpen = true },
-                        onEdit = { serviceEditor = it; serviceEditorOpen = true },
-                        onDelete = { deleteService = it }
-                    )
-                    else -> userItems(
-                        vm = vm,
-                        query = userQuery,
-                        onQuery = { userQuery = it },
-                        onAdjust = { adjustUser = it },
-                        onDetails = { detailUser = it }
-                    )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                LazyColumn(
+                    state = listStates[page],
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 84.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    when (page) {
+                        TAB_OVERVIEW -> overviewItems(
+                            vm = vm,
+                            actionOrders = actionOrders,
+                            waitingOrders = waitingOrders,
+                            actionSham = actionSham,
+                            waitingSham = waitingSham,
+                            onGo = { pagerScope.launch { pagerState.animateScrollToPage(it) } }
+                        )
+                        TAB_ORDERS -> orderItems(
+                            vm = vm,
+                            filter = orderFilter,
+                            onFilter = { orderFilter = it },
+                            query = orderQuery,
+                            onQuery = { orderQuery = it },
+                            txidIndex = txidIndex,
+                            onAssign = { assignUser = null; assignOpen = true },
+                            onApprove = { approveOrder = it },
+                            onReject = { rejectOrder = it }
+                        )
+                        TAB_SHAM -> shamItems(
+                            vm = vm,
+                            pendingOnly = shamPendingOnly,
+                            openCount = actionSham,
+                            onFilter = { shamPendingOnly = it },
+                            onApprove = { t, usdt -> vm.approveShamCash(t.id, usdt) },
+                            onReject = { rejectSham = it }
+                        )
+                        TAB_SERVICES -> serviceItems(
+                            vm = vm,
+                            onAdd = { serviceEditor = null; serviceEditorOpen = true },
+                            onEdit = { serviceEditor = it; serviceEditorOpen = true },
+                            onDelete = { deleteService = it }
+                        )
+                        else -> userItems(
+                            vm = vm,
+                            query = userQuery,
+                            onQuery = { userQuery = it },
+                            onAdjust = { adjustUser = it },
+                            onDetails = { detailUser = it }
+                        )
+                    }
                 }
             }
         }
