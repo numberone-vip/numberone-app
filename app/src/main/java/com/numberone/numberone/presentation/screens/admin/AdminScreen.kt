@@ -190,8 +190,8 @@ fun AdminScreen(onBack: () -> Unit) {
             email = vm.emailFor(o.userId, o.customerEmail),
             conflict = txidConflict(o, txidIndex),
             onDismiss = { approveOrder = null },
-            onConfirm = { phone, code, expiry ->
-                vm.approveOrder(o.id, phone, code, expiry)
+            onConfirm = { phone, expiry ->
+                vm.approveOrder(o.id, phone, expiry)
                 approveOrder = null
             }
         )

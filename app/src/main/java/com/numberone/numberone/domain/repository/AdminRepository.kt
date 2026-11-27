@@ -18,7 +18,7 @@ interface AdminRepository {
     suspend fun approveShamCashTopUp(requestId: String, creditedUsdt: Double): Result<Double>
     suspend fun rejectShamCashTopUp(requestId: String, reason: String): Result<Boolean>
     suspend fun listOrders(): Result<List<Order>>
-    suspend fun approveOrder(orderId: String, phoneNumber: String, accessCode: String, expiryDate: String): Result<Unit>
+    suspend fun approveOrder(orderId: String, phoneNumber: String, expiryDate: String): Result<String>
     suspend fun rejectOrder(orderId: String, reason: String): Result<Unit>
     /** Short-lived signed URL for a receipt in the private payment-receipts bucket. */
     suspend fun getReceiptUrl(path: String): Result<String>

@@ -108,9 +108,9 @@ class AdminViewModel(
         reload()
     }
 
-    fun approveOrder(id: String, phone: String, code: String, expiry: String) = run {
-        adminRepo.approveOrder(id, phone, code, expiry).getOrThrow()
-        message = tr("تم اعتماد الطلب")
+    fun approveOrder(id: String, phone: String, expiry: String) = run {
+        val subId = adminRepo.approveOrder(id, phone, expiry).getOrThrow()
+        message = if (subId.isNotBlank()) trf("تم اعتماد الطلب وإسناد الرقم • UUID: {0}", subId) else tr("تم اعتماد الطلب")
         reload()
     }
 

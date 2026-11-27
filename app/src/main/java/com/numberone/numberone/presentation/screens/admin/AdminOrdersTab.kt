@@ -333,6 +333,7 @@ private fun SubscriptionCard(vm: AdminViewModel, sub: AdminSubscription) {
             StatusChip(sub.status)
         }
         if (sub.phoneNumber.isNotBlank()) CopyField(label = tr("الرقم"), value = sub.phoneNumber)
+        if (sub.id.isNotBlank()) CopyField(label = tr("معرّف الاشتراك (UUID)"), value = sub.id)
         ExpiryBadge(sub.expiryDate)
         sub.adminNote?.takeIf { it.isNotBlank() }?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -378,13 +379,11 @@ internal fun ApproveOrderDialog(
     email: String,
     conflict: TxidConflict,
     onDismiss: () -> Unit,
-    onConfirm: (phone: String, code: String, expiry: String) -> Unit
+    onConfirm: (phone: String, expiry: String) -> Unit
 ) {
     var phone by remember(order.id) { mutableStateOf(order.phoneNumber.orEmpty()) }
-    var code by remember(order.id) { mutableStateOf(newAccessCode()) }
     var expiry by remember(order.id) { mutableStateOf("") }
     var phoneError by remember(order.id) { mutableStateOf<String?>(null) }
-    var codeError by remember(order.id) { mutableStateOf<String?>(null) }
     var expiryError by remember(order.id) { mutableStateOf<String?>(null) }
     var formError by remember(order.id) { mutableStateOf<String?>(null) }
     AlertDialog(
@@ -428,17 +427,13 @@ internal fun ApproveOrderDialog(
                     textStyle = ltrTextStyle(),
                     modifier = Modifier.fillMaxWidth()
                 )
-                AccessFields(
-                    code = code,
-                    onCode = { code = it; codeError = null; formError = null },
-                    expiry = expiry,
-                    onExpiry = { expiry = it; expiryError = null; formError = null },
-                    expiryError = expiryError ?: codeError,
-                    shortcutDays = APPROVAL_DURATION_DAYS
-                )
+                OutlinedTextField(value = expiry, onValueChange = { expiry = it; expiryError = null; formError = null }, label = { Text(tr("تاريخ الانتهاء (yyyy-MM-dd)")) }, singleLine = true, isError = expiryError != null, supportingText = { expiryError?.let { Text(it) } }, textStyle = ltrTextStyle(), modifier = Modifier.fillMaxWidth())
+                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    APPROVAL_DURATION_DAYS.forEach { days -> val target = java.time.LocalDate.now().plusDays(days.toLong()).toString(); androidx.compose.material3.FilterChip(selected = expiry.trim() == target, onClick = { expiry = target; expiryError = null; formError = null }, label = { Text(durationLabel(days)) }) }
+                }
                 formError?.let { Text(it, color = dangerColor(), style = MaterialTheme.typography.bodySmall) }
                 Text(
-                    tr("سيصل رمز الوصول إلى العميل مع الاشتراك. راجع البيانات قبل الاعتماد."),
+                    tr("سيتم اعتماد الاشتراك وإرجاع معرّف UUID للرقم مباشرة دون رمز وصول."),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -450,9 +445,8 @@ internal fun ApproveOrderDialog(
                 when {
                     conflict.blocking -> formError = tr("رقم المعاملة مستخدم في عملية أسبق أو معتمدة. لا يمكن اعتماد هذا الطلب.")
                     phone.isBlank() -> phoneError = tr("رقم الهاتف مطلوب")
-                    code.isBlank() -> codeError = tr("رمز الوصول مطلوب")
                     dErr != null -> expiryError = dErr
-                    else -> onConfirm(phone.trim(), code.trim(), expiry.trim())
+                    else -> onConfirm(phone.trim(), expiry.trim())
                 }
             }) { Text(tr("تأكيد الموافقة"), color = successColor(), fontWeight = FontWeight.Bold) }
         },
