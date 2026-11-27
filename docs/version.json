@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 9,
-  "latestVersionName": "1.2.8",
+  "latestVersionCode": 10,
+  "latestVersionName": "1.2.9",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.2.8: حماية مضاعفة لتعديل الرصيد عند انقطاع الشبكة، وتنبيه فوري أثناء التحميل.",
-  "releaseNotesAr": "تحديث v1.2.8: حماية مضاعفة لتعديل الرصيد عند انقطاع الشبكة، وتنبيه فوري أثناء التحميل."
+  "notesAr": "تحديث v1.2.9: دعم الفاصلة العشرية العربية، وتحديث قائمة العملاء تلقائياً عند البث.",
+  "releaseNotesAr": "تحديث v1.2.9: دعم الفاصلة العشرية العربية، وتحديث قائمة العملاء تلقائياً عند البث."
 }
