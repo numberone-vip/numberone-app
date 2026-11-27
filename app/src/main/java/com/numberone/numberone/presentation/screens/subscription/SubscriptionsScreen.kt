@@ -25,10 +25,7 @@ fun SubscriptionsScreen(vm: AppViewModel, onBack: () -> Unit, onSms: () -> Unit,
             NOButton(text = tr("عرض تفاصيل الاشتراك"), onClick = { vm.loadSubscriptionById(uuidInput) }, enabled = uuidInput.trim().isNotBlank() && !vm.loading)
         }
         if (vm.subscriptions.isEmpty()) {
-            NOCard {
-                SectionTitle(tr("الاشتراكات السابقة (رمز الوصول)"), tr("إذا كان لديك اشتراك قديم برمز وصول، يمكنك استخدامه من هنا."))
-                OutlinedButton(onClick = onAccessCode, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) { Text(tr("استخدام رمز الوصول القديم"), fontWeight = FontWeight.Bold) }
-            }
+            EmptyState(tr("لا توجد اشتراكات نشطة حالياً"))
         } else {
             vm.subscriptions.forEach { sub ->
                 NOCard {
@@ -46,7 +43,6 @@ fun SubscriptionsScreen(vm: AppViewModel, onBack: () -> Unit, onSms: () -> Unit,
                 }
             }
             NOButton(text = tr("فتح صندوق الرسائل"), onClick = onSms)
-            OutlinedButton(onClick = onAccessCode, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) { Text(tr("استخدام رمز الوصول القديم"), fontWeight = FontWeight.Bold) }
         }
     }
 }

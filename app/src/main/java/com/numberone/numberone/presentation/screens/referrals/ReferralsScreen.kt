@@ -33,6 +33,27 @@ fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
         FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
         NOCard {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                IconBadge(Icons.Filled.WorkspacePremium, size = 54.dp)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(tr("👑 برنامج مكافآت Number One VIP"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                    Text(tr("ادعُ أصدقاءك للحصول على رصيد مكافآت إضافي وخصومات حصرية على الأرقام الفورية والخاصة."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        NOCard {
+            SectionTitle(tr("قيمة المكافأة والخصم"), tr("مزايا الدعوة لك ولصديقك"))
+            Text(tr("• مكافأة الداعي: رصيد مكافأة إضافي يُضاف لمحفظتك بعد تسجيل صديقك بكودك وإتمام أول عملية شحن أو شراء."), style = MaterialTheme.typography.bodySmall)
+            Text(tr("• ميزة الصديق المدعو: تفعيل الكود يؤهّلك للعروض الترويجية وأكواد الخصم على باقات VIP والأرقام الفورية."), style = MaterialTheme.typography.bodySmall)
+        }
+        NOCard {
+            SectionTitle(tr("شروط وأحكام الإحالة"), tr("قواعد احتساب المكافأة"))
+            Text(tr("1. يُستخدم كود إحالة واحد فقط لكل حساب جديد."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr("2. لا يُسمح باستخدام كود الدعوة الخاص بحسابك الشخصي."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr("3. تُحتسب المكافأة بعد إتمام الصديق أول عملية شحن أو شراء ناجحة."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr("4. الحسابات الوهمية أو المتكررة تُلغي المكافأة تلقائياً."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        NOCard {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 IconBadge(Icons.Filled.CardGiftcard, size = 46.dp)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(tr("🎁 شارك كودك واربح مكافآت!"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)

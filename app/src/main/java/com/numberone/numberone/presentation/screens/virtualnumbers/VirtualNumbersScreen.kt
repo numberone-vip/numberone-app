@@ -244,7 +244,20 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
         }
     }
     val sQuery = serviceSearch.trim()
-    val filteredServices = remember(catalog, sQuery) { catalog.services.sortedBy { it.name.lowercase() }.filter { s -> sQuery.isEmpty() || s.name.contains(sQuery, ignoreCase = true) || s.code.contains(sQuery, ignoreCase = true) } }
+    val popularKeys = remember { listOf("whatsapp", "telegram", "facebook", "instagram", "tiktok", "google", "snapchat", "twitter", "openai", "microsoft", "apple", "paypal", "amazon", "viber", "discord", "uber", "netflix", "imo") }
+    val filteredServices = remember(catalog, sQuery) {
+        catalog.services
+            .filter { svc -> sQuery.isEmpty() || svc.name.contains(sQuery, ignoreCase = true) || svc.code.contains(sQuery, ignoreCase = true) }
+            .sortedWith(
+                compareBy<VirtualNumberService>(
+                    { svc ->
+                        val idx = popularKeys.indexOfFirst { k -> svc.code.equals(k, true) || svc.name.lowercase().contains(k) }
+                        if (idx >= 0) idx else 999
+                    },
+                    { it.name.lowercase() }
+                )
+            )
+    }
 
     val activeOrder = order
     val canBuy = currentQuote != null && chosenOperator != null && selectedCountry != null &&
@@ -285,6 +298,20 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
 
                 item {
                     BalanceHeader(balance = vm.wallet.balance, currency = vm.wallet.currency)
+                }
+                item {
+                    NOCard {
+                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Icon(Icons.Filled.VerifiedUser, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
+                                Text(tr("🛡️ ضمان الاسترداد التلقائي خلال 15 دقيقة"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text(tr("في حال عدم وصول كود التحقق خلال 15 دقيقة، يُردّ مبلغ الرقم كاملاً إلى رصيد محفظتك تلقائياً بدون أي خصم."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                Text(tr("👑 تنبيه مهم لمستخدمي واتساب (WhatsApp)"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                Text(tr("نظراً لسياسات واتساب الصارمة، نوصي باختيار «أرقام خاصة (VIP)» لضمان أعلى نسبة قبول واستمرار الرقم معك."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
                 }
 
                 if (catalog.services.isNotEmpty()) { item { Row(modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("whatsapp" to "واتساب","telegram" to "تيليجرام","facebook" to "فيسبوك","google" to "غوغل","tiktok" to "تيك توك").forEach { (c, l) -> catalog.services.firstOrNull { it.code.equals(c, true) || c in it.name.lowercase() }?.let { m -> FilterChip(selected = selectedService?.code == m.code, onClick = { selectedService = m }, label = { Text(tr(l), fontWeight = FontWeight.Bold) }) } } } } }
@@ -487,8 +514,14 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                     items(filteredServices, key = { it.code }) { service ->
                         val isSelected = service.code == selectedService?.code
                         Row(modifier = Modifier.fillMaxWidth().clickable { selectedService = service; serviceSheetOpen = false; serviceSearch = "" }.padding(vertical = 12.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            val isPopular = popularKeys.any { k -> service.code.equals(k, true) || service.name.lowercase().contains(k) }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(service.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(service.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isSelected || isPopular) FontWeight.Bold else FontWeight.Normal)
+                                    if (isPopular) {
+                                        Text(tr("الأكثر طلباً"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                                 Text(service.code, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (isSelected) Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)

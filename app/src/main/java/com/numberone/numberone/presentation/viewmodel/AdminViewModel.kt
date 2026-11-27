@@ -192,6 +192,11 @@ class AdminViewModel(
         reload()
     }
 
+    fun sendNotification(targetUserId: String?, title: String, body: String) = run {
+        val targets = if (targetUserId.isNullOrBlank()) users.map { it.userId } else listOf(targetUserId)
+        val sent = adminRepo.sendAdminNotification(targets, title, body).getOrThrow()
+        message = trf("تم إرسال الإشعار إلى {0} عميل بنجاح", sent)
+    }
     fun resetAccess(subscriptionId: String, code: String, expiry: String) = run {
         adminRepo.resetSubscriptionAccess(subscriptionId, code, expiry).getOrThrow()
         message = tr("تم تحديث وصول الاشتراك")

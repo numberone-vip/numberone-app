@@ -62,13 +62,15 @@ internal fun LazyListScope.userItems(
             value = query,
             onValueChange = onQuery,
             singleLine = true,
-            placeholder = { Text(tr("ابحث بالبريد الإلكتروني…")) },
+            placeholder = { Text(tr("ابحث بالبريد الإلكتروني أو ID العميل…")) },
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
         )
     }
     val q = query.trim().lowercase()
-    val list = if (q.isEmpty()) vm.users else vm.users.filter { (it.email ?: "").lowercase().contains(q) }
+    val list = if (q.isEmpty()) vm.users else vm.users.filter {
+        (it.email ?: "").lowercase().contains(q) || it.userId.lowercase().contains(q)
+    }
     if (list.isEmpty() && !vm.loading) {
         item { EmptyState(if (vm.users.isEmpty()) tr("لا يوجد مستخدمون") else tr("لا توجد نتائج مطابقة")) }
     }
@@ -93,6 +95,7 @@ private fun UserCard(user: AdminUser, subsCount: Int, loading: Boolean, onAdjust
                 }
             }
         }
+        com.numberone.numberone.core.components.CopyField(label = tr("معرّف العميل (ID)"), value = user.userId)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(tr("الرصيد"), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(

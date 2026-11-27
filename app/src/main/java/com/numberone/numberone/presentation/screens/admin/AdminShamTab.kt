@@ -78,11 +78,24 @@ internal fun LazyListScope.shamItems(
         )
     }
 
-    // Automatic USDT (Binance) deposits: read-only, no admin action is needed.
-    val recent = vm.deposits.take(10)
+    val recent = vm.deposits.filter { it.requestedAmount > 0.0 }.take(10)
     if (recent.isNotEmpty()) {
-        item { SectionTitle(tr("إيداعات USDT التلقائية"), trf("آخر {0} عمليات (تُعتمد تلقائياً بعد التحقق من الشبكة)", recent.size)) }
-        items(recent) { d -> DepositCard(d, vm.emailFor(d.userId)) }
+        item { SectionTitle(tr("إيداعات USDT (Binance)"), trf("آخر {0} عمليات (تُعتمد تلقائياً أو يدوياً عند الحاجة)", recent.size)) }
+        items(recent, key = { "dep-" + it.id }) { d ->
+            DepositCard(
+                d = d,
+                email = vm.emailFor(d.userId),
+                loading = vm.loading,
+                onManualApprove = { usdt ->
+                    vm.adjustBalance(
+                        userId = d.userId,
+                        amount = usdt,
+                        note = "اعتماد إيداع USDT يدوي #${d.id.take(8)}",
+                        requestId = d.id
+                    )
+                }
+            )
+        }
     }
 }
 
@@ -133,6 +146,7 @@ private fun ShamReviewCard(
         topUp.creditedUsdt?.let {
             Text(tr("أُضيف للمحفظة: ") + ltr(formatAmount(it) + " USDT"), color = successColor(), fontWeight = FontWeight.SemiBold)
         }
+        com.numberone.numberone.core.components.CopyField(label = tr("معرّف العميل (ID)"), value = topUp.userId)
         topUp.rejectionReason?.let {
             Text(trf("سبب الرفض: {0}", it), color = dangerColor(), style = MaterialTheme.typography.bodySmall)
         }
@@ -178,7 +192,34 @@ private fun ShamReviewCard(
 }
 
 @Composable
-private fun DepositCard(d: AdminWalletDeposit, email: String) {
+private fun DepositCard(
+    d: AdminWalletDeposit,
+    email: String,
+    loading: Boolean,
+    onManualApprove: (Double) -> Unit
+) {
+    val open = isOpenStatus(d.status)
+    var amountInput by remember(d.id) { mutableStateOf(formatAmount(d.requestedAmount)) }
+    var confirmOpen by remember(d.id) { mutableStateOf(false) }
+    val parsed = amountInput.trim().replace(',', '.').toDoubleOrNull()
+    val valid = parsed != null && parsed.isFinite() && parsed > 0.0 && parsed <= 100000.0
+
+    if (confirmOpen && parsed != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirmOpen = false },
+            title = { Text(tr("تأكيد الاعتماد اليدوي"), fontWeight = FontWeight.Bold) },
+            text = { Text(trf("سيتم إضافة {0} USDT إلى محفظة {1}. هل أنت متأكد؟", formatAmount(parsed), email)) },
+            confirmButton = {
+                androidx.compose.material3.Button(onClick = { confirmOpen = false; onManualApprove(parsed) }) {
+                    Text(tr("تأكيد وإضافة الرصيد"), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { confirmOpen = false }) { Text(tr("إلغاء")) }
+            }
+        )
+    }
+
     NOCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -196,5 +237,23 @@ private fun DepositCard(d: AdminWalletDeposit, email: String) {
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
+        if (open) {
+            OutlinedTextField(
+                value = amountInput,
+                onValueChange = { amountInput = it },
+                label = { Text(tr("المبلغ المعتمد بالـ USDT")) },
+                singleLine = true,
+                textStyle = ltrTextStyle(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+            androidx.compose.material3.OutlinedButton(
+                onClick = { confirmOpen = true },
+                enabled = !loading && valid,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(tr("اعتماد يدوي وإضافة الرصيد"), fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }

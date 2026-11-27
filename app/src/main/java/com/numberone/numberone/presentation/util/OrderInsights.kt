@@ -50,7 +50,7 @@ fun Order.isWalletOrder(): Boolean = paymentMethod.trim().equals("wallet", ignor
 fun Order.hasReceipt(): Boolean = !receiptPath.isNullOrBlank()
 
 /** Open order whose payment receipt is already uploaded. The admin must approve or reject it. */
-fun Order.needsAdminAction(): Boolean = isOpenStatus(status) && hasReceipt()
+fun Order.needsAdminAction(): Boolean = isOpenStatus(status) && (hasReceipt() || isWalletOrder())
 
 /** Open manual-payment order with no receipt yet. The customer has to upload one. */
 fun Order.waitingForCustomer(): Boolean = isOpenStatus(status) && !hasReceipt() && !isWalletOrder()
@@ -130,7 +130,7 @@ fun normalizeDigits(text: String): String = buildString(text.length) {
 fun orderMatchesSearch(order: Order, customerEmail: String, query: String): Boolean {
     val q = normalizeDigits(query.trim()).lowercase()
     if (q.isEmpty()) return true
-    if (order.id.lowercase().contains(q)) return true
+    if (order.userId.lowercase().contains(q) || id.lowercase().contains(q)) return true
     if (customerEmail.lowercase().contains(q)) return true
     val txQuery = q.replace(" ", "").removePrefix("0x")
     if (txQuery.length >= 6 && order.transactionRef?.lowercase()?.contains(txQuery) == true) return true

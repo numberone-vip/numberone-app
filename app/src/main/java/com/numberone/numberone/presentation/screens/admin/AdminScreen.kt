@@ -138,14 +138,10 @@ fun AdminScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 when (tab) {
-                    TAB_OVERVIEW -> overviewItems(
-                        vm = vm,
-                        actionOrders = actionOrders,
-                        waitingOrders = waitingOrders,
-                        actionSham = actionSham,
-                        waitingSham = waitingSham,
-                        onGo = { tab = it }
-                    )
+                    TAB_OVERVIEW -> {
+                        overviewItems(vm = vm, actionOrders = actionOrders, waitingOrders = waitingOrders, actionSham = actionSham, waitingSham = waitingSham, onGo = { tab = it })
+                        item(key = "admin-send-notif") { AdminSendNotificationCard(vm) }
+                    }
                     TAB_ORDERS -> orderItems(
                         vm = vm,
                         filter = orderFilter,

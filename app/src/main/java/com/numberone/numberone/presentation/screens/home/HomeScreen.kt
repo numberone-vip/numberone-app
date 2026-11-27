@@ -363,13 +363,11 @@ private fun DashboardTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         GreetingHeader(userEmail = userEmail, unreadNotifications = engagementVm?.unreadCount ?: 0, onNotifications = { onNavigate(AppRoutes.NOTIFICATIONS) })
-        Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(NumberOneColors.Champagne, NumberOneColors.GoldDeep))), modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(Icons.Filled.Bolt, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Text(tr("تفعيل فوري خلال ثوانٍ وأرقام VIP دائمة تدعم فيسبوك وواتساب"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-            }
-        }
-
+        VipSpotlightBanner(
+            onPrivate = { onOpenTab(TAB_PRIVATE) },
+            onInstant = { onOpenTab(TAB_INSTANT) },
+            onReferrals = { onNavigate(AppRoutes.REFERRALS) }
+        )
         // 1. Wallet
         if (showSkeleton) SkeletonBlock(height = 150.dp) else BalanceHeroCard(
             label = tr("المحفظة"),
@@ -412,6 +410,8 @@ private fun DashboardTab(
             }
         }
 
+        ActiveVipNumberHomeCard(vm = vm, onNavigate = onNavigate)
+
         // 3. Shortcuts: a tidy 2x2 grid, then the full-width rows.
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(tr("اختصارات"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -420,7 +420,7 @@ private fun DashboardTab(
                 ShortcutTile(tr("طلباتي"), tr("سجل الطلبات والمشتريات"), Icons.Filled.ReceiptLong, { onNavigate(AppRoutes.PURCHASE_HISTORY) }, Modifier.weight(1f).fillMaxHeight())
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
-                ShortcutTile(tr("اشتراكاتي"), tr("إدارة الباقات ورموز التفعيل"), Icons.Filled.Subscriptions, { onNavigate(AppRoutes.SUBSCRIPTION) }, Modifier.weight(1f).fillMaxHeight())
+                ShortcutTile(tr("اشتراكاتي"), tr("أرقامك الخاصة ورسائلها النشطة"), Icons.Filled.Subscriptions, { onNavigate(AppRoutes.SUBSCRIPTION) }, Modifier.weight(1f).fillMaxHeight())
                 ShortcutTile(
                     tr("الحساب"),
                     userEmail?.takeIf { it.isNotBlank() } ?: tr("اللغة والمظهر والأمان"),
@@ -729,6 +729,134 @@ private fun ShortcutTile(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActiveVipNumberHomeCard(vm: AppViewModel, onNavigate: (String) -> Unit) {
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (vm.history.isEmpty()) vm.loadHistory()
+    }
+    val activeSub = vm.subscriptions.firstOrNull { it.phoneNumber.isNotBlank() }
+    val approvedOrder = vm.history.firstOrNull {
+        !it.phoneNumber.isNullOrBlank() && it.status.uppercase() in setOf("COMPLETED", "APPROVED", "DELIVERED", "ACTIVE")
+    }
+    val phone = activeSub?.phoneNumber?.takeIf { it.isNotBlank() } ?: approvedOrder?.phoneNumber.orEmpty()
+    if (phone.isBlank()) return
+
+    val title = activeSub?.serviceName?.takeIf { it.isNotBlank() }
+        ?: approvedOrder?.serviceName?.takeIf { it.isNotBlank() }
+        ?: tr("رقم خاص (VIP)")
+    val code = activeSub?.latestOtp?.takeIf { it.isNotBlank() }
+        ?: approvedOrder?.smsCode?.takeIf { it.isNotBlank() }
+    val expiry = activeSub?.expiryDate ?: approvedOrder?.expiresAt
+
+    com.numberone.numberone.core.components.NOCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                tr("👑 رقمك الخاص النشط (VIP)"),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+            com.numberone.numberone.core.components.StatusChip("ACTIVE")
+        }
+        Text(
+            title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+        com.numberone.numberone.core.components.CopyField(
+            label = tr("رقم الهاتف"),
+            value = phone
+        )
+        if (!code.isNullOrBlank()) {
+            com.numberone.numberone.core.components.CopyField(
+                label = tr("كود التحقق"),
+                value = code
+            )
+        } else {
+            Text(
+                tr("بانتظار وصول كود التحقق من الإدارة…"),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        expiry?.takeIf { it.isNotBlank() }?.let {
+            com.numberone.numberone.core.components.ExpiryBadge(expiry = it)
+        }
+        androidx.compose.material3.HorizontalDivider()
+        Text(tr("🛡️ تعليمات حماية رقمك من الحظر"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(tr("• في اليوم الأول للتفعيل: استقبل الرسائل الواردة فقط ولا تبدأ محادثات مع أرقام غير مسجّلة على هاتفك."), style = MaterialTheme.typography.bodySmall)
+        Text(tr("• فعّل التحقق بخطوتين فوراً (PIN) لحماية حسابك."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(tr("• تجنّب الرسائل الجماعية والروابط والانضمام لمجموعات كثيرة في الأيام الأولى."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = {
+                    vm.loadHistory()
+                    activeSub?.id?.takeIf { it.isNotBlank() }?.let { vm.loadSubscriptionById(it) }
+                },
+                enabled = !vm.loading,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(tr("تحديث الكود"), fontWeight = FontWeight.Bold)
+            }
+            androidx.compose.material3.Button(
+                onClick = { onNavigate(AppRoutes.SMS_INBOX) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(tr("صندوق الرسائل"), fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun VipSpotlightBanner(onPrivate: () -> Unit, onInstant: () -> Unit, onReferrals: () -> Unit) {
+    var slide by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(4000L); slide = (slide + 1) % 3 } }
+    val titles = listOf(tr("👑 أرقام خاصة دائمة (VIP)"), tr("⚡ تفعيل فوري خلال ثوانٍ"), tr("🎁 ادعُ أصدقاءك واربح رصيداً"))
+    val subtitles = listOf(
+        tr("مخصّصة لك وحدك • تدعم واتساب وتيليجرام وفيسبوك بأعلى استقرار"),
+        tr("أكثر من 1,340 تطبيقاً ودولة • استرداد تلقائي خلال 15 دقيقة"),
+        tr("شارك كود الدعوة واحصل على مكافآت وخصومات حصرية")
+    )
+    val icons = listOf(Icons.Filled.WorkspacePremium, Icons.Filled.Bolt, Icons.Filled.CardGiftcard)
+    val actions = listOf(onPrivate, onInstant, onReferrals)
+
+    Surface(
+        onClick = actions[slide],
+        shape = RoundedCornerShape(20.dp),
+        color = Color.Transparent,
+        border = BorderStroke(1.2.dp, Brush.horizontalGradient(listOf(NumberOneColors.GoldLight, NumberOneColors.GoldDeep))),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.background(Brush.linearGradient(listOf(Color(0xFF231D13), Color(0xFF14110C), Color(0xFF2A2112)))).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            androidx.compose.animation.Crossfade(targetState = slide, label = "vip_slide") { idx ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(44.dp).clip(CircleShape).background(Brush.linearGradient(listOf(NumberOneColors.GoldLight, NumberOneColors.GoldDeep)))
+                    ) { Icon(icons[idx], contentDescription = null, tint = NumberOneColors.Obsidian, modifier = Modifier.size(24.dp)) }
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(titles[idx], style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = NumberOneColors.GoldLight)
+                        Text(subtitles[idx], style = MaterialTheme.typography.bodySmall, color = Color(0xFFE8DFCE))
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                (0..2).forEach { i ->
+                    Box(modifier = Modifier.clickable { slide = i }.size(width = if (slide == i) 20.dp else 7.dp, height = 6.dp).clip(CircleShape).background(if (slide == i) NumberOneColors.GoldLight else Color.White.copy(alpha = 0.28f)))
+                }
             }
         }
     }

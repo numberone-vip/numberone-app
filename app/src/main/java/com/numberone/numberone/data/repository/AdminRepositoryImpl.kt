@@ -308,6 +308,15 @@ class AdminRepositoryImpl(
         rpc.rpcRaw("admin_send_subscription_sms", buildJsonObject { put("p_subscription_id", subscriptionId); put("p_sender", sender.trim()); put("p_body", body.trim()) })
         Unit
     }
+    override suspend fun sendAdminNotification(userIds: List<String>, title: String, body: String) = runCatching {
+        val t = title.trim(); val b = body.trim()
+        require(t.isNotEmpty() && b.isNotEmpty()) { tr("عنوان الإشعار ونص الرسالة مطلوبان") }
+        val targets = userIds.map { it.trim() }.filter { uuidRegex.matches(it) }.distinct()
+        require(targets.isNotEmpty()) { tr("لا يوجد مستلمون صالحون") }
+        val rows = targets.map { uid -> buildJsonObject { put("user_id", uid); put("event_type", "admin_announcement"); put("title", t); put("body", b); put("status", "sent") } }
+        com.numberone.numberone.data.remote.SupabaseClientProvider.client.postgrest["notifications"].insert(rows)
+        targets.size
+    }
     override suspend fun resetSubscriptionAccess(subscriptionId: String, accessCode: String, expiryDate: String) = runCatching {
         require(subscriptionId.isNotBlank()) { tr("معرّف غير صالح") }
         val date = expiryDate.trim()

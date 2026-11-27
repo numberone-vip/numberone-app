@@ -72,6 +72,12 @@ fun ColumnScope.StoreBody(vm: AppViewModel, onTopUp: (() -> Unit)? = null) {
             vm.loadStore()
         }
     }
+    NOCard {
+        SectionTitle(tr("🛡️ تعليمات حماية رقمك من الحظر"), tr("اتبع هذه القواعد للحفاظ على رقمك الخاص بأمان"))
+        Text(tr("• في اليوم الأول للتفعيل: استقبل الرسائل الواردة فقط ولا تبدأ محادثات مع أرقام غير مسجّلة على هاتفك."), style = MaterialTheme.typography.bodySmall)
+        Text(tr("• فعّل التحقق بخطوتين فوراً (PIN) لحماية حسابك."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(tr("• تجنّب الرسائل الجماعية والروابط والانضمام لمجموعات كثيرة في الأيام الأولى."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 
     var receipt by remember { mutableStateOf<ReceiptFile?>(null) }
 

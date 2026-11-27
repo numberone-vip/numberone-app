@@ -76,7 +76,7 @@ fun SmsInboxScreen(vm: AppViewModel, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 IconBadge(Icons.Filled.Sms, tint = MaterialTheme.colorScheme.primary, size = 72.dp)
-                EmptyState(tr("لا توجد رسائل بعد.\nأدخل رمز الوصول من صفحة «اشتراكاتي» لعرض رسائلك."))
+                EmptyState(tr("لا توجد رسائل بعد.\nافتح صفحة «اشتراكاتي» لعرض أرقامك الخاصة ورسائلها."))
             }
         }
 

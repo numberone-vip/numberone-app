@@ -299,15 +299,30 @@ private fun BinanceSection(vm: AppViewModel) {
         androidx.compose.material3.OutlinedButton(onClick = vm::cancelSelectedDeposit, modifier = Modifier.fillMaxWidth()) { Text(tr("إلغاء المعاملة"), color = com.numberone.numberone.core.components.dangerColor(), fontWeight = FontWeight.Bold) }
     }
 
+    val cleanDeposits = vm.deposits.filter { it.requestedAmount > 0.0 }
+    var showAllDeposits by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val visibleDeposits = if (showAllDeposits) cleanDeposits else cleanDeposits.take(1)
     NOCard {
         SectionTitle(tr("طلبات الإيداع"), tr("اضغط على طلب مفتوح لاختياره"))
-        if (vm.deposits.isEmpty()) EmptyState(tr("لا توجد طلبات إيداع بعد"))
-        vm.deposits.forEach { d ->
+        if (cleanDeposits.isEmpty()) EmptyState(tr("لا توجد طلبات إيداع بعد"))
+        visibleDeposits.forEach { d ->
             DepositRow(
                 deposit = d,
                 selected = d.id == vm.selectedDeposit,
                 onSelect = { vm.selectDeposit(d.id) }
             )
+        }
+        if (cleanDeposits.size > 1) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = { showAllDeposits = !showAllDeposits },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (showAllDeposits) tr("إخفاء الطلبات السابقة")
+                    else trf("عرض الطلبات السابقة ({0})", cleanDeposits.size - 1),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -514,7 +529,7 @@ private fun ShamSection(
     var liveCfg by remember { mutableStateOf(com.numberone.numberone.data.remote.SupabaseWalletDataSource.LiveDepositConfig()) }
     LaunchedEffect(Unit) { liveCfg = com.numberone.numberone.data.remote.SupabaseWalletDataSource().getLiveDepositConfig() }
     val awaitingReceipt = vm.shamTopUps.filter { isOpenStatus(it.status) && it.receiptPath == null }
-    val active = awaitingReceipt.firstOrNull { it.id == vm.shamSelected } ?: awaitingReceipt.firstOrNull()
+    val active = awaitingReceipt.firstOrNull { it.id == vm.shamSelected }
 
     NOCard {
         DepositProgress(current = if (active == null) 1 else 2)
@@ -565,18 +580,38 @@ private fun ShamSection(
             onConfirm = onConfirmReceipt,
             onRemove = onRemoveReceipt
         )
+        androidx.compose.material3.OutlinedButton(
+            onClick = { onRemoveReceipt(); vm.selectSham("") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(tr("إغلاق هذا الطلب"), color = com.numberone.numberone.core.components.dangerColor(), fontWeight = FontWeight.Bold)
+        }
     }
 
+    var showAllSham by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val visibleSham = if (showAllSham) vm.shamTopUps else vm.shamTopUps.take(1)
     NOCard {
         SectionTitle(tr("طلبات شام كاش"), tr("تابع حالة كل طلب من هنا"))
         if (vm.shamTopUps.isEmpty()) EmptyState(tr("لا توجد طلبات شام كاش بعد"))
-        vm.shamTopUps.forEach { t ->
+        visibleSham.forEach { t ->
             ShamRow(
                 topUp = t,
                 isActive = t.id == active?.id,
                 canSwitch = active != null && t.id != active.id && isOpenStatus(t.status) && t.receiptPath == null,
                 onSwitch = { vm.selectSham(t.id) }
             )
+        }
+        if (vm.shamTopUps.size > 1) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = { showAllSham = !showAllSham },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (showAllSham) tr("إخفاء الطلبات السابقة")
+                    else trf("عرض الطلبات السابقة ({0})", vm.shamTopUps.size - 1),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

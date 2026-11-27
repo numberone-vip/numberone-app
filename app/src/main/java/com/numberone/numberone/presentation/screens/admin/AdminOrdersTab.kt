@@ -130,7 +130,7 @@ internal fun LazyListScope.orderItems(
             value = query,
             onValueChange = onQuery,
             singleLine = true,
-            placeholder = { Text(tr("رقم الطلب أو البريد أو الهاتف…")) },
+            placeholder = { Text(tr("رقم الطلب أو البريد أو ID العميل…")) },
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
         )
@@ -288,6 +288,7 @@ private fun OrderReviewCard(
             )
         }
         order.phoneNumber?.takeIf { it.isNotBlank() }?.let { CopyField(label = tr("الرقم المُسنَد"), value = it) }
+        CopyField(label = tr("معرّف العميل (ID)"), value = order.userId)
         CopyField(label = tr("معرّف الطلب"), value = order.id)
         order.transactionRef?.takeIf { it.isNotBlank() }?.let { CopyField(label = tr("رقم المعاملة"), value = it) }
         order.rejectionReason?.takeIf { it.isNotBlank() }?.let {
@@ -501,12 +502,15 @@ internal fun AssignSubscriptionDialog(
                     textStyle = ltrTextStyle(),
                     modifier = Modifier.fillMaxWidth()
                 )
-                AccessFields(
-                    code = code,
-                    onCode = { code = it; formError = null },
-                    expiry = expiry,
-                    onExpiry = { expiry = it; expiryError = null },
-                    expiryError = expiryError
+                OutlinedTextField(
+                    value = expiry,
+                    onValueChange = { expiry = it; expiryError = null; formError = null },
+                    label = { Text(tr("تاريخ الانتهاء (yyyy-MM-dd)")) },
+                    singleLine = true,
+                    isError = expiryError != null,
+                    supportingText = { expiryError?.let { Text(it) } },
+                    textStyle = ltrTextStyle(),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 formError?.let { Text(it, color = dangerColor(), style = MaterialTheme.typography.bodySmall) }
             }

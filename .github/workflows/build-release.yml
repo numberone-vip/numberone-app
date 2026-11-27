@@ -39,3 +39,14 @@ jobs:
         with:
           name: NumberOne-Release-APK
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Publish APK to GitHub Pages
+        if: github.actor != 'github-actions[bot]'
+        run: |
+          mkdir -p docs
+          cp app/build/outputs/apk/release/app-release.apk docs/NumberOne.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@://github.com"
+          git add docs/NumberOne.apk
+          git diff --cached --quiet || git commit -m "chore: publish updated NumberOne.apk [skip ci]"
+          git push
