@@ -20,7 +20,7 @@ fun buildReferralShareMessage(code: String): String =
     "🎁 هدية خاصة لك في تطبيق Number One للأرقام الافتراضية والخاصة VIP!\n\n" +
     "✨ احصل على رقمك الفوري أو الخاص لتفعيل واتساب وتيليجرام وفيسبوك بأعلى جودة وأسرع وصول للأكواد.\n\n" +
     "🔑 استخدم كود الدعوة الخاص بي عند التسجيل:\n👉 $code\n\n" +
-    "📲 رابط تحميل التطبيق الرسمي:\nhttps://numberone-vip.github.io/numberone-app/?ref=$code\n\n" +
+    "📲 رابط تحميل التطبيق الرسمي:\nhttps://numberone-vip.aclclouds.online/?ref=$code\n\n" +
     "افتح الرابط وحمّل التطبيق، ثم أدخل الكود في قسم الإحالات والمكافآت! 🚀"
 
 @Composable
