@@ -275,11 +275,11 @@ private fun AdminSendNotificationCard(vm: AdminViewModel) {
     var selectedUser by remember { mutableStateOf<AdminUser?>(null) }
     var title by remember { mutableStateOf("") }
     var body by remember { mutableStateOf("") }
-    NOCard {
-        SectionTitle(tr("📢 إرسال إشعار للعملاء"), tr("أرسل تنبيهاً فورياً لجميع العملاء أو لعميل محدد"))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            FilterChip(selected = sendAll, onClick = { sendAll = true }, label = { Text(tr("جميع العملاء")) })
-            FilterChip(selected = !sendAll, onClick = { sendAll = false }, label = { Text(tr("عميل محدد")) })
+    com.numberone.numberone.core.components.NOCard {
+        com.numberone.numberone.core.components.SectionTitle(tr("📢 إرسال إشعار للعملاء"), tr("أرسل تنبيهاً فورياً لجميع العملاء أو لعميل محدد"))
+        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            androidx.compose.material3.FilterChip(selected = sendAll, onClick = { sendAll = true }, label = { Text(tr("جميع العملاء")) })
+            androidx.compose.material3.FilterChip(selected = !sendAll, onClick = { sendAll = false }, label = { Text(tr("عميل محدد")) })
         }
         if (!sendAll) {
             PickerField(
@@ -291,9 +291,9 @@ private fun AdminSendNotificationCard(vm: AdminViewModel) {
                 placeholder = tr("اختر عميلاً")
             )
         }
-        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(tr("عنوان الإشعار")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = body, onValueChange = { body = it }, label = { Text(tr("نص الرسالة")) }, modifier = Modifier.fillMaxWidth())
-        NOButton(
+        androidx.compose.material3.OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(tr("عنوان الإشعار")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        androidx.compose.material3.OutlinedTextField(value = body, onValueChange = { body = it }, label = { Text(tr("نص الرسالة")) }, modifier = Modifier.fillMaxWidth())
+        com.numberone.numberone.core.components.NOButton(
             text = if (sendAll) tr("إرسال لجميع العملاء") else tr("إرسال للعميل المحدد"),
             enabled = title.isNotBlank() && body.isNotBlank() && (sendAll || selectedUser != null),
             onClick = {
