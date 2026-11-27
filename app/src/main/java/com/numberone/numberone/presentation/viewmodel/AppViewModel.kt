@@ -191,15 +191,16 @@ class AppViewModel : ViewModel() {
 
     fun buy(serviceId: String, months: Int = 1) {
         run {
-            val requestId = walletRequestIds.getOrPut(serviceId) { java.util.UUID.randomUUID().toString() }
+            val reqKey = "$serviceId:$months"
+            val requestId = walletRequestIds.getOrPut(reqKey) { java.util.UUID.randomUUID().toString() }
             val result = try {
                 AppContainer.walletRepository.purchaseServiceWithWalletMonths(serviceId, requestId, months).getOrThrow()
             } catch (e: Exception) {
                 // Insufficient balance is a final outcome for this attempt: the next try is a new purchase.
-                if (ErrorMapper.classify(e) == AppError.InsufficientBalance) walletRequestIds.remove(serviceId)
+                if (ErrorMapper.classify(e) == AppError.InsufficientBalance) walletRequestIds.remove(reqKey)
                 throw e
             }
-            walletRequestIds.remove(serviceId)
+            walletRequestIds.remove(reqKey)
             message = trf("تم إنشاء الطلب {0} وخُصم المبلغ من محفظتك بنجاح", result.orderId)
             wallet = AppContainer.walletRepository.getWallet().getOrThrow()
             transactions = AppContainer.walletRepository.getTransactions().getOrThrow()

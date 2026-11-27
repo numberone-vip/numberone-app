@@ -196,6 +196,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("verify-binance-deposit error", error);
-    return reply({ error: error instanceof Error ? error.message : "Unexpected server error" }, 500);
+    return reply({ error: "تعذّر التحقق من الإيداع مؤقتاً، يرجى المحاولة لاحقاً." }, 500);
   }
 });

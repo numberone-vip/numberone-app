@@ -449,7 +449,8 @@ Deno.serve(async (request) => {
       if (!activation) throw new HttpError("Activation not found", 404);
       const providerOrder = await providerRequest(`user/cancel/${encodeURIComponent(String(activation.provider_activation_id))}`) as ProviderOrder;
       const status = String(providerOrder.status ?? "").toUpperCase();
-      if (status === "CANCELED" || status === "CANCELLED") {
+      const hasSms = Array.isArray(providerOrder.sms) && providerOrder.sms.length > 0;
+      if ((status === "CANCELED" || status === "CANCELLED") && !hasSms) {
         await rpc(admin, "virtual_numbers_refund_wallet", {
           p_user_id: user.id,
           p_request_id: activation.request_id,
