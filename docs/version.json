@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 8,
-  "latestVersionName": "1.2.7",
+  "latestVersionCode": 9,
+  "latestVersionName": "1.2.8",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.2.7: تعزيز حماية عمليات الشراء والاسترداد، دعم باقات 12 شهراً بخصم 25%، وتحسينات الأمان.",
-  "releaseNotesAr": "تحديث v1.2.7: تعزيز حماية عمليات الشراء والاسترداد، دعم باقات 12 شهراً بخصم 25%، وتحسينات الأمان."
+  "notesAr": "تحديث v1.2.8: حماية مضاعفة لتعديل الرصيد عند انقطاع الشبكة، وتنبيه فوري أثناء التحميل.",
+  "releaseNotesAr": "تحديث v1.2.8: حماية مضاعفة لتعديل الرصيد عند انقطاع الشبكة، وتنبيه فوري أثناء التحميل."
 }

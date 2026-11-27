@@ -179,8 +179,15 @@ class AdminViewModel(
 
     // ---- Users & wallets -----------------------------------------------------
 
+    private val pendingAdjustIds = mutableMapOf<String, String>()
+
     fun adjustBalance(userId: String, amount: Double, note: String, requestId: String) = run {
-        val newBalance = adminRepo.adjustWalletBalance(userId, amount, note, requestId).getOrThrow()
+        val adjKey = "$userId:$amount:$note"
+        val effectiveRequestId = pendingAdjustIds.getOrPut(adjKey) {
+            requestId.ifBlank { java.util.UUID.randomUUID().toString() }
+        }
+        val newBalance = adminRepo.adjustWalletBalance(userId, amount, note, effectiveRequestId).getOrThrow()
+        pendingAdjustIds.remove(adjKey)
         // The write has succeeded. Set the success message before refreshing; reload() never throws.
         message = trf("تم تحديث الرصيد. الرصيد الجديد: {0} USDT", newBalance)
         reload()

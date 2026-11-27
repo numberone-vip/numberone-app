@@ -74,7 +74,7 @@ class AppViewModel : ViewModel() {
     fun selectDeposit(v: String) { selectedDeposit = v }
 
     private fun run(task: suspend () -> Unit) {
-        if (loading) return
+        if (loading) { message = tr("جاري تنفيذ عملية حالياً، انتظر لحظة…"); return }
         viewModelScope.launch {
             loading = true; error = null; message = null
             try {
