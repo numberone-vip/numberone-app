@@ -1,7 +1,8 @@
 {
-  "latestVersionCode": 6,
-  "latestVersionName": "1.2.5",
+  "latestVersionCode": 7,
+  "latestVersionName": "1.2.6",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "releaseNotesAr": "تحديث v1.2.5: خصم 25% على الاشتراك السنوي، تصميم بطاقات VIP المطور، وإصلاح روابط الدعم."
+  "notesAr": "تحديث v1.2.6: خصم 25% على الاشتراك السنوي، بطاقات VIP مطورة، وتحسينات الأمان والمشاركة.",
+  "releaseNotesAr": "تحديث v1.2.6: خصم 25% على الاشتراك السنوي، بطاقات VIP مطورة، وتحسينات الأمان والمشاركة."
 }
