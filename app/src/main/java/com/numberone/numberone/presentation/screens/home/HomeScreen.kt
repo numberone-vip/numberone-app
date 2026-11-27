@@ -513,7 +513,7 @@ private fun ActiveNumberCard(number: ActiveNumber, userEmail: String? = null, on
                             onClick = {
                                 askCodeOpen = false
                                 val msg = "طلب كود تحقق جديد (VIP)\nالرقم: ${number.phone}\nالتطبيق: $appName\nالحساب: ${userEmail ?: "-"}"
-                                val uri = android.net.Uri.parse("https://t.me" + android.net.Uri.encode(msg))
+                                val uri = android.net.Uri.parse("https://t.me/NumbersStore_Sy?text=" + android.net.Uri.encode(msg))
                                 runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri)) }
                             },
                             modifier = Modifier.fillMaxWidth()

@@ -54,7 +54,7 @@ fun SupportScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(14.dp))
             Button(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me"))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/NumbersStore_Sy"))
                     runCatching { context.startActivity(intent) }
                 },
                 modifier = Modifier
@@ -76,7 +76,7 @@ fun SupportScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             OutlinedButton(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me"))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=13343908826&text=" + Uri.encode(tr("مرحباً دعم Number One"))))
                     runCatching { context.startActivity(intent) }
                 },
                 modifier = Modifier
