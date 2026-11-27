@@ -481,7 +481,7 @@ internal fun AssignSubscriptionDialog(
                     label = tr("المستخدم"),
                     selected = user,
                     options = users,
-                    itemLabel = { it.email ?: it.userId },
+                    itemLabel = { listOfNotNull(it.email?.takeIf { e -> e.isNotBlank() }, it.userId).joinToString(" • ") },
                     onSelect = { user = it; formError = null },
                     placeholder = tr("اختر مستخدماً"),
                     enabled = preselectedUser == null
