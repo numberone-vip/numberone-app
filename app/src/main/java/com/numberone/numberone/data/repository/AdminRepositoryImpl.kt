@@ -129,18 +129,19 @@ class AdminRepositoryImpl(
         rows<Order>("admin_list_orders", rpc.rpcRaw("admin_list_orders"))
     }
 
-    override suspend fun approveOrder(orderId: String, phoneNumber: String, accessCode: String, expiryDate: String) = runCatching {
-        require(orderId.isNotBlank() && phoneNumber.isNotBlank() && accessCode.isNotBlank()) { tr("جميع الحقول مطلوبة") }
+    override suspend fun approveOrder(orderId: String, phoneNumber: String, expiryDate: String) = runCatching {
+        require(orderId.isNotBlank() && phoneNumber.isNotBlank()) { tr("رقم الهاتف وتاريخ الانتهاء مطلوبان") }
         require(dateRegex.matches(expiryDate.trim())) { tr("صيغة التاريخ yyyy-MM-dd") }
         java.time.LocalDate.parse(expiryDate.trim())
-        rpc.rpcRaw(
+        val raw = rpc.rpcRaw(
             "admin_approve_order",
             buildJsonObject {
-                put("p_order_id", orderId); put("p_phone_number", phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim())
-                put("p_access_code", accessCode.trim()); put("p_expiry_date", expiryDate.trim())
+                put("p_order_id", orderId.trim())
+                put("p_phone_number", phoneNumber.replace(Regex("[\\s\\-()]+"), "").trim())
+                put("p_expiry_date", expiryDate.trim())
             }
         )
-        Unit
+        raw.trim().removePrefix("\"").removeSuffix("\"")
     }
 
     override suspend fun rejectOrder(orderId: String, reason: String) = runCatching {

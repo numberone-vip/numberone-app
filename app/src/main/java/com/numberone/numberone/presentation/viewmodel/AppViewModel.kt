@@ -249,6 +249,20 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    fun loadSubscriptionById(subscriptionId: String) {
+        val cleanId = subscriptionId.trim()
+        if (cleanId.isBlank()) { error = tr("أدخل معرّف الاشتراك (UUID)"); return }
+        run {
+            val sub = AppContainer.subscriptionRepository.getSubscriptionById(cleanId)
+            if (sub == null) {
+                message = tr("لم يتم العثور على اشتراك بهذا المعرّف")
+            } else {
+                subscriptions = listOf(sub) + subscriptions.filterNot { it.id == sub.id || it.phoneNumber == sub.phoneNumber }
+                message = tr("تم تحديث بيانات الاشتراك بنجاح")
+            }
+        }
+    }
+
     fun access() {
         val code = accessCode.trim()
         if (code.isBlank()) { error = tr("أدخل رمز الوصول"); return }
