@@ -40,6 +40,7 @@ interface AdminRepository {
     suspend fun assignSubscription(userId: String, serviceId: String, phoneNumber: String, accessCode: String, expiryDate: String): Result<Unit>
     /** Rotates the access code and/or sets a new expiry. Blank arguments are left unchanged. */
     suspend fun sendSubscriptionSms(subscriptionId: String, sender: String, body: String): Result<Unit>
+    suspend fun approveDepositRequest(requestId: String, note: String = ""): Result<Unit>
     suspend fun sendAdminNotification(userIds: List<String>, title: String, body: String): Result<Int>
     suspend fun resetSubscriptionAccess(subscriptionId: String, accessCode: String, expiryDate: String): Result<Unit>
 }

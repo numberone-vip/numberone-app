@@ -192,6 +192,11 @@ class AdminViewModel(
         reload()
     }
 
+    fun approveDeposit(id: String, note: String = "") = run {
+        adminRepo.approveDepositRequest(id, note).getOrThrow()
+        message = tr("تم اعتماد الإيداع يدوياً وإضافة الرصيد")
+        reload()
+    }
     fun sendNotification(targetUserId: String?, title: String, body: String) = run {
         val targets = if (targetUserId.isNullOrBlank()) users.map { it.userId } else listOf(targetUserId)
         val sent = adminRepo.sendAdminNotification(targets, title, body).getOrThrow()
