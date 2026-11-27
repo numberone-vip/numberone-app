@@ -268,3 +268,38 @@ fun AdminScreen(onBack: () -> Unit) {
         ReceiptViewerDialog(url = url, onDismiss = { vm.closeReceipt() })
     }
 }
+
+@Composable
+private fun AdminSendNotificationCard(vm: AdminViewModel) {
+    var sendAll by remember { mutableStateOf(true) }
+    var selectedUser by remember { mutableStateOf<AdminUser?>(null) }
+    var title by remember { mutableStateOf("") }
+    var body by remember { mutableStateOf("") }
+    NOCard {
+        SectionTitle(tr("📢 إرسال إشعار للعملاء"), tr("أرسل تنبيهاً فورياً لجميع العملاء أو لعميل محدد"))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            FilterChip(selected = sendAll, onClick = { sendAll = true }, label = { Text(tr("جميع العملاء")) })
+            FilterChip(selected = !sendAll, onClick = { sendAll = false }, label = { Text(tr("عميل محدد")) })
+        }
+        if (!sendAll) {
+            PickerField(
+                label = tr("اختر العميل"),
+                selected = selectedUser,
+                options = vm.users,
+                itemLabel = { (it.email ?: it.userId) + " • " + it.userId.take(8) },
+                onSelect = { selectedUser = it },
+                placeholder = tr("اختر عميلاً")
+            )
+        }
+        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(tr("عنوان الإشعار")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = body, onValueChange = { body = it }, label = { Text(tr("نص الرسالة")) }, modifier = Modifier.fillMaxWidth())
+        NOButton(
+            text = if (sendAll) tr("إرسال لجميع العملاء") else tr("إرسال للعميل المحدد"),
+            enabled = title.isNotBlank() && body.isNotBlank() && (sendAll || selectedUser != null),
+            onClick = {
+                vm.sendNotification(if (sendAll) null else selectedUser?.userId, title, body)
+                title = ""; body = ""
+            }
+        )
+    }
+}

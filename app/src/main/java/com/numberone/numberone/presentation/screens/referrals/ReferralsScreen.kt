@@ -33,7 +33,7 @@ fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
         FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
         NOCard {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                IconBadge(Icons.Filled.WorkspacePremium, size = 54.dp)
+                IconBadge(Icons.Filled.Star, size = 54.dp)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(tr("👑 برنامج مكافآت Number One VIP"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
                     Text(tr("ادعُ أصدقاءك للحصول على رصيد مكافآت إضافي وخصومات حصرية على الأرقام الفورية والخاصة."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

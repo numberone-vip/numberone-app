@@ -827,7 +827,7 @@ private fun VipSpotlightBanner(onPrivate: () -> Unit, onInstant: () -> Unit, onR
         tr("أكثر من 1,340 تطبيقاً ودولة • استرداد تلقائي خلال 15 دقيقة"),
         tr("شارك كود الدعوة واحصل على مكافآت وخصومات حصرية")
     )
-    val icons = listOf(Icons.Filled.WorkspacePremium, Icons.Filled.Bolt, Icons.Filled.CardGiftcard)
+    val icons = listOf(Icons.Filled.Star, Icons.Filled.Bolt, Icons.Filled.CardGiftcard)
     val actions = listOf(onPrivate, onInstant, onReferrals)
 
     Surface(
