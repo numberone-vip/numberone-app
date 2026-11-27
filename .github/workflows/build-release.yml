@@ -50,6 +50,6 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk docs/NumberOne.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@://github.com"
-          git add docs/NumberOne.apk
+          git add -f docs/NumberOne.apk
           git diff --cached --quiet || git commit -m "chore: publish updated NumberOne.apk [skip ci]"
-          git push
+          git pull --rebase && git push
