@@ -42,13 +42,13 @@ object AppAlertMonitor {
         runCatching {
             val latest = AppContainer.virtualNumberRepository.latestActivation().getOrNull()
             if (latest != null && !latest.smsCode.isNullOrBlank()) {
-                val sig = "sms_${latest.id}_${latest.smsCode}"
+                val sig = "sms_${latest.activationId}_${latest.smsCode}"
                 if (isNew(appCtx, sig)) {
                     SmsNotifications.show(
                         context = appCtx,
-                        id = SmsNotifications.notifyId(latest.id),
+                        id = SmsNotifications.notifyId(latest.activationId),
                         title = tr("وصل رمز تحقق SMS جديد"),
-                        body = trf("الرقم {0} • افتح التطبيق لقراءة الرمز.", latest.phoneNumber)
+                        body = trf("الرقم {0} • افتح التطبيق لقراءة الرمز.", latest.phone)
                     )
                 }
             }

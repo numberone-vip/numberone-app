@@ -288,7 +288,7 @@ private fun OrderReviewCard(
             )
         }
         order.phoneNumber?.takeIf { it.isNotBlank() }?.let { CopyField(label = tr("الرقم المُسنَد"), value = it) }
-        CopyField(label = tr("معرّف العميل (ID)"), value = order.userId)
+        CopyField(label = tr("معرّف العميل (ID)"), value = order.userId.orEmpty())
         CopyField(label = tr("معرّف الطلب"), value = order.id)
         order.transactionRef?.takeIf { it.isNotBlank() }?.let { CopyField(label = tr("رقم المعاملة"), value = it) }
         order.rejectionReason?.takeIf { it.isNotBlank() }?.let {
