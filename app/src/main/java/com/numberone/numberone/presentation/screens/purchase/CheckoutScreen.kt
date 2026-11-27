@@ -86,8 +86,7 @@ fun CheckoutScreen(
     val stockColor = if (inStock) successColor() else dangerColor()
     var fallbackMonths by remember(service.id) { mutableStateOf(1) }
     val activeMonths = if (options.size > 1) 1 else fallbackMonths
-    val rawAnnual = selected.price * activeMonths
-    val price = if (activeMonths >= 12) kotlin.math.round(rawAnnual * 0.75 * 100.0) / 100.0 else rawAnnual
+    val price = selected.price
     val priceText = formatAmount(price)
     val hasFunds = walletBalance == null || walletBalance >= price
     val walletPurchaseEnabled = enabled && inStock && hasFunds
@@ -160,7 +159,7 @@ fun CheckoutScreen(
             }
         }
 
-        Text(tr("اختر مدة الاشتراك:"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        if (false) { Text(tr("اختر مدة الاشتراك:"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(1 to tr("اشتراك شهري"), 12 to tr("اشتراك سنوي")).forEach { (m, lbl) ->
                 val rawP = selected.price * m
@@ -194,7 +193,7 @@ fun CheckoutScreen(
                     }
                 }
             }
-        }
+        } }
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(

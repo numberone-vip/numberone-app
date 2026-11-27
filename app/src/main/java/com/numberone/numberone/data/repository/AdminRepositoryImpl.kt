@@ -208,7 +208,7 @@ class AdminRepositoryImpl(
         rpc.rpcRaw(
             "admin_upsert_service",
             buildJsonObject {
-                draft.id?.let { put("p_id", it.trim()) }
+                put("p_id", draft.id?.trim()?.let { kotlinx.serialization.json.JsonPrimitive(it) } ?: kotlinx.serialization.json.JsonNull)
                 put("p_name", draft.name.trim())
                 // Live RPC derives the services.country column from p_country_code.
                 // It has no p_country parameter.

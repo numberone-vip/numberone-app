@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 10,
-  "latestVersionName": "1.2.9",
+  "latestVersionCode": 11,
+  "latestVersionName": "1.3.0",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.2.9: دعم الفاصلة العشرية العربية، وتحديث قائمة العملاء تلقائياً عند البث.",
-  "releaseNotesAr": "تحديث v1.2.9: دعم الفاصلة العشرية العربية، وتحديث قائمة العملاء تلقائياً عند البث."
+  "notesAr": "تحديث v1.3.0: تطابق الأسعار السنوية مع الخادم 100% وإصلاح إنشاء الخدمات الجديدة في الإدارة.",
+  "releaseNotesAr": "تحديث v1.3.0: تطابق الأسعار السنوية مع الخادم 100% وإصلاح إنشاء الخدمات الجديدة في الإدارة."
 }
