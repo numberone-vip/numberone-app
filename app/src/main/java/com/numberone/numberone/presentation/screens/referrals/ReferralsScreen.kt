@@ -1,5 +1,6 @@
 package com.numberone.numberone.presentation.screens.referrals
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,42 +17,62 @@ import com.numberone.numberone.core.components.*
 import com.numberone.numberone.core.localization.tr
 import com.numberone.numberone.presentation.viewmodel.EngagementViewModel
 
+fun buildReferralShareMessage(code: String): String =
+    "🎁 هدية خاصة لك في تطبيق Number One للأرقام الافتراضية والخاصة VIP!\n\n" +
+    "✨ احصل على رقمك الفوري أو الخاص لتفعيل واتساب وتيليجرام وفيسبوك بأعلى جودة وأسرع وصول للأكواد.\n\n" +
+    "🔑 استخدم كود الدعوة الخاص بي عند التسجيل:\n👉 $code\n\n" +
+    "📲 رابط تحميل التطبيق مباشرة:\nhttps://github.com\n\n" +
+    "افتح التطبيق ← الإحالات والمكافآت ← أدخل الكود لتحصل على مكافأتك فوراً! 🚀"
+
 @Composable
 fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val ltrStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr)
     var inputCode by remember { mutableStateOf("") }
     LaunchedEffect(Unit) { vm.clearFeedback(); vm.loadMyReferralCode() }
-    NOScaffold(title = tr("نظام الإحالات"), onBack = onBack) {
+    NOScaffold(title = tr("الإحالات والمكافآت"), onBack = onBack) {
         FeedbackBanner(loading = vm.loading, error = vm.error, message = vm.message)
         NOCard {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                IconBadge(Icons.Filled.CardGiftcard, size = 44.dp)
+                IconBadge(Icons.Filled.CardGiftcard, size = 46.dp)
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(tr("كود الإحالة الخاص بك"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    Text(tr("شارك كودك مع أصدقائك للحصول على مكافآت الإحالة."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(tr("🎁 شارك كودك واربح مكافآت!"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(tr("كل صديق يسجّل بكودك يمنحك فرصة الحصول على مكافآت حصرية ورصيد إضافي."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (vm.myReferralCode.isNotBlank()) {
-                CopyField(label = tr("كود الدعوة"), value = vm.myReferralCode)
+                CopyField(label = tr("كود الدعوة الخاص بك • اضغط للنسخ"), value = vm.myReferralCode)
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, buildReferralShareMessage(vm.myReferralCode)) }
+                        runCatching { context.startActivity(Intent.createChooser(intent, tr("مشاركة كود الدعوة"))) }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(tr("مشاركة كود الدعوة الآن"), fontWeight = FontWeight.Black)
+                }
                 OutlinedButton(
                     onClick = {
-                        val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, "سجّل في تطبيق Number One واستخدم كود الإحالة الخاص بي: ${vm.myReferralCode}") }
-                        runCatching { context.startActivity(Intent.createChooser(intent, tr("مشاركة كود الإحالة"))) }
+                        val msg = Uri.encode(buildReferralShareMessage(vm.myReferralCode))
+                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me"))) }
                     },
                     modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(14.dp)
                 ) {
-                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(tr("مشاركة الكود"), fontWeight = FontWeight.Bold)
+                    Icon(Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(tr("مشاركة مباشرة عبر واتساب"), fontWeight = FontWeight.Bold)
                 }
             }
         }
         NOCard {
-            SectionTitle(tr("هل لديك كود إحالة من صديق؟"), tr("أدخل كود الإحالة لتفعيله على حسابك."))
-            OutlinedTextField(value = inputCode, onValueChange = { inputCode = it.uppercase() }, label = { Text(tr("كود الإحالة")) }, singleLine = true, textStyle = ltrStyle, modifier = Modifier.fillMaxWidth())
+            SectionTitle(tr("هل لديك كود إحالة من صديق؟"), tr("أدخل كود الدعوة هنا لتفعيله على حسابك فوراً."))
+            OutlinedTextField(value = inputCode, onValueChange = { inputCode = it.uppercase() }, label = { Text(tr("أدخل كود الإحالة")) }, singleLine = true, textStyle = ltrStyle, modifier = Modifier.fillMaxWidth())
             Button(onClick = { vm.applyReferralCode(inputCode) }, enabled = inputCode.trim().length >= 3 && !vm.loading, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(tr("تطبيق كود الإحالة"), fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(8.dp))
+                Text(tr("تفعيل كود الإحالة"), fontWeight = FontWeight.Bold)
             }
         }
     }

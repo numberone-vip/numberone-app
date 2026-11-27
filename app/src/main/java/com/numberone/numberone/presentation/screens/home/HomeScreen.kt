@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Share
+import com.numberone.numberone.presentation.screens.referrals.buildReferralShareMessage
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
@@ -335,6 +338,7 @@ private fun DashboardTab(
     LaunchedEffect(Unit) {
         vm.loadDashboard()
         engagementVm?.refreshUnreadCount()
+        engagementVm?.loadMyReferralCode()
         repository.latestActivation().onSuccess { apiActivation = it }
     }
 
@@ -425,7 +429,24 @@ private fun DashboardTab(
                     Modifier.weight(1f).fillMaxHeight()
                 )
             }
-            ActionRow(tr("الإحالات والمكافآت"), tr("شارك كود الدعوة واحصل على مكافآت"), Icons.Filled.CardGiftcard, { onNavigate(AppRoutes.REFERRALS) })
+            Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)), modifier = Modifier.fillMaxWidth()) {
+                val shareCtx = LocalContext.current
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        IconBadge(Icons.Filled.CardGiftcard, size = 40.dp)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(tr("🎁 ادعُ أصدقاءك واربح مكافآت!"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
+                            Text(tr("شارك كود الدعوة ورابط التطبيق مع أصدقائك بضغطة واحدة"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = { val c = engagementVm?.myReferralCode.orEmpty(); if (c.isNotBlank()) { val i = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, buildReferralShareMessage(c)) }; runCatching { shareCtx.startActivity(android.content.Intent.createChooser(i, tr("مشاركة كود الدعوة"))) } } else onNavigate(AppRoutes.REFERRALS) }, modifier = Modifier.weight(1f).height(42.dp), shape = RoundedCornerShape(12.dp)) {
+                            Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(tr("مشاركة الآن"), fontWeight = FontWeight.Bold)
+                        }
+                        OutlinedButton(onClick = { onNavigate(AppRoutes.REFERRALS) }, modifier = Modifier.weight(1f).height(42.dp), shape = RoundedCornerShape(12.dp)) { Text(tr("كودي وإدخال كود"), fontWeight = FontWeight.Bold) }
+                    }
+                }
+            }
             ActionRow(tr("الدعم الفني"), tr("المساعدة وخدمة العملاء"), Icons.Filled.SupportAgent, { onNavigate(AppRoutes.SUPPORT) })
             if (isAdmin) {
                 ActionRow(
