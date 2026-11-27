@@ -72,14 +72,7 @@ class SupabaseWalletDataSource : WalletDataSource {
         val services = rpcJson.decodeFromString<List<Service>>(
             supabase.postgrest.from("services").select().data
         )
-        // A catalog product can have several purchasable price rows. Group only identical
-        // product/country combinations and retain every original row (especially its UUID).
-        return services.groupBy {
-            listOf(it.name.trim().lowercase(), it.country.trim().lowercase(), it.countryCode.trim().lowercase())
-        }.values.map { variants ->
-            val sorted = variants.sortedWith(compareBy<Service> { it.price }.thenBy { it.id })
-            sorted.first().copy(options = sorted)
-        }
+        return services.sortedWith(compareBy<Service> { it.price }.thenBy { it.name.lowercase() })
     }
 
     override suspend fun getMyOrders(userId: String): List<OrderModel> =

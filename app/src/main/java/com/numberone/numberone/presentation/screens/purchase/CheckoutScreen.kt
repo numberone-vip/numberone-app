@@ -160,15 +160,14 @@ fun CheckoutScreen(
 
         Text(tr("اختر مدة الاشتراك:"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (options.size > 1) {
-                options.forEachIndexed { idx, option ->
-                    val lbl = serviceDurationLabel(option.name) ?: when (idx) { 0 -> tr("شهر واحد"); 1 -> tr("3 أشهر"); 2 -> tr("6 أشهر"); else -> tr("سنة كاملة") }
-                    FilterChip(selected = option.id == selected.id, onClick = { selectedId = option.id }, label = { Text("$lbl • ${formatAmount(option.price)} USDT", fontWeight = FontWeight.Bold) }, enabled = true)
-                }
-            } else {
-                listOf(1 to tr("اشتراك شهري"), 12 to tr("اشتراك سنوي")).forEach { (m, lbl) ->
-                    FilterChip(selected = fallbackMonths == m, onClick = { fallbackMonths = m }, label = { Text(lbl, fontWeight = FontWeight.Bold) }, enabled = true)
-                }
+            listOf(1 to tr("اشتراك شهري"), 12 to tr("اشتراك سنوي")).forEach { (m, lbl) ->
+                val chipPrice = formatAmount(selected.price * m)
+                FilterChip(
+                    selected = fallbackMonths == m,
+                    onClick = { fallbackMonths = m },
+                    label = { Text("$lbl • $chipPrice USDT", fontWeight = FontWeight.Bold) },
+                    enabled = true
+                )
             }
         }
 
