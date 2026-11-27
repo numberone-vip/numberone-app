@@ -21,8 +21,8 @@ fun buildReferralShareMessage(code: String): String =
     "🎁 هدية خاصة لك في تطبيق Number One للأرقام الافتراضية والخاصة VIP!\n\n" +
     "✨ احصل على رقمك الفوري أو الخاص لتفعيل واتساب وتيليجرام وفيسبوك بأعلى جودة وأسرع وصول للأكواد.\n\n" +
     "🔑 استخدم كود الدعوة الخاص بي عند التسجيل:\n👉 $code\n\n" +
-    "📲 رابط تحميل التطبيق مباشرة:\nhttps://github.com\n\n" +
-    "افتح التطبيق ← الإحالات والمكافآت ← أدخل الكود لتحصل على مكافأتك فوراً! 🚀"
+    "📲 رابط تحميل التطبيق الرسمي:\nhttps://saamabbas83-arch.github.io/numberone-app/?ref=$code\n\n" +
+    "افتح الرابط وحمّل التطبيق، ثم أدخل الكود في قسم الإحالات والمكافآت! 🚀"
 
 @Composable
 fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
@@ -55,8 +55,15 @@ fun ReferralsScreen(vm: EngagementViewModel, onBack: () -> Unit) {
                 }
                 OutlinedButton(
                     onClick = {
-                        val msg = Uri.encode(buildReferralShareMessage(vm.myReferralCode))
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me"))) }
+                        val text = buildReferralShareMessage(vm.myReferralCode)
+                        val wa = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; setPackage("com.whatsapp"); putExtra(Intent.EXTRA_TEXT, text) }
+                        runCatching { context.startActivity(wa) }.onFailure {
+                            val wab = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; setPackage("com.whatsapp.w4b"); putExtra(Intent.EXTRA_TEXT, text) }
+                            runCatching { context.startActivity(wab) }.onFailure {
+                                val fb = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }
+                                runCatching { context.startActivity(Intent.createChooser(fb, tr("مشاركة كود الدعوة"))) }
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(14.dp)
                 ) {
