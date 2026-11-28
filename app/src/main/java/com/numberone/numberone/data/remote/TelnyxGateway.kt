@@ -36,7 +36,7 @@ import java.util.UUID
 @Serializable data class TelnyxNumberItem(val id: String = "", @SerialName("user_id") val userId: String = "", val email: String? = null, @SerialName("phone_number") val phoneNumber: String = "", val status: String = "", @SerialName("monthly_price") val monthlyPrice: Double = 0.0, @SerialName("expires_at") val expiresAt: String? = null, @SerialName("subscription_id") val subscriptionId: String? = null)
 @Serializable data class TelnyxOffer(val enabled: Boolean = false, @SerialName("monthly_price") val monthlyPrice: Double = 0.0, @SerialName("markup_percent") val markupPercent: Double = 100.0, @SerialName("voice_rate_per_min") val voiceRatePerMin: Double = 0.05, @SerialName("wallet_balance") val walletBalance: Double = 0.0, val numbers: List<TelnyxNumberItem> = emptyList())
 @Serializable data class TelnyxAvailableNumber(@SerialName("phone_number") val phoneNumber: String = "", @SerialName("country_code") val countryCode: String = "US", val region: String = "", @SerialName("provider_cost") val providerCost: Double = 0.0, @SerialName("customer_price") val customerPrice: Double = 0.0, val features: List<String> = emptyList())
-@Serializable data class TelnyxSearchRes(val ok: Boolean = false, @SerialName("markup_percent") val markupPercent: Double = 100.0, val numbers: List<TelnyxAvailableNumber> = emptyList(), val errors: List<String> = emptyList())
+@Serializable data class TelnyxSearchRes(val ok: Boolean = false, @SerialName("markup_percent") val markupPercent: Double = 100.0, val numbers: List<TelnyxAvailableNumber> = emptyList(), val errors: List<String> = emptyList(), @SerialName("unavailable_countries") val unavailableCountries: Map<String, String> = emptyMap())
 @Serializable data class TelnyxOrderResult(val ok: Boolean = false, @SerialName("purchase_id") val purchaseId: String? = null, @SerialName("phone_number") val phoneNumber: String? = null, @SerialName("amount_charged") val amountCharged: Double? = null, val state: String? = null, val error: String? = null)
 @Serializable data class TelnyxSendSmsRes(val ok: Boolean = false, @SerialName("message_id") val messageId: String? = null, val charged: Double? = null, val error: String? = null)
 @Serializable data class TelnyxCallLogItem(val id: String = "", val amount: Double = 0.0, val currency: String = "USDT", val status: String = "", val description: String = "", @SerialName("created_at") val createdAt: String = "")
@@ -55,8 +55,14 @@ object TelnyxClient {
         return if (raw.startsWith("[")) json.decodeFromString<List<TelnyxOffer>>(raw).firstOrNull() ?: TelnyxOffer()
         else json.decodeFromString<TelnyxOffer>(raw)
     }
-    suspend fun searchNumbers(cc: String, limit: Int = 5): TelnyxSearchRes =
-        sb.functions.invoke("telnyx-search-numbers", buildJsonObject { put("country_code", cc); put("limit", limit) }).body()
+    suspend fun searchNumbers(cc: String, limit: Int = 20, areaCode: String = "", contains: String = "", numberType: String = ""): TelnyxSearchRes =
+        sb.functions.invoke("telnyx-search-numbers", buildJsonObject {
+            put("country_code", cc)
+            put("limit", limit)
+            if (areaCode.isNotBlank()) put("area_code", areaCode)
+            if (contains.isNotBlank()) put("contains", contains)
+            if (numberType.isNotBlank()) put("number_type", numberType)
+        }).body()
     suspend fun orderNumber(cc: String, phone: String?, key: String): TelnyxOrderResult =
         sb.functions.invoke("telnyx-order", buildJsonObject {
             put("p_country_code", cc)
@@ -85,13 +91,18 @@ fun countryBadgeCode(cc: String): String = when (cc.uppercase()) {
 }
 
 fun countryArabicTitle(cc: String): String = when (cc.uppercase()) {
-    "US" -> "الولايات المتحدة"; "CA" -> "كندا"; "GB", "UK" -> "المملكة المتحدة"; "AU" -> "أستراليا"; else -> cc
+    "US" -> "الولايات المتحدة"; "CA" -> "كندا"; "GB", "UK" -> "المملكة المتحدة"; "AU" -> "أستراليا"
+    "NL" -> "هولندا"; "SE" -> "السويد"; "FI" -> "فنلندا"; "PL" -> "بولندا"; "BE" -> "بلجيكا"
+    "ES" -> "إسبانيا"; "MX" -> "المكسيك"; "BR" -> "البرازيل"; "ZA" -> "جنوب أفريقيا"; else -> cc
 }
 
 @Composable
 fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) {
     val scope = rememberCoroutineScope()
-    var filter by remember { mutableStateOf("ALL") }
+    var filter by remember { mutableStateOf("US") }
+    var areaCode by remember { mutableStateOf("") }
+    var contains by remember { mutableStateOf("") }
+    var numType by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
     var items by remember { mutableStateOf<List<TelnyxAvailableNumber>>(emptyList()) }
     var errMsg by remember { mutableStateOf<String?>(null) }
@@ -102,18 +113,16 @@ fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) 
     fun load(code: String) {
         scope.launch {
             loading = true; errMsg = null
-            runCatching { TelnyxClient.searchNumbers(code, if (code == "ALL") 4 else 8) }
+            runCatching { TelnyxClient.searchNumbers(code, 20, areaCode.trim(), contains.trim(), numType) }
                 .onSuccess { res ->
                     items = res.numbers
-                    if (res.numbers.isEmpty() && res.errors.isNotEmpty()) errMsg = res.errors.first()
+                    if (res.numbers.isEmpty()) errMsg = res.unavailableCountries[code] ?: res.errors.firstOrNull()
                 }
                 .onFailure { errMsg = ErrorMapper.toUserMessage(it) }
             loading = false
         }
     }
-
-    LaunchedEffect(filter) { load(filter) }
-
+    LaunchedEffect(filter, numType) { load(filter) }
     selected?.let { item ->
         AlertDialog(
             onDismissRequest = { if (!buying) { selected = null; buyErr = null } },
@@ -128,21 +137,15 @@ fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) 
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        if (buying) return@Button
-                        buying = true; buyErr = null
-                        scope.launch {
-                            runCatching { TelnyxClient.orderNumber(item.countryCode, item.phoneNumber, "telnyx-${UUID.randomUUID()}") }
-                                .onSuccess { r ->
-                                    if (r.ok && !r.phoneNumber.isNullOrBlank()) { selected = null; buying = false; onPurchased(r.phoneNumber) }
-                                    else { buyErr = r.error ?: tr("تعذّر إتمام الشراء حالياً"); buying = false }
-                                }
-                                .onFailure { buyErr = ErrorMapper.toUserMessage(it); buying = false }
-                        }
-                    },
-                    enabled = !buying
-                ) { Text(if (buying) tr("جارٍ التفعيل…") else tr("شراء وتفعيل الآن"), fontWeight = FontWeight.Bold) }
+                Button(onClick = {
+                    if (buying) return@Button
+                    buying = true; buyErr = null
+                    scope.launch {
+                        runCatching { TelnyxClient.orderNumber(item.countryCode, item.phoneNumber, "telnyx-${UUID.randomUUID()}") }
+                            .onSuccess { r -> if (r.ok && !r.phoneNumber.isNullOrBlank()) { selected = null; buying = false; onPurchased(r.phoneNumber) } else { buyErr = r.error ?: tr("تعذّر إتمام الشراء حالياً"); buying = false } }
+                            .onFailure { buyErr = ErrorMapper.toUserMessage(it); buying = false }
+                    }
+                }, enabled = !buying) { Text(if (buying) tr("جارٍ التفعيل…") else tr("شراء وتفعيل الآن"), fontWeight = FontWeight.Bold) }
             },
             dismissButton = { TextButton(onClick = { if (!buying) { selected = null; buyErr = null } }) { Text(tr("إلغاء")) } }
         )
@@ -151,23 +154,36 @@ fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
                     IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = tr("رجوع")) }
-                    Text(tr("إضافة رقم جديد"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(tr("إضافة رقم جديد"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { load(filter) }) { Text(tr("تحديث"), fontWeight = FontWeight.Bold) }
                 }
-                val filters = listOf("ALL" to tr("الكل"), "US" to "🇺🇸 USA", "CA" to "🇨🇦 Canada", "GB" to "🇬🇧 UK", "AU" to "🇦🇺 Australia")
-                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val filters = listOf("US" to "🇺🇸 USA", "CA" to "🇨🇦 Canada", "GB" to "🇬🇧 UK", "NL" to "🇳🇱 Netherlands", "SE" to "🇸🇪 Sweden", "FI" to "🇫🇮 Finland", "PL" to "🇵🇱 Poland", "BE" to "🇧🇪 Belgium", "ES" to "🇪🇸 Spain", "MX" to "🇲🇽 Mexico", "BR" to "🇧🇷 Brazil", "ZA" to "🇿🇦 S.Africa", "ALL" to tr("الكل"))
+                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     filters.forEach { (code, label) ->
                         val active = filter == code
                         Surface(onClick = { filter = code }, shape = RoundedCornerShape(12.dp), color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)) {
-                            Text(label, modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (active) NumberOneColors.Obsidian else MaterialTheme.colorScheme.onSurface)
+                            Text(label, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (active) NumberOneColors.Obsidian else MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(value = areaCode, onValueChange = { areaCode = normalizeDigits(it).filter { c -> c.isDigit() }.take(4) }, placeholder = { Text("212 / 305") }, label = { Text(tr("رمز المنطقة")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = contains, onValueChange = { contains = normalizeDigits(it).filter { c -> c.isDigit() }.take(8) }, placeholder = { Text("777 / 2026") }, label = { Text(tr("رقم مميز")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                    Button(onClick = { load(filter) }, shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 14.dp)) { Text(tr("بحث"), fontWeight = FontWeight.Bold) }
+                }
+                if (filter == "US" || filter == "CA") {
+                    Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("" to tr("الكل"), "local" to tr("محلي Local"), "toll_free" to tr("مجاني Toll-Free")).forEach { (tCode, tLabel) ->
+                            FilterChip(selected = numType == tCode, onClick = { numType = tCode }, label = { Text(tLabel) })
                         }
                     }
                 }
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (loading) { repeat(4) { SkeletonBlock(height = 84.dp) } }
                     else if (errMsg != null && items.isEmpty()) { NOCard { Text(errMsg!!, color = dangerColor(), style = MaterialTheme.typography.bodySmall); TextButton(onClick = { load(filter) }) { Text(tr("إعادة المحاولة")) } } }
-                    else if (items.isEmpty()) { NOCard { Text(tr("لا توجد أرقام متاحة حالياً لهذه الدولة، جرّب دولة أخرى."), style = MaterialTheme.typography.bodySmall) } }
+                    else if (items.isEmpty()) { NOCard { Text(tr("لا توجد أرقام مطابقة لبحثك حالياً، جرّب رمز منطقة آخر."), style = MaterialTheme.typography.bodySmall) } }
                     else {
                         items.groupBy { it.countryCode.uppercase() }.forEach { (cc, list) ->
                             Text(tr(countryArabicTitle(cc)).uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)

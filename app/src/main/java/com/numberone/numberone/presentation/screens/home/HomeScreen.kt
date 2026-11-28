@@ -197,7 +197,7 @@ private fun DashboardTab(vm: AppViewModel, userEmail: String?, offer: TelnyxOffe
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     IconBadge(Icons.Filled.Bolt, size = 44.dp)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(tr("أرقام تفعيل فورية (5SIM)"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
+                        Text(tr("أرقام تفعيل فورية"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
                         Text(tr("كود سريع لمرة واحدة • أكثر من 1,340 تطبيقاً ودولة"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

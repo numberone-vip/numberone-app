@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 29,
-  "latestVersionName": "1.5.1",
+  "latestVersionCode": 30,
+  "latestVersionName": "1.5.2",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.5.1: إصلاح استقرار التنقل والمكالمات الصوتية وإظهار لوحة الإدارة في حسابي.",
-  "releaseNotesAr": "تحديث v1.5.1: إصلاح استقرار التنقل والمكالمات الصوتية وإظهار لوحة الإدارة في حسابي."
+  "notesAr": "تحديث v1.5.2: توسيع متجر الأرقام لـ 20 رقماً مع البحث برمز المنطقة والأرقام المميزة وإزالة اسم المزود من الواجهة.",
+  "releaseNotesAr": "تحديث v1.5.2: توسيع متجر الأرقام لـ 20 رقماً مع البحث برمز المنطقة والأرقام المميزة وإزالة اسم المزود من الواجهة."
 }
