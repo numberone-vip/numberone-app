@@ -162,13 +162,14 @@ fun AdminScreen(onBack: () -> Unit) {
                         onReject = { rejectSham = it }
                     )
                     TAB_SERVICES -> {
-                    item(key = "admin-telnyx-card") { com.numberone.numberone.data.remote.TelnyxAdminCard() }
-                    serviceItems(
-                        vm = vm,
-                        onAdd = { serviceEditor = null; serviceEditorOpen = true },
-                        onEdit = { serviceEditor = it; serviceEditorOpen = true },
-                        onDelete = { deleteService = it }
-                    )
+                        item(key = "admin-telnyx-card") { com.numberone.numberone.data.remote.TelnyxAdminCard() }
+                        serviceItems(
+                            vm = vm,
+                            onAdd = { serviceEditor = null; serviceEditorOpen = true },
+                            onEdit = { serviceEditor = it; serviceEditorOpen = true },
+                            onDelete = { deleteService = it }
+                        )
+                    }
                     else -> userItems(
                         vm = vm,
                         query = userQuery,
