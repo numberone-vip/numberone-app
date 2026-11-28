@@ -56,16 +56,44 @@ object TelnyxClient {
             if (cur.enabled && cur.monthlyPrice > 0.0) Text(ltr("${formatAmount(cur.monthlyPrice)} USDT"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         }
         if (cur.enabled && cur.monthlyPrice > 0.0) {
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { listOf("US" to "🇺🇸 أمريكا +1", "GB" to "🇬🇧 بريطانيا +44", "CA" to "🇨🇦 كندا +1", "DE" to "🇩🇪 ألمانيا +49", "FR" to "🇫🇷 فرنسا +33", "NL" to "🇳🇱 هولندا +31", "SE" to "🇸🇪 السويد +46", "AU" to "🇦🇺 أستراليا +61").forEach { (c, l) -> FilterChip(selected = cc == c, onClick = { cc = c }, label = { Text(l) }) } }
-            Button(onClick = {
-                if (busy) return@Button; busy = true; msg = null
-                scope.launch {
-                    runCatching { TelnyxClient.orderNumber(cc, "telnyx-${UUID.randomUUID()}") }
-                        .onSuccess { r -> if (r.ok && !r.phoneNumber.isNullOrBlank()) { msg = trf("تم تفعيل رقمك بنجاح: {0}", ltr(r.phoneNumber)); err = false; reload(); onPurchased() } else { msg = r.error ?: tr("تعذّر إتمام الطلب حالياً"); err = true } }
-                        .onFailure { msg = ErrorMapper.toUserMessage(it); err = true }
-                    busy = false
+            val countries = listOf(
+                Triple("US", "🇺🇸 الولايات المتحدة (+1)", "رقم سحابي خاص • واتساب للأعمال والمنصات"),
+                Triple("GB", "🇬🇧 المملكة المتحدة (+44)", "رقم بريطاني خاص • استقبال SMS فوري"),
+                Triple("CA", "🇨🇦 كندا (+1)", "رقم كندي خاص • تفعيل آلي على مدار الساعة")
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                countries.forEach { (code, title, desc) ->
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        border = BorderStroke(1.dp, if (cc == code) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(tr(title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                Text(tr(desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Button(
+                                onClick = {
+                                    if (busy) return@Button
+                                    cc = code; busy = true; msg = null
+                                    scope.launch {
+                                        runCatching { TelnyxClient.orderNumber(code, "telnyx-${UUID.randomUUID()}") }
+                                            .onSuccess { r -> if (r.ok && !r.phoneNumber.isNullOrBlank()) { msg = trf("تم تفعيل رقمك بنجاح: {0}", ltr(r.phoneNumber)); err = false; reload(); onPurchased() } else { msg = r.error ?: tr("تعذّر إتمام الطلب حالياً"); err = true } }
+                                            .onFailure { msg = ErrorMapper.toUserMessage(it); err = true }
+                                        busy = false
+                                    }
+                                },
+                                enabled = !busy,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(if (busy && cc == code) tr("جارٍ…") else ltr("${formatAmount(cur.monthlyPrice)} USDT"), fontWeight = FontWeight.Black)
+                            }
+                        }
+                    }
                 }
-            }, enabled = !busy, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(if (busy) tr("جارٍ التفعيل…") else trf("شراء فوري ({0} USDT / شهر)", ltr(formatAmount(cur.monthlyPrice))), fontWeight = FontWeight.Bold) }
+            }
         }
         msg?.let { Text(it, color = if (err) dangerColor() else successColor(), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold) }
         if (cur.numbers.isNotEmpty()) {

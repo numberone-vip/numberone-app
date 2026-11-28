@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 21,
-  "latestVersionName": "1.4.0",
+  "latestVersionCode": 22,
+  "latestVersionName": "1.4.1",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.4.0: متجر أرقام الأعمال السحابية الأوتوماتيكية لـ 8 دول عبر API.",
-  "releaseNotesAr": "تحديث v1.4.0: متجر أرقام الأعمال السحابية الأوتوماتيكية لـ 8 دول عبر API."
+  "notesAr": "تحديث v1.4.1: واجهة أرقام الأعمال السحابية الجديدة (Fanytel-style) وإخفاء الباقات اليدوية عن العملاء.",
+  "releaseNotesAr": "تحديث v1.4.1: واجهة أرقام الأعمال السحابية الجديدة (Fanytel-style) وإخفاء الباقات اليدوية عن العملاء."
 }

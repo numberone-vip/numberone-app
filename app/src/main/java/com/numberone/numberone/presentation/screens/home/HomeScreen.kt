@@ -709,7 +709,7 @@ private fun PrivateNumbersTab(vm: AppViewModel, onNavigate: (String) -> Unit = {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            StoreBody(vm)
+            // Cloud Telnyx store only
         }
     }
 }
