@@ -216,7 +216,7 @@ private fun AccountTab(vm: AppViewModel, engagementVm: EngagementViewModel?, use
     val caller = selectedCaller.ifBlank { numbers.firstOrNull()?.phoneNumber.orEmpty() }
     var txDialogOpen by remember { mutableStateOf(false) }
     var adminConfirmed by remember(isAdmin) { mutableStateOf(isAdmin) }
-    LaunchedEffect(Unit) { if (!adminConfirmed) runCatching { com.numberone.numberone.core.di.AppContainer.userRepository.isAdmin().getOrDefault(false) }.onSuccess { if (it) adminConfirmed = true } }
+    LaunchedEffect(Unit) { if (!adminConfirmed) runCatching { SupabaseClientProvider.client.postgrest.rpcDecode<Boolean>("is_admin") }.onSuccess { if (it) adminConfirmed = true } }
 
     if (txDialogOpen) AlertDialog(
         onDismissRequest = { txDialogOpen = false }, title = { Text(tr("سجل المعاملات والفواتير"), fontWeight = FontWeight.Black) },
