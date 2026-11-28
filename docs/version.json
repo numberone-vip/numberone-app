@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 22,
-  "latestVersionName": "1.4.1",
+  "latestVersionCode": 23,
+  "latestVersionName": "1.4.2",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.4.1: واجهة أرقام الأعمال السحابية الجديدة (Fanytel-style) وإخفاء الباقات اليدوية عن العملاء.",
-  "releaseNotesAr": "تحديث v1.4.1: واجهة أرقام الأعمال السحابية الجديدة (Fanytel-style) وإخفاء الباقات اليدوية عن العملاء."
+  "notesAr": "تحديث v1.4.2: إضافة لوحة الاتصال الصوتية المدمجة (Keypad) لأرقام الأعمال السحابية.",
+  "releaseNotesAr": "تحديث v1.4.2: إضافة لوحة الاتصال الصوتية المدمجة (Keypad) لأرقام الأعمال السحابية."
 }

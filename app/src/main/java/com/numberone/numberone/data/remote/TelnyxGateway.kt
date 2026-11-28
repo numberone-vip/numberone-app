@@ -43,6 +43,8 @@ object TelnyxClient {
     var busy by remember { mutableStateOf(false) }
     var msg by remember { mutableStateOf<String?>(null) }
     var err by remember { mutableStateOf(false) }
+    var dialerNum by remember { mutableStateOf<String?>(null) }
+    dialerNum?.let { num -> TelnyxVoiceDialerDialog(callerNumber = num, onDismiss = { dialerNum = null }) }
     fun reload() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { offer = it } } }
     LaunchedEffect(Unit) { reload() }
     val cur = offer ?: return
@@ -105,7 +107,10 @@ object TelnyxClient {
                             Text(ltr(n.phoneNumber), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
                             n.expiresAt?.let { Text(tr("ينتهي: ") + ltr(it.take(10)), style = MaterialTheme.typography.labelSmall) }
                         }
-                        OutlinedButton(onClick = onOpenSms) { Text(tr("صندوق SMS")) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FilledTonalButton(onClick = { dialerNum = n.phoneNumber }) { Text(tr("اتصال")) }
+                            OutlinedButton(onClick = onOpenSms) { Text(tr("SMS")) }
+                        }
                     }
                 }
             }
