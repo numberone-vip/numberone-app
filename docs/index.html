@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Number One — أرقام افتراضية وسحابية فورية</title>
+  <meta property="og:title" content="Number One — متجر الأرقام الافتراضية والسحابية" />
+  <meta property="og:description" content="احصل على أرقام افتراضية وسحابية فورية مع استقبال SMS ومكالمات صوتية." />
+  <meta property="og:image" content="./og-banner.png" />
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#090d16;color:#f8fafc;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+    .card{max-width:440px;width:100%;background:#111827;border:1px solid #1f2937;border-radius:24px;padding:24px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+    img{width:100%;border-radius:16px;margin-bottom:18px;border:1px solid #1f2937}
+    h1{margin:0 0 8px;font-size:26px;font-weight:900}
+    p{margin:0 0 18px;color:#9ca3af;font-size:14px;line-height:1.6}
+    .badge{display:inline-block;background:rgba(16,185,129,.15);color:#34d399;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:16px}
+    .btn{display:block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;text-decoration:none;padding:15px 20px;border-radius:14px;font-weight:800;font-size:16px;box-shadow:0 10px 25px rgba(37,99,235,.4)}
+    .notes{margin-top:16px;padding:12px;background:#0b1120;border-radius:12px;font-size:12px;color:#cbd5e1;text-align:right}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="./og-banner.png" alt="Number One" />
+    <div class="badge" id="ver">الإصدار الرسمي جاهز</div>
+    <h1>تطبيق Number One</h1>
+    <p>منصة متكاملة للأرقام الافتراضية المؤقتة وأرقام الأعمال السحابية (SMS + مكالمات صوتية) بشحن فوري.</p>
+    <a class="btn" id="dl" href="./NumberOne.apk">تحميل التطبيق للأندرويد (APK)</a>
+    <div class="notes" id="notes">جارٍ جلب تفاصيل آخر إصدار…</div>
+  </div>
+  <script>
+    fetch('./version.json?t=' + Date.now()).then(r => r.json()).then(d => {
+      if (d.latestVersionName) document.getElementById('ver').textContent = 'الإصدار ' + d.latestVersionName;
+      if (d.notesAr) document.getElementById('notes').textContent = d.notesAr;
+    }).catch(() => { document.getElementById('notes').style.display = 'none'; });
+  </script>
+</body>
+</html>
