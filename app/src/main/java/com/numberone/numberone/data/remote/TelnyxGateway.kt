@@ -87,3 +87,157 @@ fun countryBadgeCode(cc: String): String = when (cc.uppercase()) {
 fun countryArabicTitle(cc: String): String = when (cc.uppercase()) {
     "US" -> "الولايات المتحدة"; "CA" -> "كندا"; "GB", "UK" -> "المملكة المتحدة"; "AU" -> "أستراليا"; else -> cc
 }
+
+@Composable
+fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) {
+    val scope = rememberCoroutineScope()
+    var filter by remember { mutableStateOf("ALL") }
+    var loading by remember { mutableStateOf(true) }
+    var items by remember { mutableStateOf<List<TelnyxAvailableNumber>>(emptyList()) }
+    var errMsg by remember { mutableStateOf<String?>(null) }
+    var selected by remember { mutableStateOf<TelnyxAvailableNumber?>(null) }
+    var buying by remember { mutableStateOf(false) }
+    var buyErr by remember { mutableStateOf<String?>(null) }
+
+    fun load(code: String) {
+        scope.launch {
+            loading = true; errMsg = null
+            runCatching { TelnyxClient.searchNumbers(code, if (code == "ALL") 4 else 8) }
+                .onSuccess { res ->
+                    items = res.numbers
+                    if (res.numbers.isEmpty() && res.errors.isNotEmpty()) errMsg = res.errors.first()
+                }
+                .onFailure { errMsg = ErrorMapper.toUserMessage(it) }
+            loading = false
+        }
+    }
+
+    LaunchedEffect(filter) { load(filter) }
+
+    selected?.let { item ->
+        AlertDialog(
+            onDismissRequest = { if (!buying) { selected = null; buyErr = null } },
+            title = { Text(tr("تأكيد شراء الرقم السحابي"), fontWeight = FontWeight.Black) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(ltr(item.phoneNumber), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                    Text("${tr(countryArabicTitle(item.countryCode))} ${if (item.region.isNotBlank()) "• ${item.region}" else ""}", style = MaterialTheme.typography.bodySmall)
+                    Text(trf("الاشتراك الشهري: {0} USDT", formatAmount(item.customerPrice)), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text(tr("يشمل استقبال وإرسال SMS ومكالمات صوتية دولية فورية."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    buyErr?.let { Text(it, color = dangerColor(), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold) }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (buying) return@Button
+                        buying = true; buyErr = null
+                        scope.launch {
+                            runCatching { TelnyxClient.orderNumber(item.countryCode, item.phoneNumber, "telnyx-${UUID.randomUUID()}") }
+                                .onSuccess { r ->
+                                    if (r.ok && !r.phoneNumber.isNullOrBlank()) { selected = null; buying = false; onPurchased(r.phoneNumber) }
+                                    else { buyErr = r.error ?: tr("تعذّر إتمام الشراء حالياً"); buying = false }
+                                }
+                                .onFailure { buyErr = ErrorMapper.toUserMessage(it); buying = false }
+                        }
+                    },
+                    enabled = !buying
+                ) { Text(if (buying) tr("جارٍ التفعيل…") else tr("شراء وتفعيل الآن"), fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { if (!buying) { selected = null; buyErr = null } }) { Text(tr("إلغاء")) } }
+        )
+    }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
+                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = tr("رجوع")) }
+                    Text(tr("إضافة رقم جديد"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                }
+                val filters = listOf("ALL" to tr("الكل"), "US" to "🇺🇸 USA", "CA" to "🇨🇦 Canada", "GB" to "🇬🇧 UK", "AU" to "🇦🇺 Australia")
+                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    filters.forEach { (code, label) ->
+                        val active = filter == code
+                        Surface(onClick = { filter = code }, shape = RoundedCornerShape(12.dp), color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)) {
+                            Text(label, modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (active) NumberOneColors.Obsidian else MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (loading) { repeat(4) { SkeletonBlock(height = 84.dp) } }
+                    else if (errMsg != null && items.isEmpty()) { NOCard { Text(errMsg!!, color = dangerColor(), style = MaterialTheme.typography.bodySmall); TextButton(onClick = { load(filter) }) { Text(tr("إعادة المحاولة")) } } }
+                    else if (items.isEmpty()) { NOCard { Text(tr("لا توجد أرقام متاحة حالياً لهذه الدولة، جرّب دولة أخرى."), style = MaterialTheme.typography.bodySmall) } }
+                    else {
+                        items.groupBy { it.countryCode.uppercase() }.forEach { (cc, list) ->
+                            Text(tr(countryArabicTitle(cc)).uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), modifier = Modifier.fillMaxWidth()) {
+                                Column {
+                                    list.forEachIndexed { idx, num ->
+                                        Surface(onClick = { selected = num; buyErr = null }, color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
+                                            Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f), modifier = Modifier.size(40.dp)) {
+                                                    Box(contentAlignment = Alignment.Center) { Text(countryBadgeCode(num.countryCode), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary) }
+                                                }
+                                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                                    Text(ltr(num.phoneNumber), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                                                    val loc = listOfNotNull(num.region.takeIf { it.isNotBlank() }, tr(countryArabicTitle(num.countryCode))).joinToString(" • ")
+                                                    Text(loc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) { Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(13.dp)); Text(tr("مكالمات"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
+                                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) { Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(13.dp)); Text(tr("SMS"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
+                                                    }
+                                                }
+                                                Column(horizontalAlignment = Alignment.End) {
+                                                    Text(ltr("${formatAmount(num.customerPrice)} USDT"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                                                    Text(tr("/شهرياً"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            }
+                                        }
+                                        if (idx < list.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TelnyxAdminCard() {
+    val scope = rememberCoroutineScope()
+    var en by remember { mutableStateOf(false) }
+    var pr by remember { mutableStateOf("") }
+    var rate by remember { mutableStateOf("") }
+    var markup by remember { mutableStateOf("100") }
+    var ov by remember { mutableStateOf<TelnyxAdminOverview?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    var msg by remember { mutableStateOf<String?>(null) }
+    var err by remember { mutableStateOf(false) }
+    fun loadAll() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { en = it.enabled; pr = if (it.monthlyPrice > 0.0) formatAmount(it.monthlyPrice) else "10"; rate = formatAmount(it.voiceRatePerMin); markup = formatAmount(it.markupPercent) }.onFailure { msg = ErrorMapper.toUserMessage(it); err = true }; runCatching { TelnyxClient.adminOverview() }.onSuccess { ov = it } } }
+    LaunchedEffect(Unit) { loadAll() }
+    NOCard {
+        Text(tr("إدارة أرقام الأعمال السحابية (Telnyx)"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) { Text(tr("تفعيل البيع للعملاء"), Modifier.weight(1f)); Switch(checked = en, onCheckedChange = { en = it }) }
+        OutlinedTextField(value = markup, onValueChange = { markup = normalizeDigits(it).replace('،', '.').replace(',', '.'); msg = null }, label = { Text(tr("نسبة الربح المئوية على أسعار المزود (%)")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = rate, onValueChange = { rate = normalizeDigits(it).replace('،', '.').replace(',', '.'); msg = null }, label = { Text(tr("سعر الدقيقة الصوتية (USDT)")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = pr, onValueChange = { pr = normalizeDigits(it).replace('،', '.').replace(',', '.'); msg = null }, label = { Text(tr("السعر الاحتياطي للرقم (USDT)")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+        Button(onClick = {
+            val v = pr.trim().toDoubleOrNull() ?: 10.0; val r = rate.trim().toDoubleOrNull(); val m = markup.trim().toDoubleOrNull()
+            if (!v.isFinite() || v < 0.0 || r == null || !r.isFinite() || r < 0.0 || m == null || !m.isFinite() || m < 0.0) { msg = tr("أدخل قيماً صحيحة"); err = true; return@Button }
+            busy = true; msg = null
+            scope.launch { runCatching { TelnyxClient.adminUpdate(en, v, r, m) }.onSuccess { msg = tr("تم الحفظ بنجاح"); err = false; loadAll() }.onFailure { msg = ErrorMapper.toUserMessage(it); err = true }; busy = false }
+        }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(tr("حفظ إعدادات Telnyx"), fontWeight = FontWeight.Bold) }
+        msg?.let { Text(it, color = if (err) dangerColor() else successColor(), style = MaterialTheme.typography.bodySmall) }
+        ov?.let { o ->
+            HorizontalDivider()
+            val bad = o.purchases.count { it.state == "uncertain" || it.state == "failed" }
+            Text(trf("الأرقام: {0} • المشتريات: {1} • الفواتير: {2}", o.numbers.size, o.purchases.size, o.billingRecords.size), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            if (bad > 0) Text(trf("تنبيه: {0} عملية بحالة uncertain/failed!", bad), color = dangerColor(), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            o.billingRecords.take(5).forEach { b -> Text(ltr("${b.billingReference} • ${b.email ?: b.userId.take(8)} • ${formatAmount(b.amount)} ${b.currency} (${b.status})"), style = MaterialTheme.typography.labelSmall) }
+        }
+    }
+}
