@@ -122,6 +122,7 @@ android {
             force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.21")
 
             force("androidx.annotation:annotation:1.8.1")
+            force("com.android.volley:volley:1.2.1")
 
             eachDependency {
                 if (requested.group == "androidx.lifecycle") {
