@@ -104,7 +104,41 @@ fun CheckoutScreen(
                 Text(service.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 val flag = flagEmoji(service.countryCode)
                 val duration = serviceDurationLabel(service.name) ?: if (activeMonths >= 12) tr("اشتراك سنوي • 365 يوم") else tr("اشتراك شهري • 30 يوم")
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                val cc = selected.countryCode.trim().let { if (it.startsWith("+") || it.isBlank()) it else "+$it" }.ifBlank { "+1" }
+        val formatSample = when {
+            cc.startsWith("+1") -> "+1 (•••) •••-••••"
+            cc.startsWith("+44") -> "+44 •••• ••••••"
+            cc.startsWith("+60") -> "+60 •• •••• ••••"
+            cc.startsWith("+963") -> "+963 ••• ••••••"
+            cc.startsWith("+971") -> "+971 •• ••• ••••"
+            cc.startsWith("+966") -> "+966 •• ••• ••••"
+            else -> "$cc ••• ••• ••••"
+        }
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = tr("صيغة الرقم (تُخصَّص تلقائياً):"),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = ltr(formatSample),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (flag != null) {
                         Text(flag, fontSize = 18.sp)
                     } else {
