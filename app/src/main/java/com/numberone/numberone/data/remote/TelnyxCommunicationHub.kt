@@ -284,3 +284,82 @@ fun CallsTab(
         }
     }
 }
+
+@Composable
+fun MessagesTab(
+    offer: TelnyxOffer?,
+    activity: TelnyxUserActivity?,
+    initialRecipient: String?,
+    onClearInitialRecipient: () -> Unit,
+    onOpenLegacySmsInbox: () -> Unit,
+    onRefreshAll: () -> Unit
+) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var composeOpen by remember(initialRecipient) { mutableStateOf(!initialRecipient.isNullOrBlank()) }
+    var toNumber by remember(initialRecipient) { mutableStateOf(initialRecipient.orEmpty()) }
+    var msgText by remember { mutableStateOf("") }
+    var sending by remember { mutableStateOf(false) }
+    var sendErr by remember { mutableStateOf<String?>(null) }
+    var pickContactOpen by remember { mutableStateOf(false) }
+    var contacts by remember { mutableStateOf<List<PhoneContactItem>>(emptyList()) }
+    val fromNumber = offer?.numbers?.firstOrNull()?.phoneNumber.orEmpty()
+    val messages = activity?.messages.orEmpty()
+
+    if (pickContactOpen) {
+        LaunchedEffect(Unit) { contacts = loadDeviceContacts(ctx) }
+        AlertDialog(onDismissRequest = { pickContactOpen = false }, title = { Text(tr("اختر جهة اتصال"), fontWeight = FontWeight.Black) },
+            text = { Column(modifier = Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (contacts.isEmpty()) Text(tr("لا توجد جهات اتصال متاحة أو لم يُمنح الإذن بعد."), style = MaterialTheme.typography.bodySmall)
+                contacts.forEach { c -> TextButton(onClick = { toNumber = c.phone; pickContactOpen = false }, modifier = Modifier.fillMaxWidth()) { Text("${c.name} (${ltr(c.phone)})", maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+            } }, confirmButton = {}, dismissButton = { TextButton(onClick = { pickContactOpen = false }) { Text(tr("إغلاق")) } })
+    }
+    if (composeOpen) {
+        AlertDialog(onDismissRequest = { if (!sending) { composeOpen = false; onClearInitialRecipient() } }, title = { Text(tr("رسالة جديدة"), fontWeight = FontWeight.Black) },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(value = toNumber, onValueChange = { toNumber = it; sendErr = null }, label = { Text(tr("الرقم مع رمز الدولة مثل +1...")) }, trailingIcon = { IconButton(onClick = { pickContactOpen = true }) { Icon(Icons.Filled.Add, null) } }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = msgText, onValueChange = { msgText = it; sendErr = null }, label = { Text(tr("نص الرسالة…")) }, minLines = 3, modifier = Modifier.fillMaxWidth())
+                sendErr?.let { Text(it, color = dangerColor(), style = MaterialTheme.typography.bodySmall) }
+            } },
+            confirmButton = { Button(onClick = {
+                if (sending) return@Button
+                if (fromNumber.isBlank()) { sendErr = tr("يجب امتلاك رقم أعمال سحابي أولاً لإرسال SMS."); return@Button }
+                if (toNumber.trim().length < 6 || msgText.trim().isEmpty()) { sendErr = tr("أدخل الرقم ونص الرسالة"); return@Button }
+                sending = true; sendErr = null
+                scope.launch {
+                    runCatching { TelnyxClient.sendSms(fromNumber, toNumber.trim(), msgText.trim(), "sms-${UUID.randomUUID()}") }
+                        .onSuccess { r -> if (r.ok) { sending = false; msgText = ""; composeOpen = false; onClearInitialRecipient(); onRefreshAll() } else { sendErr = r.error ?: tr("تعذّر إرسال الرسالة"); sending = false } }
+                        .onFailure { sendErr = ErrorMapper.toUserMessage(it); sending = false }
+                }
+            }, enabled = !sending) { Icon(Icons.AutoMirrored.Filled.Send, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(if (sending) tr("جارٍ الإرسال…") else tr("إرسال"), fontWeight = FontWeight.Bold) } },
+            dismissButton = { TextButton(onClick = { if (!sending) { composeOpen = false; onClearInitialRecipient() } }) { Text(tr("إلغاء")) } })
+    }
+    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text(tr("الرسائل"), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                TextButton(onClick = onOpenLegacySmsInbox) { Text(tr("صندوق الأكواد")) }
+            }
+            if (messages.isEmpty()) Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.AutoMirrored.Filled.Message, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(48.dp))
+                Spacer(Modifier.height(10.dp))
+                Text(tr("لا توجد رسائل بعد"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(tr("تصل هنا الرسائل النصية المرسلة إلى رقمك السحابي."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                messages.forEach { m ->
+                    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(ltr(m.counterparty), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                                Text(if (m.direction == "out") tr("صادرة") else tr("واردة"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            }
+                            Text(m.text, style = MaterialTheme.typography.bodyMedium)
+                            Text(m.createdAt.take(16).replace("T", " "), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+        FloatingActionButton(onClick = { composeOpen = true; sendErr = null }, containerColor = NumberOneColors.GoldMid, contentColor = NumberOneColors.Obsidian, shape = RoundedCornerShape(16.dp), modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp)) { Icon(Icons.Filled.Edit, null) }
+    }
+}
