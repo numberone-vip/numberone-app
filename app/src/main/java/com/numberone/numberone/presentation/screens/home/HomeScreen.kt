@@ -704,7 +704,7 @@ private fun PrivateNumbersTab(vm: AppViewModel, onNavigate: (String) -> Unit = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(tr("الأرقام الخاصة (VIP)"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
                 Text(
-                    tr("أرقام خاصة مخصصة لك من شهر حتى سنة كاملة • تدعم واتساب وفيسبوك وكافة المنصات"),
+                    tr("أرقام أعمال سحابية فورية التفعيل • استقبال SMS مباشر على مدار الساعة"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

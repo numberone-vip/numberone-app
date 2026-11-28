@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 19,
-  "latestVersionName": "1.3.8",
+  "latestVersionCode": 20,
+  "latestVersionName": "1.3.9",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.3.8: إضافة أرقام الأعمال السحابية الفورية (Telnyx) ولوحة التحكم والفوترة.",
-  "releaseNotesAr": "تحديث v1.3.8: إضافة أرقام الأعمال السحابية الفورية (Telnyx) ولوحة التحكم والفوترة."
+  "notesAr": "تحديث v1.3.9: عرض أرقام الأعمال السحابية (Telnyx) حصرياً في قسم الأرقام الخاصة.",
+  "releaseNotesAr": "تحديث v1.3.9: عرض أرقام الأعمال السحابية (Telnyx) حصرياً في قسم الأرقام الخاصة."
 }
