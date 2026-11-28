@@ -79,14 +79,14 @@ import java.util.UUID
     }
 
     LaunchedEffect(client) {
-        client.socketResponseFlow.collect { res ->
+        client.getSocketResponse().collect { res ->
             when (res.status) {
                 SocketStatus.ESTABLISHED -> status = tr("جارٍ تسجيل الدخول للصوت…")
                 SocketStatus.MESSAGERECEIVED -> when (res.data?.method) {
                     SocketMethod.CLIENT_READY.methodName -> dest?.let { d ->
                         dest = null; status = trf("جارٍ الاتصال بـ {0}…", ltr(d))
                         audio.mode = AudioManager.MODE_IN_COMMUNICATION
-                        callId = client.call.newInvite("Number One", callerNumber, d, "").callId
+                        callId = client.call.newInvite("Number One", callerNumber, d, "", mapOf()).callId
                     }
                     SocketMethod.RINGING.methodName -> status = trf("يرن الآن: {0}", ltr(dial))
                     SocketMethod.ANSWER.methodName -> { connected = true; elapsedSec = 0; status = trf("مكالمة نشطة مع {0}", ltr(dial)) }
