@@ -101,7 +101,7 @@ import java.util.UUID
         }
         val live = client.getSocketResponse()
         live.observeForever(obs)
-        onDispose { live.removeObserver(obs); end(); runCatching { client.onDestroy() } }
+        onDispose { live.removeObserver(obs); end(); runCatching { client.disconnectFromSocket() } }
     }
 
     AlertDialog(
