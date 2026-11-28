@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 13,
-  "latestVersionName": "1.3.2",
+  "latestVersionCode": 14,
+  "latestVersionName": "1.3.3",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.3.2: شارة ID الحساب في الشاشة الرئيسية والبحث الشامل بالـ ID في لوحة الإدارة.",
-  "releaseNotesAr": "تحديث v1.3.2: شارة ID الحساب في الشاشة الرئيسية والبحث الشامل بالـ ID في لوحة الإدارة."
+  "notesAr": "تحديث v1.3.3: تفعيل إرسال الإشعارات الجماعية والفردية من لوحة الإدارة عبر الخادم الآمن.",
+  "releaseNotesAr": "تحديث v1.3.3: تفعيل إرسال الإشعارات الجماعية والفردية من لوحة الإدارة عبر الخادم الآمن."
 }

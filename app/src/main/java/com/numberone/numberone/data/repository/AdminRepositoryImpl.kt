@@ -325,9 +325,12 @@ class AdminRepositoryImpl(
         require(t.isNotEmpty() && b.isNotEmpty()) { tr("عنوان الإشعار ونص الرسالة مطلوبان") }
         val targets = userIds.map { it.trim() }.filter { uuidRegex.matches(it) }.distinct()
         require(targets.isNotEmpty()) { tr("لا يوجد مستلمون صالحون") }
-        val rows = targets.map { uid -> AdminNotifInsert(uid, "admin_announcement", t, b, "sent") }
-        com.numberone.numberone.data.remote.SupabaseClientProvider.client.postgrest["notifications"].insert(rows)
-        targets.size
+        val raw = rpc.rpcRaw("admin_send_notification", buildJsonObject {
+            put("p_user_ids", kotlinx.serialization.json.buildJsonArray { targets.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
+            put("p_title", t)
+            put("p_body", b)
+        })
+        raw.trim().toIntOrNull() ?: targets.size
     }
     override suspend fun resetSubscriptionAccess(subscriptionId: String, accessCode: String, expiryDate: String) = runCatching {
         require(subscriptionId.isNotBlank()) { tr("معرّف غير صالح") }
