@@ -30,25 +30,37 @@ import java.util.UUID
 
 object TelnyxClient {
     private val sb = SupabaseClientProvider.client
-    suspend fun getOffer(): TelnyxOffer = sb.postgrest.rpcDecode("get_telnyx_offer", buildJsonObject {})
+    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
+    suspend fun getOffer(): TelnyxOffer {
+        val raw = sb.postgrest.rpc("get_telnyx_offer").data
+        val trimmed = raw.trim()
+        return if (trimmed.startsWith("[")) json.decodeFromString<List<TelnyxOffer>>(trimmed).firstOrNull() ?: TelnyxOffer()
+        else json.decodeFromString<TelnyxOffer>(trimmed)
+    }
     suspend fun orderNumber(cc: String, key: String): TelnyxOrderResult = sb.functions.invoke("telnyx-order", buildJsonObject { put("p_country_code", cc); put("p_idempotency_key", key) }).body()
     suspend fun adminUpdate(en: Boolean, pr: Double, rate: Double) { sb.postgrest.rpcRaw("admin_update_telnyx_config", buildJsonObject { put("p_enabled", en); put("p_monthly_price", pr); put("p_voice_rate_per_min", rate) }) }
-    suspend fun adminOverview(): TelnyxAdminOverview = sb.postgrest.rpcDecode("admin_list_telnyx_overview", buildJsonObject {})
+    suspend fun adminOverview(): TelnyxAdminOverview {
+        val raw = sb.postgrest.rpc("admin_list_telnyx_overview").data
+        return json.decodeFromString<TelnyxAdminOverview>(raw)
+    }
 }
 
 @Composable fun TelnyxCustomerCard(onOpenSms: () -> Unit, onPurchased: () -> Unit) {
     val scope = rememberCoroutineScope()
     var offer by remember { mutableStateOf<TelnyxOffer?>(null) }
+    var loadErr by remember { mutableStateOf<String?>(null) }
     var cc by remember { mutableStateOf("US") }
     var busy by remember { mutableStateOf(false) }
     var msg by remember { mutableStateOf<String?>(null) }
     var err by remember { mutableStateOf(false) }
     var dialerNum by remember { mutableStateOf<String?>(null) }
-    fun reload() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { offer = it } } }
+    fun reload() { scope.launch { loadErr = null; runCatching { TelnyxClient.getOffer() }.onSuccess { offer = it }.onFailure { loadErr = ErrorMapper.toUserMessage(it) } } }
     LaunchedEffect(Unit) { reload() }
-    val cur = offer ?: return
+    if (offer == null && loadErr == null) { NOCard { Text(tr("جارٍ تحميل باقات الأرقام السحابية…"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; return }
+    if (offer == null && loadErr != null) { NOCard { Text(loadErr!!, color = dangerColor(), style = MaterialTheme.typography.bodySmall); TextButton(onClick = { reload() }) { Text(tr("إعادة المحاولة")) } }; return }
+    val cur = offer!!
     dialerNum?.let { num -> TelnyxVoiceDialerDialog(callerNumber = num, voiceRatePerMin = cur.voiceRatePerMin, walletBalance = cur.walletBalance, onDismiss = { dialerNum = null; reload(); onPurchased() }) }
-    if (!cur.enabled && cur.numbers.isEmpty()) return
+    if (!cur.enabled && cur.numbers.isEmpty()) { NOCard { Text(tr("خدمة أرقام الأعمال السحابية متوقفة مؤقتاً من الإدارة"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }; return }
     NOCard {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.weight(1f)) {
@@ -124,7 +136,7 @@ object TelnyxClient {
     var busy by remember { mutableStateOf(false) }
     var msg by remember { mutableStateOf<String?>(null) }
     var err by remember { mutableStateOf(false) }
-    fun loadAll() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { en = it.enabled; pr = if (it.monthlyPrice > 0.0) formatAmount(it.monthlyPrice) else ""; rate = formatAmount(it.voiceRatePerMin) }; runCatching { TelnyxClient.adminOverview() }.onSuccess { ov = it } } }
+    fun loadAll() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { en = it.enabled; pr = if (it.monthlyPrice > 0.0) formatAmount(it.monthlyPrice) else ""; rate = formatAmount(it.voiceRatePerMin) }.onFailure { msg = ErrorMapper.toUserMessage(it); err = true }; runCatching { TelnyxClient.adminOverview() }.onSuccess { ov = it } } }
     LaunchedEffect(Unit) { loadAll() }
     NOCard {
         Text(tr("إدارة أرقام الأعمال السحابية (Telnyx)"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
