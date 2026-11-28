@@ -56,7 +56,7 @@ object TelnyxClient {
             if (cur.enabled && cur.monthlyPrice > 0.0) Text(ltr("${formatAmount(cur.monthlyPrice)} USDT"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         }
         if (cur.enabled && cur.monthlyPrice > 0.0) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("US" to "🇺🇸 US", "GB" to "🇬🇧 UK", "CA" to "🇨🇦 CA").forEach { (c, l) -> FilterChip(selected = cc == c, onClick = { cc = c }, label = { Text(l) }) } }
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { listOf("US" to "🇺🇸 أمريكا +1", "GB" to "🇬🇧 بريطانيا +44", "CA" to "🇨🇦 كندا +1", "DE" to "🇩🇪 ألمانيا +49", "FR" to "🇫🇷 فرنسا +33", "NL" to "🇳🇱 هولندا +31", "SE" to "🇸🇪 السويد +46", "AU" to "🇦🇺 أستراليا +61").forEach { (c, l) -> FilterChip(selected = cc == c, onClick = { cc = c }, label = { Text(l) }) } }
             Button(onClick = {
                 if (busy) return@Button; busy = true; msg = null
                 scope.launch {
