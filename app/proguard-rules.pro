@@ -30,3 +30,16 @@
     *** Companion;
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+-keep,includedescriptorclasses class com.numberone.numberone.**$$serializer { *; }
+-keepclassmembers class com.numberone.numberone.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.numberone.numberone.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep class io.github.jan.supabase.** { *; }
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-dontwarn io.github.jan.supabase.**
+-dontwarn kotlinx.serialization.**

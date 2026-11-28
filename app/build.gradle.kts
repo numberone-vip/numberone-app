@@ -53,8 +53,11 @@ android {
         applicationId = "com.numberone.numberone"
         minSdk = 26
         targetSdk = 36
-        versionCode = 16
-        versionName = "1.3.5"
+        versionCode = 17
+        versionName = "1.3.6"
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
 
         vectorDrawables {
             useSupportLibrary = true
@@ -72,7 +75,8 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
 
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -89,6 +93,8 @@ android {
         resources {
             excludes.add("/META-INF/{AL2.0,LGPL2.1}")
             excludes.add("META-INF/kotlinx_coroutines_core.version")
+            excludes.add("DebugProbesKt.bin")
+            excludes.add("**/*.kotlin_builtins")
 
             pickFirsts.add("nonJvmMain/default/linkdata/package_androidx/0_androidx.knm")
             pickFirsts.add("nonJvmMain/default/linkdata/root_package/0_.knm")
