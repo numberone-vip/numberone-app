@@ -192,11 +192,20 @@ fun WalletScreen(vm: AppViewModel, onBack: () -> Unit) {
             )
         }
 
+        var txExpanded by rememberSaveable { mutableStateOf(false) }
         NOCard {
-            SectionTitle(tr("سجل الحركات"), if (vm.transactions.isEmpty()) null else tr("آخر العمليات على محفظتك"))
-            if (vm.transactions.isEmpty()) {
-                EmptyState(tr("لا توجد حركات بعد. ستظهر هنا عمليات الشحن والشراء."))
-            } else {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(tr("سجل الحركات"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(if (vm.transactions.isEmpty()) tr("لا توجد حركات بعد") else trf("{0} عملية مسجلة", vm.transactions.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (vm.transactions.isNotEmpty()) {
+                    OutlinedButton(onClick = { txExpanded = !txExpanded }, shape = RoundedCornerShape(12.dp)) {
+                        Text(if (txExpanded) tr("إخفاء") else tr("عرض السجل"), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            if (txExpanded && vm.transactions.isNotEmpty()) {
                 // Filter chips: all, incoming, outgoing.
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     ChoicePill(text = tr("الكل"), selected = txFilter == TX_ALL, onClick = { txFilter = TX_ALL; showAllTx = false }, modifier = Modifier.weight(1f))

@@ -159,11 +159,11 @@ fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) 
                     Text(tr("إضافة رقم جديد"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
                     TextButton(onClick = { load(filter) }) { Text(tr("تحديث"), fontWeight = FontWeight.Bold) }
                 }
-                val filters = listOf("US" to "🇺🇸 USA", "CA" to "🇨🇦 Canada", "GB" to "🇬🇧 UK", "NL" to "🇳🇱 Netherlands", "SE" to "🇸🇪 Sweden", "FI" to "🇫🇮 Finland", "PL" to "🇵🇱 Poland", "BE" to "🇧🇪 Belgium", "ES" to "🇪🇸 Spain", "MX" to "🇲🇽 Mexico", "BR" to "🇧🇷 Brazil", "ZA" to "🇿🇦 S.Africa", "ALL" to tr("الكل"))
+                val states = listOf("CH" to "🇨🇭 سويسرا (مجاني)", "" to "🇺🇸 كل الولايات", "212" to "🗽 نيويورك 212", "305" to "🌴 ميامي 305", "310" to "🎬 لوس أنجلوس 310", "713" to "🤠 تكساس 713", "312" to "🏙️ شيكاغو 312", "202" to "🏛️ واشنطن 202", "702" to "🎰 لاس فيغاس 702", "404" to "🍑 أتلانتا 404")
                 Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    filters.forEach { (code, label) ->
-                        val active = filter == code
-                        Surface(onClick = { filter = code }, shape = RoundedCornerShape(12.dp), color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)) {
+                    states.forEach { (stCode, label) ->
+                        val active = if (stCode == "CH") filter == "CH" else (areaCode == stCode && filter == "US")
+                        Surface(onClick = { if (stCode == "CH") { filter = "CH"; areaCode = ""; load("CH") } else { filter = "US"; areaCode = stCode; load("US") } }, shape = RoundedCornerShape(12.dp), color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)) {
                             Text(label, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (active) NumberOneColors.Obsidian else MaterialTheme.colorScheme.onSurface)
                         }
                     }
@@ -175,7 +175,7 @@ fun TelnyxAddNumberDialog(onDismiss: () -> Unit, onPurchased: (String) -> Unit) 
                 }
                 if (filter == "US" || filter == "CA") {
                     Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("" to tr("الكل"), "local" to tr("محلي Local"), "toll_free" to tr("مجاني Toll-Free")).forEach { (tCode, tLabel) ->
+                        listOf("" to tr("الكل"), "local" to tr("محلي Local"), "toll_free" to tr("رقم موحّد (800/888)")).forEach { (tCode, tLabel) ->
                             FilterChip(selected = numType == tCode, onClick = { numType = tCode }, label = { Text(tLabel) })
                         }
                     }

@@ -15,6 +15,7 @@ import com.numberone.numberone.di.AppContainer
 import com.numberone.numberone.domain.model.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 class AppViewModel : ViewModel() {
     var loading by mutableStateOf(false); private set
@@ -74,12 +75,22 @@ class AppViewModel : ViewModel() {
     fun setTxHash(v: String) { _txHash = v }
     fun selectDeposit(v: String) { selectedDeposit = v }
 
+    private fun runQuiet(task: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                withTimeout(20_000) { task() }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) { }
+        }
+    }
+
     private fun run(task: suspend () -> Unit) {
         if (loading) { message = tr("جاري تنفيذ عملية حالياً، انتظر لحظة…"); return }
         viewModelScope.launch {
             loading = true; error = null; message = null
             try {
-                task()
+                withTimeout(25_000) { task() }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -92,7 +103,7 @@ class AppViewModel : ViewModel() {
     }
 
     fun refresh() {
-        run {
+        runQuiet {
             val repo = AppContainer.walletRepository
             wallet = repo.getWallet().getOrThrow()
             transactions = repo.getTransactions().getOrThrow()
@@ -103,7 +114,7 @@ class AppViewModel : ViewModel() {
     }
 
     fun loadWallet() {
-        run {
+        runQuiet {
             val repo = AppContainer.walletRepository
             wallet = repo.getWallet().getOrThrow()
             transactions = repo.getTransactions().getOrThrow()

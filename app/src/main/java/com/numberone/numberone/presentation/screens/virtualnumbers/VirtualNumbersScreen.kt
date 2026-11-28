@@ -150,7 +150,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
             .onSuccess { result ->
                 catalog = result
                 selectedCountry = result.countries.firstOrNull()
-                selectedService = result.services.firstOrNull { it.code.equals("whatsapp", ignoreCase = true) }
+                selectedService = result.services.firstOrNull { it.code.equals("telegram", ignoreCase = true) }
                     ?: result.services.firstOrNull()
             }
             .onFailure { say(it.message ?: tr("تعذر تحميل كتالوج الأرقام")) }
@@ -244,7 +244,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
         }
     }
     val sQuery = serviceSearch.trim()
-    val popularKeys = remember { listOf("whatsapp", "telegram", "facebook", "instagram", "tiktok", "google", "snapchat", "twitter", "openai", "microsoft", "apple", "paypal", "amazon", "viber", "discord", "uber", "netflix", "imo") }
+    val popularKeys = remember { listOf("telegram", "facebook", "instagram", "tiktok", "google", "snapchat", "twitter", "openai", "microsoft", "apple", "paypal", "amazon", "viber", "discord", "uber", "netflix", "imo") }
     val filteredServices = remember(catalog, sQuery) {
         catalog.services
             .filter { svc -> sQuery.isEmpty() || svc.name.contains(sQuery, ignoreCase = true) || svc.code.contains(sQuery, ignoreCase = true) }
@@ -314,7 +314,7 @@ fun VirtualNumbersScreen(vm: AppViewModel, onBack: () -> Unit, onTopUp: () -> Un
                     }
                 }
 
-                if (catalog.services.isNotEmpty()) { item { Row(modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("whatsapp" to "واتساب","telegram" to "تيليجرام","facebook" to "فيسبوك","google" to "غوغل","tiktok" to "تيك توك").forEach { (c, l) -> catalog.services.firstOrNull { it.code.equals(c, true) || c in it.name.lowercase() }?.let { m -> FilterChip(selected = selectedService?.code == m.code, onClick = { selectedService = m }, label = { Text(tr(l), fontWeight = FontWeight.Bold) }) } } } } }
+                if (catalog.services.isNotEmpty()) { item { Row(modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("telegram" to "تيليجرام","facebook" to "فيسبوك","google" to "غوغل","tiktok" to "تيك توك").forEach { (c, l) -> catalog.services.firstOrNull { it.code.equals(c, true) || c in it.name.lowercase() }?.let { m -> FilterChip(selected = selectedService?.code == m.code, onClick = { selectedService = m }, label = { Text(tr(l), fontWeight = FontWeight.Bold) }) } } } } }
                 item { CountryPicker(country = selectedCountry, onClick = { countrySearch = ""; countrySheetOpen = true }) }
                 item { ServicePicker(service = selectedService, totalCount = catalog.services.size, onClick = { serviceSearch = ""; serviceSheetOpen = true }) }
 
