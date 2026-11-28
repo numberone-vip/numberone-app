@@ -709,7 +709,7 @@ private fun PrivateNumbersTab(vm: AppViewModel, onNavigate: (String) -> Unit = {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            // Cloud Telnyx store only
+            com.numberone.numberone.data.remote.TelnyxCustomerCard(onOpenSms = { onNavigate(AppRoutes.SMS_INBOX) }, onPurchased = { vm.loadStore(); vm.loadWallet() })
         }
     }
 }

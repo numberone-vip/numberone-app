@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 26,
-  "latestVersionName": "1.4.5",
+  "latestVersionCode": 27,
+  "latestVersionName": "1.4.6",
   "forceUpdate": false,
   "downloadUrl": "https://numberone-vip.github.io/numberone-app/NumberOne.apk",
-  "notesAr": "تحديث v1.4.5: إصلاح عرض باقات أرقام الأعمال السحابية ولوحة الاتصال الصوتية.",
-  "releaseNotesAr": "تحديث v1.4.5: إصلاح عرض باقات أرقام الأعمال السحابية ولوحة الاتصال الصوتية."
+  "notesAr": "تحديث v1.4.6: تفعيل عرض باقات أرقام الأعمال السحابية ولوحة الاتصال الصوتية في تبويب الأرقام الخاصة.",
+  "releaseNotesAr": "تحديث v1.4.6: تفعيل عرض باقات أرقام الأعمال السحابية ولوحة الاتصال الصوتية في تبويب الأرقام الخاصة."
 }
