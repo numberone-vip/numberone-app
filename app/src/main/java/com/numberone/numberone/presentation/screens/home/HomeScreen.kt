@@ -215,6 +215,8 @@ private fun AccountTab(vm: AppViewModel, engagementVm: EngagementViewModel?, use
     val numbers = offer?.numbers.orEmpty()
     val caller = selectedCaller.ifBlank { numbers.firstOrNull()?.phoneNumber.orEmpty() }
     var txDialogOpen by remember { mutableStateOf(false) }
+    var adminConfirmed by remember(isAdmin) { mutableStateOf(isAdmin) }
+    LaunchedEffect(Unit) { if (!adminConfirmed) runCatching { com.numberone.numberone.core.di.AppContainer.userRepository.isAdmin().getOrDefault(false) }.onSuccess { if (it) adminConfirmed = true } }
 
     if (txDialogOpen) AlertDialog(
         onDismissRequest = { txDialogOpen = false }, title = { Text(tr("سجل المعاملات والفواتير"), fontWeight = FontWeight.Black) },
@@ -269,7 +271,7 @@ private fun AccountTab(vm: AppViewModel, engagementVm: EngagementViewModel?, use
         })
         ActionRow(tr("الدعم الفني"), tr("تواصل مع فريق الدعم والمساعدة"), Icons.Filled.SupportAgent, { onNavigate(AppRoutes.SUPPORT) })
         ActionRow(tr("الإعدادات"), tr("اللغة، المظهر، والأمان"), Icons.Filled.Settings, { onNavigate(AppRoutes.SETTINGS) })
-        if (isAdmin) ActionRow(tr("لوحة الإدارة"), tr("إدارة نسب الربح والطلبات والإيداعات"), Icons.Filled.AdminPanelSettings, { onNavigate(AppRoutes.ADMIN) }, highlighted = true)
+        if (adminConfirmed) ActionRow(tr("لوحة الإدارة"), tr("إدارة نسب الربح والطلبات والإيداعات"), Icons.Filled.AdminPanelSettings, { onNavigate(AppRoutes.ADMIN) }, highlighted = true)
         TextButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text(tr("تسجيل الخروج"), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold) }
     }
 }

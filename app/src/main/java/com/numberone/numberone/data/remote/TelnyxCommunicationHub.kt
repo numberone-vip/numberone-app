@@ -40,6 +40,7 @@ import com.numberone.numberone.core.components.*
 import com.numberone.numberone.core.error.ErrorMapper
 import com.numberone.numberone.core.localization.*
 import com.numberone.numberone.core.theme.NumberOneColors
+import com.telnyx.webrtc.sdk.Call
 import com.telnyx.webrtc.sdk.TelnyxClient as WebRtcClient
 import com.telnyx.webrtc.sdk.TokenConfig
 import com.telnyx.webrtc.sdk.model.LogLevel
@@ -106,6 +107,7 @@ fun CallsTab(
     var muted by remember { mutableStateOf(false) }
     var speaker by remember { mutableStateOf(false) }
     var statusText by remember { mutableStateOf<String?>(null) }
+    var activeCall by remember { mutableStateOf<Call?>(null) }
     var callId by remember { mutableStateOf<UUID?>(null) }
     var dest by remember { mutableStateOf<String?>(null) }
     var elapsedSec by remember { mutableIntStateOf(0) }
@@ -118,7 +120,7 @@ fun CallsTab(
     val balance = offer?.walletBalance ?: 0.0
 
     fun endCall(msg: String? = null) {
-        (callId ?: rtc.call?.callId)?.let { id -> runCatching { rtc.call?.endCall(id) } }
+        val c = activeCall; val id = callId; if (c != null && id != null) { runCatching { c.endCall(id) } }; activeCall = null
         callId = null; dest = null; calling = false; connected = false; muted = false; speaker = false; elapsedSec = 0
         runCatching { audio.isSpeakerphoneOn = false; audio.mode = AudioManager.MODE_NORMAL }
         statusText = msg
@@ -140,8 +142,7 @@ fun CallsTab(
                     SocketMethod.CLIENT_READY.methodName -> dest?.let { d ->
                         dest = null; statusText = trf("جارٍ الاتصال بـ {0}…", ltr(d))
                         audio.mode = AudioManager.MODE_IN_COMMUNICATION
-                        rtc.call?.newInvite("Number One", activeCaller, d, "")
-                        callId = rtc.call?.callId
+                        runCatching { val c = rtc.call; c?.newInvite("Number One", activeCaller, d, ""); activeCall = c; callId = c?.callId }.onFailure { endCall(tr("تعذّر إنشاء المكالمة")) }
                     }
                     SocketMethod.RINGING.methodName -> statusText = trf("يرن الآن: {0}", ltr(dial))
                     SocketMethod.ANSWER.methodName -> { connected = true; elapsedSec = 0; statusText = trf("مكالمة نشطة • {0}", ltr(dial)) }
@@ -216,7 +217,7 @@ fun CallsTab(
                     val timer = if (connected) " (${elapsedSec / 60}:${(elapsedSec % 60).toString().padStart(2, '0')})" else ""
                     statusText?.let { Text(it + timer, style = MaterialTheme.typography.bodySmall, color = if (connected) successColor() else MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold) }
                     if (calling) Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                        FilledTonalIconButton(onClick = { muted = !muted; runCatching { rtc.call?.onMuteUnmutePressed() } }) { Icon(if (muted) Icons.Filled.MicOff else Icons.Filled.Mic, null) }
+                        FilledTonalIconButton(onClick = { muted = !muted; runCatching { activeCall?.onMuteUnmutePressed() } }) { Icon(if (muted) Icons.Filled.MicOff else Icons.Filled.Mic, null) }
                         FilledTonalIconButton(onClick = { speaker = !speaker; audio.isSpeakerphoneOn = speaker }) { Icon(Icons.AutoMirrored.Filled.VolumeUp, null, tint = if (speaker) MaterialTheme.colorScheme.primary else LocalContentColor.current) }
                     }
                 }
@@ -226,8 +227,8 @@ fun CallsTab(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             row.forEach { (digit, letters) ->
                                 Box(modifier = Modifier.size(66.dp).clip(CircleShape).clickable {
-                                    val id = callId ?: rtc.call?.callId
-                                    if (calling && id != null) runCatching { rtc.call?.dtmf(id, digit) }
+                                    val c = activeCall; val id = callId
+                                    if (calling && c != null && id != null) runCatching { c.dtmf(id, digit) }
                                     else if (dial.length < 18) dial += if (digit == "0" && dial.isEmpty()) "+" else digit
                                 }, contentAlignment = Alignment.Center) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
