@@ -161,7 +161,9 @@ fun AdminScreen(onBack: () -> Unit) {
                         onApprove = { t, usdt -> vm.approveShamCash(t.id, usdt) },
                         onReject = { rejectSham = it }
                     )
-                    TAB_SERVICES -> serviceItems(
+                    TAB_SERVICES -> {
+                    item(key = "admin-telnyx-card") { com.numberone.numberone.data.remote.TelnyxAdminCard() }
+                    serviceItems(
                         vm = vm,
                         onAdd = { serviceEditor = null; serviceEditorOpen = true },
                         onEdit = { serviceEditor = it; serviceEditorOpen = true },

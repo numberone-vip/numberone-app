@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 18,
-  "latestVersionName": "1.3.7",
+  "latestVersionCode": 19,
+  "latestVersionName": "1.3.8",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.3.7: دعم كتابة الأرقام باللوحة العربية والإنجليزية في جميع حقول المبالغ والأسعار.",
-  "releaseNotesAr": "تحديث v1.3.7: دعم كتابة الأرقام باللوحة العربية والإنجليزية في جميع حقول المبالغ والأسعار."
+  "notesAr": "تحديث v1.3.8: إضافة أرقام الأعمال السحابية الفورية (Telnyx) ولوحة التحكم والفوترة.",
+  "releaseNotesAr": "تحديث v1.3.8: إضافة أرقام الأعمال السحابية الفورية (Telnyx) ولوحة التحكم والفوترة."
 }
