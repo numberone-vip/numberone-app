@@ -204,6 +204,7 @@ dependencies {
     // Kotlin
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    implementation("com.github.team-telnyx:telnyx-webrtc-android:v1.2.21-alpha")
 
     // Testing
     testImplementation(libs.junit)

@@ -43,3 +43,11 @@
 -dontwarn io.ktor.**
 -dontwarn io.github.jan.supabase.**
 -dontwarn kotlinx.serialization.**
+
+# Telnyx WebRTC SDK & native WebRTC rules
+-keep class com.telnyx.webrtc.** { *; }
+-keep class org.webrtc.** { *; }
+-dontwarn org.webrtc.**
+-dontwarn kotlin.Experimental$Level
+-dontwarn kotlin.Experimental
+-dontwarn kotlinx.coroutines.scheduling.ExperimentalCoroutineDispatcher
