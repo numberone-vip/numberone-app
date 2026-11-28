@@ -66,9 +66,10 @@ class AppViewModel : ViewModel() {
     }
 
     fun setAccessCode(v: String) { _accessCode = v }
-    fun setAmount(v: String) { _amount = v }
+    private fun normNum(v: String): String = com.numberone.numberone.presentation.util.normalizeDigits(v).replace('،', '.').replace(',', '.')
+    fun setAmount(v: String) { _amount = normNum(v) }
     fun setShamMethod(v: String) { _shamMethod = v }
-    fun setShamAmount(v: String) { _shamAmount = v }
+    fun setShamAmount(v: String) { _shamAmount = normNum(v) }
     fun selectSham(v: String) { shamSelected = v }
     fun setTxHash(v: String) { _txHash = v }
     fun selectDeposit(v: String) { selectedDeposit = v }

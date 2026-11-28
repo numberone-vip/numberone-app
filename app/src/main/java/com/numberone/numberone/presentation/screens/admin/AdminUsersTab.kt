@@ -140,7 +140,7 @@ internal fun AdjustBalanceDialog(user: AdminUser, onDismiss: () -> Unit, onConfi
                 }
                 OutlinedTextField(
                     value = amount,
-                    onValueChange = { amount = it; error = null },
+                    onValueChange = { amount = com.numberone.numberone.presentation.util.normalizeDigits(it).replace('،', '.').replace(',', '.'); error = null },
                     label = { Text(tr("المبلغ بالـ USDT")) },
                     singleLine = true,
                     textStyle = ltrTextStyle(),

@@ -155,7 +155,7 @@ internal fun ServiceEditorDialog(service: AdminService?, onDismiss: () -> Unit, 
                     textStyle = ltrTextStyle(), modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
-                    value = price, onValueChange = { price = it; error = null },
+                    value = price, onValueChange = { price = com.numberone.numberone.presentation.util.normalizeDigits(it).replace('،', '.').replace(',', '.'); error = null },
                     label = { Text(tr("السعر بالـ USDT")) }, singleLine = true,
                     textStyle = ltrTextStyle(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
