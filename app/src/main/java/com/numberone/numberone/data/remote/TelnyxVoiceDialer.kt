@@ -22,22 +22,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import com.numberone.numberone.core.components.*
 import com.numberone.numberone.core.error.ErrorMapper
 import com.numberone.numberone.core.localization.*
 import com.telnyx.webrtc.sdk.TelnyxClient
 import com.telnyx.webrtc.sdk.TokenConfig
+import com.telnyx.webrtc.sdk.model.LogLevel
 import com.telnyx.webrtc.sdk.model.SocketMethod
 import com.telnyx.webrtc.sdk.model.SocketStatus
-import com.telnyx.webrtc.sdk.verto.receive.ByeResponse
-import io.github.jan.supabase.exceptions.HttpRequestException
+import com.telnyx.webrtc.sdk.verto.receive.ReceivedMessageBody
+import com.telnyx.webrtc.sdk.verto.receive.SocketResponse
 import io.github.jan.supabase.functions.functions
 import io.ktor.client.call.body
-import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.buildJsonObject
 import java.util.UUID
 
 @Serializable data class TelnyxVoiceTokenRes(val ok: Boolean = false, val token: String = "", @SerialName("phone_number") val phoneNumber: String = "", @SerialName("voice_rate_per_min") val voiceRatePerMin: Double = 0.05, @SerialName("wallet_balance") val walletBalance: Double = 0.0, val error: String? = null, val message: String? = null)
@@ -62,7 +63,7 @@ import java.util.UUID
     var elapsedSec by remember { mutableIntStateOf(0) }
 
     fun end(msg: String? = null) {
-        callId?.let { runCatching { client.endCall(it) } }
+        (callId ?: client.call?.callId)?.let { id -> runCatching { client.call?.endCall(id) } }
         callId = null; dest = null; calling = false; connected = false; muted = false; speaker = false; elapsedSec = 0
         runCatching { audio.isSpeakerphoneOn = false; audio.mode = AudioManager.MODE_NORMAL }
         if (msg != null) status = msg
@@ -78,27 +79,30 @@ import java.util.UUID
         }
     }
 
-    LaunchedEffect(client) {
-        client.getSocketResponse().collect { res ->
+    DisposableEffect(client) {
+        val obs = Observer<SocketResponse<ReceivedMessageBody>> { res ->
             when (res.status) {
                 SocketStatus.ESTABLISHED -> status = tr("جارٍ تسجيل الدخول للصوت…")
                 SocketStatus.MESSAGERECEIVED -> when (res.data?.method) {
                     SocketMethod.CLIENT_READY.methodName -> dest?.let { d ->
                         dest = null; status = trf("جارٍ الاتصال بـ {0}…", ltr(d))
                         audio.mode = AudioManager.MODE_IN_COMMUNICATION
-                        callId = client.call.newInvite("Number One", callerNumber, d, "", mapOf()).callId
+                        client.call?.newInvite("Number One", callerNumber, d, "")
+                        callId = client.call?.callId
                     }
                     SocketMethod.RINGING.methodName -> status = trf("يرن الآن: {0}", ltr(dial))
                     SocketMethod.ANSWER.methodName -> { connected = true; elapsedSec = 0; status = trf("مكالمة نشطة مع {0}", ltr(dial)) }
-                    SocketMethod.BYE.methodName -> end((res.data?.result as? ByeResponse)?.cause?.let { trf("انتهت ({0})", it) } ?: tr("انتهت المكالمة"))
+                    SocketMethod.BYE.methodName -> end(tr("انتهت المكالمة"))
                 }
                 SocketStatus.ERROR -> end(res.errorMessage ?: tr("فشل الاتصال الصوتي"))
                 SocketStatus.DISCONNECT -> if (calling) end(tr("انقطع الاتصال"))
                 else -> Unit
             }
         }
+        val live = client.getSocketResponse()
+        live.observeForever(obs)
+        onDispose { live.removeObserver(obs); end(); runCatching { client.onDestroy() } }
     }
-    DisposableEffect(Unit) { onDispose { end(); runCatching { client.disconnect() } } }
 
     AlertDialog(
         onDismissRequest = { end(); onDismiss() },
@@ -115,13 +119,13 @@ import java.util.UUID
                 val timer = if (connected) " (${elapsedSec / 60}:${(elapsedSec % 60).toString().padStart(2, '0')})" else ""
                 Text(status + timer, style = MaterialTheme.typography.bodySmall, color = if (connected) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 if (calling) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    FilledTonalIconButton(onClick = { muted = !muted; runCatching { client.call.onMuteUnmutePressed() } }) { Icon(if (muted) Icons.Filled.MicOff else Icons.Filled.Mic, null) }
+                    FilledTonalIconButton(onClick = { muted = !muted; runCatching { client.call?.onMuteUnmutePressed() } }) { Icon(if (muted) Icons.Filled.MicOff else Icons.Filled.Mic, null) }
                     FilledTonalIconButton(onClick = { speaker = !speaker; audio.isSpeakerphoneOn = speaker }) { Icon(Icons.AutoMirrored.Filled.VolumeUp, null, tint = if (speaker) MaterialTheme.colorScheme.primary else LocalContentColor.current) }
                 }
                 listOf(listOf("1","2","3"), listOf("4","5","6"), listOf("7","8","9"), listOf("*","0","#")).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { d ->
-                            FilledTonalButton(onClick = { if (calling && callId != null) runCatching { client.call.dtmf(callId!!, d) } else if (dial.length < 18) dial += d }, shape = CircleShape, modifier = Modifier.size(56.dp)) { Text(d, fontWeight = FontWeight.Bold) }
+                            FilledTonalButton(onClick = { val id = callId ?: client.call?.callId; if (calling && id != null) runCatching { client.call?.dtmf(id, d) } else if (dial.length < 18) dial += d }, shape = CircleShape, modifier = Modifier.size(56.dp)) { Text(d, fontWeight = FontWeight.Bold) }
                         }
                     }
                 }
@@ -138,14 +142,13 @@ import java.util.UUID
                                 runCatching { SupabaseClientProvider.client.functions.invoke("telnyx-voice-token", buildJsonObject {}).body<TelnyxVoiceTokenRes>() }
                                     .onSuccess { r ->
                                         rate = r.voiceRatePerMin; balance = r.walletBalance
-                                        if (r.token.isNotBlank()) { dest = dial; client.tokenLogin(TokenConfig(r.token, "Number One", callerNumber, null, null, null, false)) }
+                                        if (r.token.isNotBlank()) { dest = dial; client.tokenLogin(TokenConfig(r.token, "Number One", callerNumber, null, null, null, LogLevel.NONE, false)) }
                                         else end(r.message ?: r.error ?: tr("تعذّر بدء المكالمة"))
                                     }
                                     .onFailure { e ->
-                                        val raw = runCatching { (e as? HttpRequestException)?.response?.bodyAsText() }.getOrNull()
-                                        val parsed = raw?.let { runCatching { Json { ignoreUnknownKeys = true }.decodeFromString<TelnyxVoiceTokenRes>(it) }.getOrNull() }
-                                        if (parsed != null) { rate = parsed.voiceRatePerMin; balance = parsed.walletBalance }
-                                        end(parsed?.message ?: ErrorMapper.toUserMessage(e))
+                                        val msg = e.message.orEmpty()
+                                        if (msg.contains("insufficient_balance") || msg.contains("402")) end(trf("رصيدك غير كافٍ. تحتاج على الأقل {0} USDT للدقيقة", formatAmount(rate)))
+                                        else end(ErrorMapper.toUserMessage(e))
                                     }
                             }
                         },
