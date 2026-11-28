@@ -214,7 +214,7 @@ fun HomeScreen(
                     onOpenTab = { goTo(it) },
                     onLogout = onLogout
                 )
-                TAB_PRIVATE -> PrivateNumbersTab(vm)
+                TAB_PRIVATE -> PrivateNumbersTab(vm, onNavigate)
                 else -> VirtualNumbersScreen(
                     vm = vm,
                     onBack = { goTo(TAB_HOME) },
@@ -687,7 +687,7 @@ private fun GreetingHeader(userEmail: String?, unreadNotifications: Int = 0, onN
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun PrivateNumbersTab(vm: AppViewModel) {
+private fun PrivateNumbersTab(vm: AppViewModel, onNavigate: (String) -> Unit = {}) {
     @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
     PullToRefreshBox(
         isRefreshing = vm.loading,
