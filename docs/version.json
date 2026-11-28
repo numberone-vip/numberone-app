@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 15,
-  "latestVersionName": "1.3.4",
+  "latestVersionCode": 16,
+  "latestVersionName": "1.3.5",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.3.4: تحسين رسائل التحقق عند رفض الطلبات في لوحة الإدارة.",
-  "releaseNotesAr": "تحديث v1.3.4: تحسين رسائل التحقق عند رفض الطلبات في لوحة الإدارة."
+  "notesAr": "تحديث v1.3.5: توضيح رسائل كود الإحالة ومنع إدخال الكود الشخصي مباشرة.",
+  "releaseNotesAr": "تحديث v1.3.5: توضيح رسائل كود الإحالة ومنع إدخال الكود الشخصي مباشرة."
 }
