@@ -2,7 +2,6 @@ package com.numberone.numberone.presentation.screens.home
 
 import com.numberone.numberone.core.localization.tr
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
