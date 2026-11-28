@@ -43,6 +43,7 @@ import com.numberone.numberone.presentation.screens.referrals.buildReferralShare
 import com.numberone.numberone.presentation.viewmodel.AppViewModel
 import com.numberone.numberone.presentation.viewmodel.EngagementViewModel
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
