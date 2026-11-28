@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 23,
-  "latestVersionName": "1.4.2",
+  "latestVersionCode": 24,
+  "latestVersionName": "1.4.3",
   "forceUpdate": false,
-  "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.4.2: إضافة لوحة الاتصال الصوتية المدمجة (Keypad) لأرقام الأعمال السحابية.",
-  "releaseNotesAr": "تحديث v1.4.2: إضافة لوحة الاتصال الصوتية المدمجة (Keypad) لأرقام الأعمال السحابية."
+  "downloadUrl": "https://aclclouds.online",
+  "notesAr": "تحديث v1.4.3: نظام فوترة المكالمات الصوتية بالدقيقة من المحفظة وتحديد سعر الدقيقة من الإدارة.",
+  "releaseNotesAr": "تحديث v1.4.3: نظام فوترة المكالمات الصوتية بالدقيقة من المحفظة وتحديد سعر الدقيقة من الإدارة."
 }

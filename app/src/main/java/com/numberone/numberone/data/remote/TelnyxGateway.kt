@@ -22,7 +22,7 @@ import kotlinx.serialization.json.*
 import java.util.UUID
 
 @Serializable data class TelnyxNumberItem(val id: String = "", @SerialName("user_id") val userId: String = "", val email: String? = null, @SerialName("phone_number") val phoneNumber: String = "", val status: String = "", @SerialName("monthly_price") val monthlyPrice: Double = 0.0, @SerialName("expires_at") val expiresAt: String? = null, @SerialName("subscription_id") val subscriptionId: String? = null)
-@Serializable data class TelnyxOffer(val enabled: Boolean = false, @SerialName("monthly_price") val monthlyPrice: Double = 0.0, val numbers: List<TelnyxNumberItem> = emptyList())
+@Serializable data class TelnyxOffer(val enabled: Boolean = false, @SerialName("monthly_price") val monthlyPrice: Double = 0.0, @SerialName("voice_rate_per_min") val voiceRatePerMin: Double = 0.05, @SerialName("wallet_balance") val walletBalance: Double = 0.0, val numbers: List<TelnyxNumberItem> = emptyList())
 @Serializable data class TelnyxOrderResult(val ok: Boolean = false, @SerialName("purchase_id") val purchaseId: String? = null, @SerialName("phone_number") val phoneNumber: String? = null, val state: String? = null, val error: String? = null)
 @Serializable data class TelnyxAdminPurchase(val id: String = "", @SerialName("user_id") val userId: String = "", val email: String? = null, val amount: Double = 0.0, val state: String = "", @SerialName("phone_number") val phoneNumber: String? = null, @SerialName("failure_detail") val failureDetail: String? = null)
 @Serializable data class TelnyxAdminBilling(val id: String = "", @SerialName("user_id") val userId: String = "", val email: String? = null, @SerialName("billing_reference") val billingReference: String = "", val amount: Double = 0.0, val currency: String = "USDT", val status: String = "")
@@ -32,7 +32,7 @@ object TelnyxClient {
     private val sb = SupabaseClientProvider.client
     suspend fun getOffer(): TelnyxOffer = sb.postgrest.rpcDecode("get_telnyx_offer", buildJsonObject {})
     suspend fun orderNumber(cc: String, key: String): TelnyxOrderResult = sb.functions.invoke("telnyx-order", buildJsonObject { put("p_country_code", cc); put("p_idempotency_key", key) }).body()
-    suspend fun adminUpdate(en: Boolean, pr: Double) { sb.postgrest.rpcRaw("admin_update_telnyx_config", buildJsonObject { put("p_enabled", en); put("p_monthly_price", pr) }) }
+    suspend fun adminUpdate(en: Boolean, pr: Double, rate: Double) { sb.postgrest.rpcRaw("admin_update_telnyx_config", buildJsonObject { put("p_enabled", en); put("p_monthly_price", pr); put("p_voice_rate_per_min", rate) }) }
     suspend fun adminOverview(): TelnyxAdminOverview = sb.postgrest.rpcDecode("admin_list_telnyx_overview", buildJsonObject {})
 }
 
@@ -44,16 +44,16 @@ object TelnyxClient {
     var msg by remember { mutableStateOf<String?>(null) }
     var err by remember { mutableStateOf(false) }
     var dialerNum by remember { mutableStateOf<String?>(null) }
-    dialerNum?.let { num -> TelnyxVoiceDialerDialog(callerNumber = num, onDismiss = { dialerNum = null }) }
     fun reload() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { offer = it } } }
     LaunchedEffect(Unit) { reload() }
     val cur = offer ?: return
+    dialerNum?.let { num -> TelnyxVoiceDialerDialog(callerNumber = num, voiceRatePerMin = cur.voiceRatePerMin, walletBalance = cur.walletBalance, onDismiss = { dialerNum = null; reload(); onPurchased() }) }
     if (!cur.enabled && cur.numbers.isEmpty()) return
     NOCard {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.weight(1f)) {
                 Text(tr("أرقام الأعمال السحابية • Telnyx"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Text(tr("خطوط أعمال فورية التفعيل مع استقبال SMS مباشر"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(tr("خطوط أعمال فورية التفعيل مع استقبال SMS ومكالمات صوتية"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (cur.enabled && cur.monthlyPrice > 0.0) Text(ltr("${formatAmount(cur.monthlyPrice)} USDT"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         }
@@ -87,11 +87,8 @@ object TelnyxClient {
                                         busy = false
                                     }
                                 },
-                                enabled = !busy,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(if (busy && cc == code) tr("جارٍ…") else ltr("${formatAmount(cur.monthlyPrice)} USDT"), fontWeight = FontWeight.Black)
-                            }
+                                enabled = !busy, shape = RoundedCornerShape(12.dp)
+                            ) { Text(if (busy && cc == code) tr("جارٍ…") else ltr("${formatAmount(cur.monthlyPrice)} USDT"), fontWeight = FontWeight.Black) }
                         }
                     }
                 }
@@ -122,20 +119,23 @@ object TelnyxClient {
     val scope = rememberCoroutineScope()
     var en by remember { mutableStateOf(false) }
     var pr by remember { mutableStateOf("") }
+    var rate by remember { mutableStateOf("") }
     var ov by remember { mutableStateOf<TelnyxAdminOverview?>(null) }
     var busy by remember { mutableStateOf(false) }
     var msg by remember { mutableStateOf<String?>(null) }
     var err by remember { mutableStateOf(false) }
-    fun loadAll() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { en = it.enabled; pr = if (it.monthlyPrice > 0.0) formatAmount(it.monthlyPrice) else "" }; runCatching { TelnyxClient.adminOverview() }.onSuccess { ov = it } } }
+    fun loadAll() { scope.launch { runCatching { TelnyxClient.getOffer() }.onSuccess { en = it.enabled; pr = if (it.monthlyPrice > 0.0) formatAmount(it.monthlyPrice) else ""; rate = formatAmount(it.voiceRatePerMin) }; runCatching { TelnyxClient.adminOverview() }.onSuccess { ov = it } } }
     LaunchedEffect(Unit) { loadAll() }
     NOCard {
         Text(tr("إدارة أرقام الأعمال السحابية (Telnyx)"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) { Text(tr("تفعيل البيع للعملاء"), Modifier.weight(1f)); Switch(checked = en, onCheckedChange = { en = it }) }
-        OutlinedTextField(value = pr, onValueChange = { pr = normalizeDigits(it).replace('،', '.').replace(',', '.'); msg = null }, label = { Text(tr("السعر الشهري (USDT)")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = pr, onValueChange = { pr = normalizeDigits(it).replace('،', '.').replace(',', '.'); msg = null }, label = { Text(tr("السعر الشهري للرقم (USDT)")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = rate, onValueChange = { rate = normalizeDigits(it).replace('،', '.').replace(',', '.'); msg = null }, label = { Text(tr("سعر الدقيقة الصوتية (USDT)")) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
         Button(onClick = {
-            val v = pr.trim().toDoubleOrNull(); if (v == null || !v.isFinite() || v < 0.0) { msg = tr("أدخل سعراً صحيحاً"); err = true; return@Button }
+            val v = pr.trim().toDoubleOrNull(); val r = rate.trim().toDoubleOrNull()
+            if (v == null || !v.isFinite() || v < 0.0 || r == null || !r.isFinite() || r < 0.0) { msg = tr("أدخل قيماً صحيحة"); err = true; return@Button }
             busy = true; msg = null
-            scope.launch { runCatching { TelnyxClient.adminUpdate(en, v) }.onSuccess { msg = tr("تم الحفظ بنجاح"); err = false; loadAll() }.onFailure { msg = ErrorMapper.toUserMessage(it); err = true }; busy = false }
+            scope.launch { runCatching { TelnyxClient.adminUpdate(en, v, r) }.onSuccess { msg = tr("تم الحفظ بنجاح"); err = false; loadAll() }.onFailure { msg = ErrorMapper.toUserMessage(it); err = true }; busy = false }
         }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(tr("حفظ إعدادات Telnyx"), fontWeight = FontWeight.Bold) }
         msg?.let { Text(it, color = if (err) dangerColor() else successColor(), style = MaterialTheme.typography.bodySmall) }
         ov?.let { o ->
