@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 24,
-  "latestVersionName": "1.4.3",
+  "latestVersionCode": 25,
+  "latestVersionName": "1.4.4",
   "forceUpdate": false,
-  "downloadUrl": "https://aclclouds.online",
-  "notesAr": "تحديث v1.4.3: نظام فوترة المكالمات الصوتية بالدقيقة من المحفظة وتحديد سعر الدقيقة من الإدارة.",
-  "releaseNotesAr": "تحديث v1.4.3: نظام فوترة المكالمات الصوتية بالدقيقة من المحفظة وتحديد سعر الدقيقة من الإدارة."
+  "downloadUrl": "https://numberone-vip.github.io/numberone-app/NumberOne.apk",
+  "notesAr": "تحديث v1.4.4: اعتماد الرابط الرسمي الآمن للتحديثات والمشاركة وتفعيل المكالمات الصوتية.",
+  "releaseNotesAr": "تحديث v1.4.4: اعتماد الرابط الرسمي الآمن للتحديثات والمشاركة وتفعيل المكالمات الصوتية."
 }

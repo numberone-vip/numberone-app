@@ -36,7 +36,7 @@ fun InAppUpdateDialog() {
             runCatching {
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                 val currentCode = if (Build.VERSION.SDK_INT >= 28) pInfo.longVersionCode else @Suppress("DEPRECATION") pInfo.versionCode.toLong()
-                val conn = (URL("https://vip.numberone-vip.aclclouds.online/version.json?t=" + System.currentTimeMillis()).openConnection() as HttpURLConnection).apply {
+                val conn = (URL("https://numberone-vip.github.io/numberone-app/version.json?t=" + System.currentTimeMillis()).openConnection() as HttpURLConnection).apply {
                     connectTimeout = 5000
                     readTimeout = 5000
                 }
@@ -47,7 +47,7 @@ fun InAppUpdateDialog() {
                         code = remoteCode,
                         name = json.optString("latestVersionName", ""),
                         force = json.optBoolean("forceUpdate", false),
-                        url = json.optString("downloadUrl", "https://vip.numberone-vip.aclclouds.online/"),
+                        url = json.optString("downloadUrl", "https://numberone-vip.github.io/numberone-app/"),
                         notes = json.optString("notesAr", "")
                     )
                 } else null
