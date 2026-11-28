@@ -1,8 +1,8 @@
 {
-  "latestVersionCode": 14,
-  "latestVersionName": "1.3.3",
+  "latestVersionCode": 15,
+  "latestVersionName": "1.3.4",
   "forceUpdate": false,
   "downloadUrl": "https://vip.numberone-vip.aclclouds.online/NumberOne.apk",
-  "notesAr": "تحديث v1.3.3: تفعيل إرسال الإشعارات الجماعية والفردية من لوحة الإدارة عبر الخادم الآمن.",
-  "releaseNotesAr": "تحديث v1.3.3: تفعيل إرسال الإشعارات الجماعية والفردية من لوحة الإدارة عبر الخادم الآمن."
+  "notesAr": "تحديث v1.3.4: تحسين رسائل التحقق عند رفض الطلبات في لوحة الإدارة.",
+  "releaseNotesAr": "تحديث v1.3.4: تحسين رسائل التحقق عند رفض الطلبات في لوحة الإدارة."
 }

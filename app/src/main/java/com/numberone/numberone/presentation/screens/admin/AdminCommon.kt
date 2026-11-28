@@ -181,14 +181,14 @@ internal fun ReasonDialog(
                     onValueChange = { reason = it; showError = false },
                     label = { Text(tr("سبب الرفض")) },
                     isError = showError,
-                    supportingText = { if (showError) Text(tr("سبب الرفض مطلوب")) },
+                    supportingText = { if (showError) Text(tr("أدخل سبب الرفض (3 أحرف على الأقل)")) },
                     minLines = 2
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                if (reason.isBlank()) showError = true else onConfirm(reason.trim())
+                if (reason.trim().length !in 3..500) showError = true else onConfirm(reason.trim())
             }) { Text(tr("تأكيد الرفض"), color = dangerColor(), fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(tr("إلغاء")) } }
